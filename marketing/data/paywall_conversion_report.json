@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-06-10T01:19:44+00:00",
+  "generated_at": "2026-06-10T07:47:05+00:00",
   "window_days": 30,
-  "status": "degraded",
-  "reason": "one or more PostHog queries failed",
+  "status": "ok",
+  "reason": "",
   "funnel": {
     "views": 664,
     "offer_selects": 51,
@@ -105,12 +105,31 @@
       "attempt_to_success_rate": 0.0
     }
   ],
-  "product_catalog_failures": [],
+  "product_catalog_failures": [
+    {
+      "platform": "android",
+      "product_id": "elite_tactical_monthly",
+      "failures": 428,
+      "users": 166
+    },
+    {
+      "platform": "android",
+      "product_id": "elite_tactical",
+      "failures": 375,
+      "users": 180
+    },
+    {
+      "platform": "android",
+      "product_id": "pro_base",
+      "failures": 263,
+      "users": 172
+    }
+  ],
   "product_catalog_failures_play_store": [
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 174,
+      "failures": 172,
       "users": 124
     },
     {
@@ -221,8 +240,8 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 3318,
-      "users": 345
+      "changes": 3284,
+      "users": 344
     },
     {
       "setting_name": "alarm_duration",
@@ -246,8 +265,8 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 1365,
-      "users": 314
+      "changes": 1364,
+      "users": 313
     },
     {
       "setting_name": "voice_callouts_enabled",
@@ -284,7 +303,5 @@
     "unknown paywall entry_point is still receiving meaningful traffic",
     "product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status"
   ],
-  "query_errors": [
-    "request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)"
-  ]
+  "query_errors": []
 }

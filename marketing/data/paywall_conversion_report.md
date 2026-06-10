@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-10T01:19:44+00:00
+Generated: 2026-06-10T07:47:05+00:00
 Window (days): 30
 
 ## Funnel
@@ -40,7 +40,9 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| (none) | (none) | 0 | 0 |
+| android | elite_tactical_monthly | 428 | 166 |
+| android | elite_tactical | 375 | 180 |
+| android | pro_base | 263 | 172 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
@@ -62,12 +64,12 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 3318 | 345 |
+| max_seconds | 3284 | 344 |
 | alarm_duration | 3090 | 322 |
 | volume | 2207 | 223 |
 | min_seconds | 2118 | 323 |
 | sound_type | 1513 | 263 |
-| repeat_enabled | 1365 | 314 |
+| repeat_enabled | 1364 | 313 |
 | voice_callouts_enabled | 829 | 196 |
 | vibration_enabled | 638 | 237 |
 | repeat_rounds | 432 | 127 |
@@ -78,7 +80,3 @@ Window (days): 30
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic
 - product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status
-
-## Query Diagnostics
-- Query errors: **1**
-- Last error: `request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)`

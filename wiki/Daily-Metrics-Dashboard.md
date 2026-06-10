@@ -7,7 +7,7 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 59 | 668 | 727 |
+| Distinct install users (30d) | 59 | 667 | 726 |
 | Active Installs | — | 672 | — |
 
 | Active Users | Count |
@@ -23,9 +23,9 @@
 | Metric | Value |
 |--------|-------|
 | WQTU (7d) | 10 |
-| Timer Completed (7d) | 177 |
+| Timer Completed (7d) | 159 |
 | Completed Users (7d) | 25 |
-| Sessions/Completed User (7d) | 7.08 |
+| Sessions/Completed User (7d) | 6.36 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
@@ -38,12 +38,12 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-06-10T01:23:14+00:00
+**Generated:** 2026-06-10T07:47:28+00:00
 
 ## Onboarding Funnel
-- First Open: **728**
-- First Timer Configured: **357** (49.0% of opens)
-- First Timer Completed: **81** (11.1% of opens)
+- First Open: **727**
+- First Timer Configured: **356** (49.0% of opens)
+- First Timer Completed: **80** (11.0% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -69,9 +69,7 @@
 
 **Top failure reasons:** failed (255), user_cancelled (6), cancelled (2), item_unavailable (2)
 
-**Catalog failures (Android):** none
-
-_Data quality: stale; latest read issue: `paywall conversion snapshot degraded`._
+**Catalog failures (Android):** elite_tactical_monthly (428), elite_tactical (375), pro_base (263)
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -79,9 +77,9 @@ _Data quality: stale; latest read issue: `paywall conversion snapshot degraded`.
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 728 | — |
-| First Timer Configured | 357 | 49.0% of opens |
-| First Timer Completed | 81 | 11.1% of opens |
+| First Open | 727 | — |
+| First Timer Configured | 356 | 49.0% of opens |
+| First Timer Completed | 80 | 11.0% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -157,18 +155,18 @@ _Data quality: stale; latest read issue: `paywall conversion snapshot degraded`.
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-10"]
+    x-axis ["2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-10" , "2026-06-10"]
     y-axis "Downloads"
-    line [58 , 58 , 58 , 58 , 58 , 58 , 59 , 59 , 60 , 60 , 60 , 59 , 59 , 59]
-    line [619 , 618 , 618 , 618 , 617 , 618 , 621 , 621 , 621 , 623 , 638 , 664 , 668 , 668]
+    line [58 , 58 , 58 , 58 , 58 , 59 , 59 , 60 , 60 , 60 , 59 , 59 , 59 , 59]
+    line [618 , 618 , 618 , 617 , 618 , 621 , 621 , 621 , 623 , 638 , 664 , 668 , 668 , 667]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-10"]
+    x-axis ["2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-08" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-09" , "2026-06-10" , "2026-06-10"]
     y-axis "Users"
-    line [8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 9 , 10 , 10 , 10]
+    line [8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 8 , 9 , 10 , 10 , 10 , 10]
 ```
 
 ```mermaid
@@ -196,4 +194,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-06-10T01:23:16+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-06-10T07:47:29+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
