@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-08T16:15:37+00:00",
+  "generated_at": "2026-06-10T19:53:34+00:00",
   "source": "executive_metrics_snapshot",
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "definitions": {
@@ -33,9 +33,9 @@
     "posthog_paywall_revenue_sum_30d": 0.0,
     "posthog_paywall_revenue_avg_usd_per_day": 0.0,
     "posthog_usd_gap_per_day_vs_target": 100.0,
-    "events_paywall_purchase_success_30d": 0,
-    "distinct_persons_paywall_purchase_success_30d": 0,
-    "billing_product_not_found_play_store_android_30d": 450,
+    "events_paywall_purchase_success_30d": 1,
+    "distinct_persons_paywall_purchase_success_30d": 1,
+    "billing_product_not_found_play_store_android_30d": 469,
     "store_ledger_revenue_usd_30d": null,
     "store_ledger_metric_id": "not_wired_in_executive_snapshot"
   },
@@ -51,60 +51,60 @@
     "errors": [
       "http_400"
     ],
-    "distinct_persons_application_installed": 677,
-    "distinct_persons_first_open": 677,
-    "distinct_persons_application_installed_ios": 58,
-    "distinct_persons_application_installed_android": 618,
-    "distinct_persons_application_opened_ios": 66,
-    "distinct_persons_application_opened_android": 623,
-    "timer_started_events": 1886,
-    "timer_completed_events": 587,
-    "distinct_persons_timer_started": 342,
-    "distinct_persons_timer_completed": 79,
-    "distinct_persons_timer_started_and_completed": 79,
-    "wqtu_distinct_persons": 25,
-    "wqtu_7d_distinct_persons": 8,
-    "timer_abandon_rate_event_level_pct": 68.88,
-    "distinct_persons_paywall_purchase_success": 0,
-    "events_paywall_purchase_success": 0,
+    "distinct_persons_application_installed": 731,
+    "distinct_persons_first_open": 731,
+    "distinct_persons_application_installed_ios": 60,
+    "distinct_persons_application_installed_android": 670,
+    "distinct_persons_application_opened_ios": 68,
+    "distinct_persons_application_opened_android": 674,
+    "timer_started_events": 1982,
+    "timer_completed_events": 599,
+    "distinct_persons_timer_started": 373,
+    "distinct_persons_timer_completed": 87,
+    "distinct_persons_timer_started_and_completed": 87,
+    "wqtu_distinct_persons": 27,
+    "wqtu_7d_distinct_persons": 11,
+    "timer_abandon_rate_event_level_pct": 69.78,
+    "distinct_persons_paywall_purchase_success": 1,
+    "events_paywall_purchase_success": 1,
     "distinct_persons_paywall_purchase_success_ios": 0,
-    "distinct_persons_paywall_purchase_success_android": 0,
+    "distinct_persons_paywall_purchase_success_android": 1,
     "events_paywall_purchase_success_ios": 0,
-    "events_paywall_purchase_success_android": 0,
+    "events_paywall_purchase_success_android": 1,
     "paywall_revenue_sum_30d": 0.0,
-    "billing_product_not_found_play_store_android_30d": 450,
-    "in_app_review_prompt_events": 484,
-    "in_app_review_prompt_distinct_persons": 267,
+    "billing_product_not_found_play_store_android_30d": 469,
+    "in_app_review_prompt_events": 520,
+    "in_app_review_prompt_distinct_persons": 293,
     "top_screens_by_distinct_persons": [
       [
         "Timer Setup",
-        377,
-        2817
+        410,
+        3010
       ],
       [
         "Active Timer",
-        322,
-        2320
+        352,
+        2450
       ],
       [
         "SmartCart",
-        82,
-        87
+        84,
+        89
       ],
       [
         "LipidSync",
-        75,
-        78
+        77,
+        81
       ],
       [
         "NutriPlan",
-        67,
-        71
+        69,
+        74
       ],
       [
         "Dashboard",
-        21,
-        31
+        23,
+        34
       ]
     ],
     "posthog_exception_events": 0,
@@ -148,10 +148,10 @@
       "review_count_metric_id": "google_play_androidpublisher_reviews_list_7d_commented_paginated",
       "production_release": {
         "version_codes": [
-          "1780697170"
+          "1781012436"
         ],
         "status": "completed",
-        "name": "v1780697170"
+        "name": "v1781012436"
       },
       "refund_requests_30d": 0,
       "voided_purchase_reason_counts": {},
@@ -197,12 +197,12 @@
       "review_count_request_limit": 50,
       "reviews": [],
       "ios_refund_units_30d": 0,
-      "ios_gross_units_30d": 354,
-      "ios_net_units_30d": 354,
+      "ios_gross_units_30d": 346,
+      "ios_net_units_30d": 346,
       "refund_count_metric_id": "app_store_connect_sales_reports_daily_summary_negative_units_sum",
       "sales_report_vendor_number_present": true,
       "sales_report_days_scanned": 30,
-      "sales_report_days_with_data": 29,
+      "sales_report_days_with_data": 28,
       "note": "App Store Connect Sales reports require async report generation. customerReviews count is the first page only (limit 50, newest first), not total lifetime App Store reviews. Version state is live from the API. iOS refund units are derived from negative Units rows in ASC daily SALES/SUMMARY reports when APPSTORE_VENDOR_NUMBER is configured."
     }
   },
@@ -214,7 +214,7 @@
     "ios_refund_units_30d": 0,
     "ios_refund_count_metric_id": "app_store_connect_sales_reports_daily_summary_negative_units_sum",
     "ios_sales_report_vendor_number_present": true,
-    "ios_sales_report_days_with_data": 29,
+    "ios_sales_report_days_with_data": 28,
     "ios_status": "ok",
     "asn_v2_status": "skipped",
     "asn_v2_ios_refund_count_production": null,
@@ -264,10 +264,10 @@
   "canonical_users": {
     "metric_bundle_id": "executive_canonical_users_v1",
     "window_days": 30,
-    "wqtu_7d": 8,
-    "installs_30d": 677,
-    "timer_completed_persons_30d": 79,
-    "paywall_purchase_success_persons_30d": 0,
-    "paywall_purchase_success_events_30d": 0
+    "wqtu_7d": 11,
+    "installs_30d": 731,
+    "timer_completed_persons_30d": 87,
+    "paywall_purchase_success_persons_30d": 1,
+    "paywall_purchase_success_events_30d": 1
   }
 }
