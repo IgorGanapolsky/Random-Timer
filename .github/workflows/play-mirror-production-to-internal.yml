@@ -94,16 +94,14 @@ jobs:
                   body={"releases": [body_release]},
               ).execute()
 
+              # Play edits.testers API supports googleGroups only (not individual emails).
               if tester_email:
-                  print("Ensuring internal tester email is on internal track list")
-                  svc.edits().testers().update(
-                      packageName=pkg,
-                      editId=eid,
-                      track="internal",
-                      body={"googleGroups": [], "emails": [tester_email]},
-                  ).execute()
+                  print(
+                      "ℹ️ FIREBASE_REQUIRED_TESTER_EMAIL is set; "
+                      "individual emails must be managed in Play Console UI (API limitation)."
+                  )
               else:
-                  print("⚠️ FIREBASE_REQUIRED_TESTER_EMAIL not set; skipping tester update")
+                  print("⚠️ FIREBASE_REQUIRED_TESTER_EMAIL not set")
 
               commit = svc.edits().commit(
                   packageName=pkg,
