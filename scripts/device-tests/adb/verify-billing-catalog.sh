@@ -1,17 +1,22 @@
 #!/usr/bin/env bash
 # verify-billing-catalog.sh — Retail-device billing catalog smoke via adb + PostHog correlation hints.
 # Opens paywall path, captures logcat billing lines, prints device/package version for evidence.
+# Requires PLAY_BILLING_TEST_MODE=1 or a license-tester device account (see lib/billing-guard.sh).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/common.sh
 source "$SCRIPT_DIR/lib/common.sh"
+# shellcheck source=lib/billing-guard.sh
+source "$SCRIPT_DIR/lib/billing-guard.sh"
 
 DEVICE_COUNT=$(adb devices | grep -c "device$" || true)
 if [ "$DEVICE_COUNT" -eq 0 ]; then
   echo "No Android device connected." >&2
   exit 2
 fi
+
+assert_play_billing_test_safe
 
 MODEL=$(adb shell getprop ro.product.model 2>/dev/null | tr -d '\r')
 SERIAL=$(adb devices -l | awk '/device usb/ {print $1; exit}')
