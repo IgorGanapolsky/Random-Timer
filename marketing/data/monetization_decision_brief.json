@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-06-10T18:02:05Z",
-  "source": "posthog_first_purchase_success_s25_2026_06_10",
-  "window_days": 7,
+  "generated_at": "2026-06-10T19:48:52Z",
+  "source": "gsd_stream_b_paywall_conversion_posthog_mcp_2026_06_10",
+  "window_days": 30,
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "issue_ref": "https://github.com/IgorGanapolsky/Random-Timer/issues/1684",
   "issue_1684": {
@@ -24,11 +24,82 @@
     "monthly_catalog_fix_pr": 1757
   },
   "posthog_queries": [
-    "paywall_purchase_success 7d count (telemetry proxy, not ledger revenue)",
-    "paywall_purchase_success properties on SM-S931U1 1.3.55",
-    "billing_product_catalog_status 7d breakdown by status"
+    "execute-sql: paywall funnel events 30d Android $app_version=1.3.55",
+    "execute-sql: billing_product_not_found breakdown by billing_response_label",
+    "execute-sql: billing_product_catalog_status breakdown by status"
   ],
-  "snapshot": "First paywall_purchase_success telemetry on S25 (SM-S931U1) Play-installed 1.3.55 @ 2026-06-10T18:00:04Z — product_id=elite_tactical, revenue_telemetry=29.99. Unintended retail charge GPA.3311-0689-1321-89557 (CEO not on license testers). PostHog 7d: 1 success / 1 user. Issue #1684 CLOSED.",
+  "paywall_funnel_1_3_55_android_30d": {
+    "cohort_filter": "properties.$app_version = '1.3.55' AND properties.$os = 'Android'",
+    "window": "30d trailing to 2026-06-10T19:47:48Z",
+    "distinct_users": 2,
+    "steps": {
+      "paywall_viewed": 9,
+      "paywall_offer_select": 5,
+      "paywall_purchase_attempt": 2,
+      "paywall_purchase_success": 1
+    },
+    "step_drop_offs": {
+      "viewed_to_attempt": 7,
+      "select_to_attempt": 3,
+      "attempt_to_success": 1
+    },
+    "primary_drop_off_step": "viewed_to_attempt",
+    "failure_telemetry": {
+      "billing_product_not_found": 21,
+      "billing_product_catalog_status_billing_not_ready": 3,
+      "paywall_dismissed": 1,
+      "billing_product_catalog_status_product_details_unsupported": 10,
+      "billing_product_catalog_status_play_store_update_required": 8
+    },
+    "product_not_found_detail": {
+      "billing_response_label": "FEATURE_NOT_SUPPORTED",
+      "per_product_counts": {
+        "elite_tactical": 7,
+        "elite_tactical_monthly": 7,
+        "pro_base": 7
+      },
+      "note": "Catalog probe telemetry on ProductDetails-unsupported path; not isolated to paywall CTA failure"
+    },
+    "only_product_with_attempts": "elite_tactical"
+  },
+  "ranked_fix_list": [
+    {
+      "rank": 1,
+      "fix": "license_tester_qa_before_more_iap",
+      "rationale": "Retail charge on S25 1.3.55; attempt→success n=1/2 on 1.3.55 — validate on license testers before more product changes",
+      "code_change": false,
+      "evidence": "purchase_success_1 attempt_2 users_2 on 1.3.55 Android 30d"
+    },
+    {
+      "rank": 2,
+      "fix": "monitor_select_to_attempt_gap",
+      "rationale": "5 offer_select → 2 attempt (3 silent drops); may be dismiss/not-now or billing gate toast without attempt event",
+      "code_change": false,
+      "evidence": "select_to_attempt drop 3 events / 30d 1.3.55"
+    },
+    {
+      "rank": 3,
+      "fix": "telemetry_gate_product_not_found_on_legacy_ok",
+      "rationale": "21 billing_product_not_found all FEATURE_NOT_SUPPORTED — reduce false-positive catalog noise after legacy SKU path populates cache",
+      "code_change": true,
+      "evidence": "billing_product_not_found 21 vs billing_not_ready 3 vs dismiss 1"
+    },
+    {
+      "rank": 4,
+      "fix": "monthly_elite_conversion_followup",
+      "rationale": "Broader 30d cohort: elite_tactical_monthly 33 selects / 1 attempt / 0 success — needs license-tester replay on 1.3.55+",
+      "code_change": false,
+      "evidence": "paywall_conversion_report.json product_funnel elite_tactical_monthly"
+    },
+    {
+      "rank": 5,
+      "fix": "hold_paid_ads",
+      "rationale": "WQTU + paywall volume too low to optimize conversion at scale",
+      "code_change": false,
+      "evidence": "2 distinct users on 1.3.55 Android 30d funnel"
+    }
+  ],
+  "snapshot": "GSD stream B: 1.3.55 Android 30d funnel viewed 9→attempt 2→success 1 (2 users). #1 step drop-off viewed→attempt (7 events). Among failure labels: product_not_found 21 (FEATURE_NOT_SUPPORTED probe), billing_not_ready 3, dismiss 1. No minimal code fix shipped — sample too small; retail IAP QA blocked on license testers.",
   "counts": {
     "purchase_success_7d": 1,
     "purchase_success_30d": 1,
@@ -37,6 +108,9 @@
     "purchase_attempts_today_total": 1,
     "purchase_success_today": 1,
     "purchase_attempts_30d": 5,
+    "paywall_viewed_1_3_55_android_30d": 9,
+    "paywall_attempt_1_3_55_android_30d": 2,
+    "paywall_success_1_3_55_android_30d": 1,
     "play_api_version_name": "1.3.55",
     "play_api_version_code": 1781012436,
     "public_listing_version_name": "1.3.43",
@@ -56,12 +130,13 @@
     "ledger_revenue": true,
     "note": "Unintended retail charge — add CEO to Play license testers before further IAP QA."
   },
-  "decision": "first_purchase_success_telemetry_confirmed_retail_charge_refund",
+  "decision": "no_code_fix_shipped_insufficient_signal_license_tester_qa_first",
+  "code_fix_shipped": false,
   "research_doc": "marketing/data/june_2026_monetization_research.md",
   "recommended_next_actions": [
-    "refund_play_order: GPA.3311-0689-1321-89557 via Play Console Orders",
     "license_tester: add iganapolsky@gmail.com to Play Console Settings → License testing",
-    "do_not_claim_revenue: purchase_success is telemetry proxy; ledger revenue not connected",
-    "Hold paid ads until license-tester IAP QA and attempt→success validated without retail charges"
+    "refund_play_order: GPA.3311-0689-1321-89557 via Play Console Orders",
+    "Replay 5 offer_select → 2 attempt gap on license-tester device before CTA/billing code changes",
+    "Hold paid ads until attempt→success validated without retail charges"
   ]
 }
