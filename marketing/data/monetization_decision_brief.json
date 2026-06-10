@@ -1,28 +1,15 @@
 {
   "generated_at": "2026-06-10T19:49:02Z",
   "source": "posthog_hogql_gsd_stream_c_2026_06_10",
-  "window_days": 7,
+  "gsd_cycle": 1,
+  "window_days": 30,
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
+  "research_doc": "marketing/data/june_2026_monetization_research.md",
   "issue_ref": "https://github.com/IgorGanapolsky/Random-Timer/issues/1684",
   "issue_1684": {
     "state": "CLOSED",
     "closed_at": "2026-06-10T17:04:50Z",
     "close_evidence": "billing_product_catalog_status=ok + paywall_purchase_attempt on S25 (SM-S931U1) 1.3.55 @ 2026-06-10T17:03:49Z product_id=elite_tactical"
-  },
-  "ship_evidence": {
-    "workflow_run_id": 27209581950,
-    "workflow_conclusion": "success",
-    "git_tag": "v1.3.55",
-    "git_tag_sha": "2a03f3f8",
-    "ship_date_utc": "2026-06-09",
-    "play_api_track": "production",
-    "play_api_version_name": "1.3.55",
-    "play_api_version_code": 1781012436,
-    "play_api_status": "completed",
-    "public_listing_version_name_android": "1.3.55",
-    "public_listing_version_name_ios": "1.3.43",
-    "public_listing_note": "Play public HTML proxy 1.3.55 (post_publish_revenue_gate 2026-06-10); iOS storefront HTML still 1.3.43",
-    "monthly_catalog_fix_pr": 1757
   },
   "posthog_queries": [
     "WQTU: distinct person_id with >=3 timer_completed in trailing 7d",
@@ -34,12 +21,15 @@
     "wqtu_7d": 11,
     "timer_completed_7d": 153,
     "completed_users_7d": 24,
+    "wqtu_target_q2_2026": 25,
+    "wqtu_query": "distinct persons with >=3 timer_completed in trailing 7d (PostHog MCP execute-sql 2026-06-10T19:47:48Z)",
     "targets": {
       "checkpoint_2026_03_31": 8,
       "quarter_2026_06_30": 25
     },
     "on_track_checkpoint": true,
     "on_track_quarter": false,
+    "status": "below_target",
     "metric_id": "posthog_hogql_wqtu_distinct_persons_timer_completed_ge3_7d"
   },
   "timer_completed_trend_14d": [
@@ -58,6 +48,28 @@
     {"day": "2026-05-29", "events": 17, "users": 2},
     {"day": "2026-05-28", "events": 4, "users": 3}
   ],
+  "revenue_goal": {
+    "target_usd_per_day_after_tax": 100.0,
+    "pro_annual_price_usd": 29.99,
+    "net_per_sale_usd_estimate": 17.84,
+    "sales_per_day_needed": 5.6,
+    "posthog_revenue_proxy_usd_per_day": 0.59,
+    "posthog_revenue_proxy_30d_sum": 29.99,
+    "posthog_revenue_proxy_7d_sum": 29.99,
+    "gap_usd_per_day": 99.41,
+    "gap_annual_subs_per_day": 5.57,
+    "gap_math_note": "$29.99 gross → ~$17.84 net after 15% store fee + 30% tax → ~5.6 annual Pro subs/day for $100/day net (docs/marketing/monetization-roadmap.md)",
+    "metric_id": "paywall_purchase_success properties.revenue is telemetry proxy not ledger",
+    "ledger_revenue": false
+  },
+  "gap_math": {
+    "source_doc": "docs/marketing/monetization-roadmap.md",
+    "store_fee_pct": 0.15,
+    "tax_pct": 0.30,
+    "telemetry_proxy_net_usd_per_day_30d": 0.59,
+    "telemetry_proxy_net_usd_per_day_7d": 2.55,
+    "calculation_note": "net_per_sub = gross * (1-store_fee) * (1-tax); daily proxy = (success_count * net_per_sub) / window_days"
+  },
   "paywall_funnel": {
     "metric_note": "PostHog event counts; paywall_purchase_success is telemetry proxy, not store ledger revenue",
     "7d": {
@@ -76,48 +88,62 @@
       "attempt_to_success_rate": 0.1667
     }
   },
-  "revenue_telemetry_proxy": {
-    "metric_id": "posthog_hogql_sum_paywall_purchase_success_properties_revenue",
-    "ledger_revenue": false,
-    "note": "Telemetry from paywall_purchase_success properties.revenue — not App Store Connect or Play billing proceeds",
-    "gross_sum_7d": 29.99,
-    "gross_sum_30d": 29.99,
-    "success_events_7d": 1,
-    "success_events_30d": 1,
-    "success_users_7d": 1,
-    "success_users_30d": 1
+  "paywall_funnel_30d": {
+    "paywall_viewed_users": 216,
+    "paywall_viewed_events": 415,
+    "paywall_offer_select_events": 61,
+    "paywall_purchase_attempt_users": 4,
+    "paywall_purchase_attempt_events": 6,
+    "paywall_purchase_success_users": 1,
+    "paywall_purchase_success_events": 1,
+    "view_to_attempt_pct": 1.9,
+    "attempt_to_success_pct": 16.7,
+    "view_to_success_pct": 0.24,
+    "billing_product_not_found_android_30d": 1104,
+    "posthog_query_evidence": "execute-sql 2026-06-10T19:49:02Z project 299775"
   },
-  "gap_math": {
-    "source_doc": "docs/marketing/monetization-roadmap.md",
-    "target_usd_per_day_after_tax": 100.0,
-    "anchor_price_gross_usd": 29.99,
-    "store_fee_pct": 0.15,
-    "tax_pct": 0.30,
-    "net_per_annual_sub_after_tax_usd": 17.84,
-    "required_annual_subs_per_day": 5.6,
-    "telemetry_proxy_net_usd_per_day_30d": 0.59,
-    "telemetry_proxy_net_usd_per_day_7d": 2.55,
-    "gap_usd_per_day_vs_target_30d_proxy": 99.41,
-    "gap_annual_subs_per_day_30d_proxy": 5.57,
-    "calculation_note": "net_per_sub = gross * (1-store_fee) * (1-tax); daily proxy = (success_count * net_per_sub) / window_days; gap = target - daily_proxy"
+  "store_parity": {
+    "android_play_api_version": "1.3.55",
+    "android_play_api_version_code": 1781012436,
+    "android_public_version": "1.3.55",
+    "ios_public_version": "1.3.43",
+    "ios_repo_marketing_version": "1.3.55",
+    "parity_gap": "iOS public 12 minor versions behind Android production",
+    "top_blocker": "ios_store_parity_blocked_on_testflight_signoff"
   },
-  "snapshot": "WQTU 7d=11 (quarter target 25). First paywall_purchase_success telemetry on S25 1.3.55 (elite_tactical, $29.99 gross telemetry). PostHog 30d: 1 success / 415 views. Revenue telemetry proxy ~$0.59/day net (30d) vs $100/day after-tax goal — gap ~$99.41/day (~5.6 annual subs/day). Play public listing 1.3.55; iOS public still 1.3.43. Issue #1684 CLOSED.",
-  "counts": {
-    "wqtu_7d": 11,
-    "timer_completed_7d": 153,
-    "completed_users_7d": 24,
-    "purchase_success_7d": 1,
-    "purchase_success_30d": 1,
-    "purchase_success_distinct_users_7d": 1,
-    "purchase_attempts_30d": 6,
-    "paywall_views_7d": 27,
-    "paywall_views_30d": 415,
-    "play_api_version_name": "1.3.55",
-    "play_api_version_code": 1781012436,
-    "public_listing_version_name_android": "1.3.55",
-    "public_listing_version_name_ios": "1.3.43",
-    "issue_1684_state": "CLOSED"
+  "ship_evidence": {
+    "android_workflow_run_id": 27209581950,
+    "android_workflow_conclusion": "success",
+    "android_git_tag": "v1.3.55",
+    "android_git_tag_sha": "2a03f3f8",
+    "android_ship_date_utc": "2026-06-09",
+    "play_api_track": "production",
+    "play_api_status": "completed",
+    "public_listing_note": "post_publish_revenue_gate 2026-06-10: Android PUBLIC 1.3.55; iOS VERSION_MISMATCH 1.3.43"
   },
+  "ceo_gates": {
+    "testflight_signoff": {
+      "status": "waiting",
+      "environment": "testflight-signoff",
+      "internal_distribution_run_id": 27296749967,
+      "internal_distribution_run_url": "https://github.com/IgorGanapolsky/Random-Timer/actions/runs/27296749967",
+      "job": "iOS TestFlight Signoff",
+      "unblocks": "internal-signoff/testflight commit status → native-release.yml iOS production upload",
+      "evidence": "Run waiting 1h+ as of 2026-06-10T19:48Z; Gate Internal Distribution job success; iOS TestFlight Signoff + Android Firebase Signoff waiting CEO Review deployments"
+    },
+    "production_signoff": {
+      "status": "blocked_prerequisite",
+      "last_ios_release_attempt_run_id": 27301825232,
+      "last_ios_release_attempt_url": "https://github.com/IgorGanapolsky/Random-Timer/actions/runs/27301825232",
+      "failure_reason": "missing required status internal-signoff/testflight on release/v1.3.55 SHA"
+    },
+    "firebase_signoff": {
+      "status": "waiting",
+      "internal_distribution_run_id": 27296749967,
+      "job": "Android Firebase Signoff"
+    }
+  },
+  "snapshot": "WQTU 7d=11 (quarter target 25). First paywall_purchase_success on S25 1.3.55 ($29.99 telemetry). Revenue telemetry proxy ~$0.59/day net (30d) vs $100/day goal — gap ~$99.41/day (~5.6 annual subs/day). Android public 1.3.55; iOS public 1.3.43. Issue #1684 CLOSED.",
   "first_purchase_success_telemetry": {
     "timestamp": "2026-06-10T18:00:04Z",
     "app_version": "1.3.55",
@@ -132,14 +158,22 @@
     "ledger_revenue": true,
     "note": "Unintended retail charge — add CEO to Play license testers before further IAP QA."
   },
-  "decision": "wqtu_on_track_checkpoint_revenue_proxy_far_from_100_per_day_hold_paid_scale",
-  "research_doc": "marketing/data/june_2026_monetization_research.md",
+  "decision": "gsd_cycle_1_ios_parity_blocked_revenue_proxy_far_from_100_per_day",
+  "priority_blocker": {
+    "rank": 3,
+    "category": "store_parity_ios",
+    "reason": "Revenue blocker #1684 closed (Android 1.3.55 live + public). Paywall view→success 0.24% (30d). iOS 1.3.55 blocked on testflight-signoff run 27296749967.",
+    "next_code_cycle": "paywall_attempt_rate_after_ios_parity — validate view→attempt on 1.3.55+ cohorts post license-tester QA"
+  },
   "recommended_next_actions": [
-    "refund_play_order: GPA.3311-0689-1321-89557 via Play Console Orders",
-    "license_tester: add iganapolsky@gmail.com to Play Console Settings → License testing",
-    "do_not_claim_revenue: purchase_success is telemetry proxy; ledger revenue not connected in executive snapshot",
-    "conversion: improve paywall view→success (30d 0.24%) before paid acquisition scale",
-    "Hold paid ads until license-tester IAP QA and attempt→success validated without retail charges",
-    "iOS: ship 1.3.55 to App Store public listing (still 1.3.43 on storefront proxy)"
-  ]
+    "CEO: approve testflight-signoff on https://github.com/IgorGanapolsky/Random-Timer/actions/runs/27296749967",
+    "CEO: approve firebase-signoff on same run (Android internal proof for production gate)",
+    "After signoffs: gh workflow run native-release.yml --ref release/v1.3.55 -f platform=ios",
+    "refund_play_order GPA.3311-0689-1321-89557 + add iganapolsky@gmail.com to Play license testers",
+    "Hold paid ads until iOS parity + license-tester IAP QA; revenue proxy ~$0.59/day vs $100/day target"
+  ],
+  "gsd_cycle_1_artifact": {
+    "type": "marketing_data_json_pr",
+    "branch": "feat/gsd-monetization-brief"
+  }
 }
