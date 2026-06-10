@@ -1,9 +1,13 @@
 {
-  "generated_at": "2026-06-09T14:05:00Z",
-  "source": "native_release_27209581950_play_api_verify_2026_06_09",
+  "generated_at": "2026-06-10T18:02:05Z",
+  "source": "posthog_first_purchase_success_s25_2026_06_10",
   "window_days": 7,
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "issue_ref": "https://github.com/IgorGanapolsky/Random-Timer/issues/1684",
+  "issue_1684": {
+    "state": "CLOSED",
+    "closed_at": "2026-06-10T17:04:50Z"
+  },
   "ship_evidence": {
     "workflow_run_id": 27209581950,
     "workflow_conclusion": "success",
@@ -19,29 +23,39 @@
     "monthly_catalog_fix_pr": 1757
   },
   "posthog_queries": [
-    "billing_product_catalog_status 1h by app_version=1.3.55 and device_model=SM-S931U1",
-    "billing_product_catalog_status 7d breakdown by status",
-    "paywall funnel 7d",
-    "purchase_success 30d (telemetry proxy, not ledger revenue)"
+    "paywall_purchase_success 7d count (telemetry proxy, not ledger revenue)",
+    "paywall_purchase_success properties on SM-S931U1 1.3.55",
+    "billing_product_catalog_status 7d breakdown by status"
   ],
-  "snapshot": "Android 1.3.55 shipped Play production via native-release run 27209581950. Play Publisher API readback: versionCode 1781012436 (1.3.55) status=completed on production track. Public listing HTML proxy still 1.3.43 after 900s poll (propagation lag; non-blocking). PR #1757 monthly catalog fix merged. PostHog last 1h: 8 billing_product_catalog_status events / 4 users on 1.3.55 (OnePlus8Pro) — statuses play_store_update_required and product_details_unsupported; zero status=ok; no SM-S931U1 events. S25 (R3CY90QPM7E) not connected via adb. Issue #1684 remains open pending retail Play update + catalog ok with elite_tactical_monthly.",
+  "snapshot": "First paywall_purchase_success telemetry on S25 (SM-S931U1) Play-installed 1.3.55 @ 2026-06-10T18:00:04Z — product_id=elite_tactical, revenue_telemetry=29.99, license tester. PostHog 7d: 1 success / 1 user. Issue #1684 CLOSED. NOT ledger revenue.",
   "counts": {
-    "billing_catalog_status_events_1_3_55_1h": 8,
-    "billing_catalog_users_1_3_55_1h": 4,
-    "billing_catalog_ok_1_3_55_1h": 0,
-    "billing_catalog_sm_s931u1_1h": 0,
+    "purchase_success_7d": 1,
+    "purchase_success_30d": 1,
+    "purchase_success_distinct_users_7d": 1,
+    "purchase_attempts_30d": 5,
     "play_api_version_name": "1.3.55",
     "play_api_version_code": 1781012436,
     "public_listing_version_name": "1.3.43",
-    "purchase_attempts_30d": 4,
-    "purchase_success_30d": 0
+    "issue_1684_state": "CLOSED"
   },
-  "decision": "keep_issue_1684_open_awaiting_play_update_on_s25",
+  "first_purchase_success_telemetry": {
+    "timestamp": "2026-06-10T18:00:04Z",
+    "app_version": "1.3.55",
+    "device_model": "SM-S931U1",
+    "platform": "android",
+    "product_id": "elite_tactical",
+    "revenue_telemetry": 29.99,
+    "source": "paywall",
+    "entry_point": "range_gate",
+    "license_tester": true,
+    "ledger_revenue": false,
+    "note": "paywall_purchase_success is in-app telemetry only — not Play/App Store ledger proceeds"
+  },
+  "decision": "first_purchase_success_telemetry_confirmed_not_ledger",
   "research_doc": "marketing/data/june_2026_monetization_research.md",
   "recommended_next_actions": [
-    "issue_1684: keep open; require billing_product_catalog_status.status=ok with elite_tactical_monthly on Play-installed S25 after public listing propagates",
-    "ceo_qa: tap Update on S25 Play Store (market://details?id=com.iganapolsky.randomtimer) then run verify-billing-catalog.sh",
+    "wire_store_ledger: confirm purchase in Play Console billing before revenue claims",
     "do_not_claim_revenue: purchase_success is telemetry proxy; ledger revenue not connected",
-    "Hold paid ads until catalog ok on production retail cohort and paywall attempt→success > 0"
+    "Hold paid ads until non-tester retail purchase success or ledger row"
   ]
 }

@@ -1,6 +1,6 @@
 {
   "source": "post_publish_revenue_gate",
-  "generated_at": "2026-06-09T14:04:34Z",
+  "generated_at": "2026-06-10T18:02:05Z",
   "expected_source": "github_latest_release",
   "expected_ios": "1.3.55",
   "expected_android": "1.3.55",
@@ -21,12 +21,32 @@
       "status": "VERSION_MISMATCH"
     }
   ],
-  "paywall_proxy": {
-    "generated_at": "2026-06-08T16:24:49+00:00",
-    "purchase_successes_30d": 0,
-    "purchase_attempts_30d": 4
+  "billing_catalog_gate": {
+    "issue_ref": "https://github.com/IgorGanapolsky/Random-Timer/issues/1684",
+    "state": "CLOSED",
+    "closed_at": "2026-06-10T17:04:50Z"
   },
-  "revenue_note": "store_public_pass does not imply revenue; check paywall_purchase_success in PostHog.",
+  "paywall_proxy": {
+    "generated_at": "2026-06-10T18:02:05Z",
+    "metric_id": "posthog_hogql_count_events_paywall_purchase_success",
+    "purchase_successes_7d": 1,
+    "purchase_successes_30d": 1,
+    "purchase_attempts_30d": 5,
+    "first_purchase_success_telemetry": {
+      "timestamp": "2026-06-10T18:00:04Z",
+      "app_version": "1.3.55",
+      "device_model": "SM-S931U1",
+      "platform": "android",
+      "product_id": "elite_tactical",
+      "revenue_telemetry": 29.99,
+      "source": "paywall",
+      "entry_point": "range_gate",
+      "license_tester": true,
+      "ledger_revenue": false,
+      "note": "paywall_purchase_success is in-app telemetry only — not Play/App Store ledger proceeds"
+    }
+  },
+  "revenue_note": "store_public_pass does not imply revenue; paywall_purchase_success is telemetry proxy only (not ledger revenue).",
   "ship_evidence": {
     "workflow_run_id": 27209581950,
     "workflow_conclusion": "success",
