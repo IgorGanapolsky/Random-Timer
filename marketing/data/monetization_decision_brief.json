@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-06-10T18:02:05Z",
-  "source": "posthog_first_purchase_success_s25_2026_06_10",
+  "generated_at": "2026-06-10T19:49:02Z",
+  "source": "posthog_hogql_gsd_stream_c_2026_06_10",
   "window_days": 7,
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "issue_ref": "https://github.com/IgorGanapolsky/Random-Timer/issues/1684",
@@ -19,27 +19,103 @@
     "play_api_version_name": "1.3.55",
     "play_api_version_code": 1781012436,
     "play_api_status": "completed",
-    "public_listing_version_name": "1.3.43",
-    "public_listing_note": "Storefront HTML proxy still 1.3.43 at verify-releases 900s timeout; Play Publisher API production completed",
+    "public_listing_version_name_android": "1.3.55",
+    "public_listing_version_name_ios": "1.3.43",
+    "public_listing_note": "Play public HTML proxy 1.3.55 (post_publish_revenue_gate 2026-06-10); iOS storefront HTML still 1.3.43",
     "monthly_catalog_fix_pr": 1757
   },
   "posthog_queries": [
-    "paywall_purchase_success 7d count (telemetry proxy, not ledger revenue)",
-    "paywall_purchase_success properties on SM-S931U1 1.3.55",
-    "billing_product_catalog_status 7d breakdown by status"
+    "WQTU: distinct person_id with >=3 timer_completed in trailing 7d",
+    "timer_completed daily trend 14d",
+    "paywall funnel 7d and 30d (view/attempt/success/failed)",
+    "paywall_purchase_success revenue telemetry sum 7d/30d (not ledger)"
   ],
-  "snapshot": "First paywall_purchase_success telemetry on S25 (SM-S931U1) Play-installed 1.3.55 @ 2026-06-10T18:00:04Z — product_id=elite_tactical, revenue_telemetry=29.99. Unintended retail charge GPA.3311-0689-1321-89557 (CEO not on license testers). PostHog 7d: 1 success / 1 user. Issue #1684 CLOSED.",
+  "north_star": {
+    "wqtu_7d": 11,
+    "timer_completed_7d": 153,
+    "completed_users_7d": 24,
+    "targets": {
+      "checkpoint_2026_03_31": 8,
+      "quarter_2026_06_30": 25
+    },
+    "on_track_checkpoint": true,
+    "on_track_quarter": false,
+    "metric_id": "posthog_hogql_wqtu_distinct_persons_timer_completed_ge3_7d"
+  },
+  "timer_completed_trend_14d": [
+    {"day": "2026-06-10", "events": 19, "users": 3},
+    {"day": "2026-06-09", "events": 17, "users": 8},
+    {"day": "2026-06-08", "events": 7, "users": 2},
+    {"day": "2026-06-07", "events": 37, "users": 5},
+    {"day": "2026-06-06", "events": 19, "users": 3},
+    {"day": "2026-06-05", "events": 3, "users": 2},
+    {"day": "2026-06-04", "events": 49, "users": 5},
+    {"day": "2026-06-03", "events": 45, "users": 5},
+    {"day": "2026-06-02", "events": 5, "users": 5},
+    {"day": "2026-06-01", "events": 9, "users": 3},
+    {"day": "2026-05-31", "events": 33, "users": 4},
+    {"day": "2026-05-30", "events": 1, "users": 1},
+    {"day": "2026-05-29", "events": 17, "users": 2},
+    {"day": "2026-05-28", "events": 4, "users": 3}
+  ],
+  "paywall_funnel": {
+    "metric_note": "PostHog event counts; paywall_purchase_success is telemetry proxy, not store ledger revenue",
+    "7d": {
+      "paywall_view": {"events": 27, "users": 13},
+      "paywall_purchase_attempt": {"events": 2, "users": 1},
+      "paywall_purchase_success": {"events": 1, "users": 1},
+      "view_to_success_rate": 0.037,
+      "attempt_to_success_rate": 0.5
+    },
+    "30d": {
+      "paywall_view": {"events": 415, "users": 216},
+      "paywall_purchase_attempt": {"events": 6, "users": 4},
+      "paywall_purchase_failed": {"events": 5, "users": 4},
+      "paywall_purchase_success": {"events": 1, "users": 1},
+      "view_to_success_rate": 0.0024,
+      "attempt_to_success_rate": 0.1667
+    }
+  },
+  "revenue_telemetry_proxy": {
+    "metric_id": "posthog_hogql_sum_paywall_purchase_success_properties_revenue",
+    "ledger_revenue": false,
+    "note": "Telemetry from paywall_purchase_success properties.revenue — not App Store Connect or Play billing proceeds",
+    "gross_sum_7d": 29.99,
+    "gross_sum_30d": 29.99,
+    "success_events_7d": 1,
+    "success_events_30d": 1,
+    "success_users_7d": 1,
+    "success_users_30d": 1
+  },
+  "gap_math": {
+    "source_doc": "docs/marketing/monetization-roadmap.md",
+    "target_usd_per_day_after_tax": 100.0,
+    "anchor_price_gross_usd": 29.99,
+    "store_fee_pct": 0.15,
+    "tax_pct": 0.30,
+    "net_per_annual_sub_after_tax_usd": 17.84,
+    "required_annual_subs_per_day": 5.6,
+    "telemetry_proxy_net_usd_per_day_30d": 0.59,
+    "telemetry_proxy_net_usd_per_day_7d": 2.55,
+    "gap_usd_per_day_vs_target_30d_proxy": 99.41,
+    "gap_annual_subs_per_day_30d_proxy": 5.57,
+    "calculation_note": "net_per_sub = gross * (1-store_fee) * (1-tax); daily proxy = (success_count * net_per_sub) / window_days; gap = target - daily_proxy"
+  },
+  "snapshot": "WQTU 7d=11 (quarter target 25). First paywall_purchase_success telemetry on S25 1.3.55 (elite_tactical, $29.99 gross telemetry). PostHog 30d: 1 success / 415 views. Revenue telemetry proxy ~$0.59/day net (30d) vs $100/day after-tax goal — gap ~$99.41/day (~5.6 annual subs/day). Play public listing 1.3.55; iOS public still 1.3.43. Issue #1684 CLOSED.",
   "counts": {
+    "wqtu_7d": 11,
+    "timer_completed_7d": 153,
+    "completed_users_7d": 24,
     "purchase_success_7d": 1,
     "purchase_success_30d": 1,
     "purchase_success_distinct_users_7d": 1,
-    "purchase_attempts_today_1_3_55": 1,
-    "purchase_attempts_today_total": 1,
-    "purchase_success_today": 1,
-    "purchase_attempts_30d": 5,
+    "purchase_attempts_30d": 6,
+    "paywall_views_7d": 27,
+    "paywall_views_30d": 415,
     "play_api_version_name": "1.3.55",
     "play_api_version_code": 1781012436,
-    "public_listing_version_name": "1.3.43",
+    "public_listing_version_name_android": "1.3.55",
+    "public_listing_version_name_ios": "1.3.43",
     "issue_1684_state": "CLOSED"
   },
   "first_purchase_success_telemetry": {
@@ -56,12 +132,14 @@
     "ledger_revenue": true,
     "note": "Unintended retail charge — add CEO to Play license testers before further IAP QA."
   },
-  "decision": "first_purchase_success_telemetry_confirmed_retail_charge_refund",
+  "decision": "wqtu_on_track_checkpoint_revenue_proxy_far_from_100_per_day_hold_paid_scale",
   "research_doc": "marketing/data/june_2026_monetization_research.md",
   "recommended_next_actions": [
     "refund_play_order: GPA.3311-0689-1321-89557 via Play Console Orders",
     "license_tester: add iganapolsky@gmail.com to Play Console Settings → License testing",
-    "do_not_claim_revenue: purchase_success is telemetry proxy; ledger revenue not connected",
-    "Hold paid ads until license-tester IAP QA and attempt→success validated without retail charges"
+    "do_not_claim_revenue: purchase_success is telemetry proxy; ledger revenue not connected in executive snapshot",
+    "conversion: improve paywall view→success (30d 0.24%) before paid acquisition scale",
+    "Hold paid ads until license-tester IAP QA and attempt→success validated without retail charges",
+    "iOS: ship 1.3.55 to App Store public listing (still 1.3.43 on storefront proxy)"
   ]
 }
