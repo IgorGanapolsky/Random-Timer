@@ -28,7 +28,12 @@ import com.iganapolsky.randomtimer.billing.ProManager
 import com.iganapolsky.randomtimer.monetization.QualifiedTrainingPaywallPolicy
 import com.iganapolsky.randomtimer.monetization.QualifiedTrainingPaywallStore
 import com.iganapolsky.randomtimer.ui.screens.ActiveTimerScreen
+import com.iganapolsky.randomtimer.ui.screens.PAYWALL_BILLING_REFRESH_DELAY_MS
+import com.iganapolsky.randomtimer.ui.screens.PAYWALL_BILLING_REFRESH_MAX_ATTEMPTS
+import com.iganapolsky.randomtimer.ui.screens.PaywallBillingSnapshot
 import com.iganapolsky.randomtimer.ui.screens.PaywallSheet
+import com.iganapolsky.randomtimer.ui.screens.shouldContinuePaywallBillingRefresh
+import kotlinx.coroutines.delay
 import com.iganapolsky.randomtimer.ui.screens.isPaywallPurchaseAllowed
 import com.iganapolsky.randomtimer.ui.screens.TimerSetupScreen
 import com.iganapolsky.randomtimer.ui.viewmodel.TimerViewModel
@@ -267,6 +272,25 @@ fun RandomTimerNavHost(
     LaunchedEffect(showPaywall, paywallEntryPoint, paywallDefaultToAnnual) {
         if (showPaywall) {
             viewModel.trackPaywallViewed(paywallEntryPoint, paywallDefaultToAnnual)
+        }
+    }
+
+    LaunchedEffect(showPaywall) {
+        if (!showPaywall) return@LaunchedEffect
+        repeat(PAYWALL_BILLING_REFRESH_MAX_ATTEMPTS) { attempt ->
+            paywallAvailableProductIds = viewModel.proManager.availablePaywallProductIds()
+            paywallBillingReady = viewModel.proManager.isBillingClientReady()
+            paywallBillingCatalogProbed = true
+            val snapshot =
+                PaywallBillingSnapshot(
+                    catalogProbed = paywallBillingCatalogProbed,
+                    billingReady = paywallBillingReady,
+                    availableProductIds = paywallAvailableProductIds,
+                )
+            if (!shouldContinuePaywallBillingRefresh(snapshot, attempt)) {
+                return@LaunchedEffect
+            }
+            delay(PAYWALL_BILLING_REFRESH_DELAY_MS)
         }
     }
 
