@@ -1,0 +1,141 @@
+{
+  "generated_at": "2026-06-10T19:50:00+00:00",
+  "source": "ml_ranking_monetization_v1",
+  "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
+  "business_goal_usd_per_day_after_tax": 100.0,
+  "net_revenue_per_annual_sub_usd": 17.84,
+  "subs_per_day_required": 5.97,
+  "current_subs_per_day_proxy": 0.033,
+  "revenue_gap_usd_per_day": 99.41,
+  "budget_cap_usd_per_month": 20,
+  "score_formula": "score = (expected_daily_revenue_delta_usd / effort_hours) * confidence * (1 - risk)",
+  "confidence_model": "confidence = min(1, sqrt(sample_n / 200)) * min(1, max(purchase_successes, funnel_leak_views) / 10)",
+  "effort_hours": {
+    "ios_ship": 8,
+    "paywall_fix": 4,
+    "ads": "blocked",
+    "aso": 2,
+    "price_test": 6
+  },
+  "live_posthog_evidence": {
+    "query_window_days": 30,
+    "wqtu_7d": 11,
+    "paid_distinct_users_30d": 1,
+    "paywall_views": 365,
+    "paywall_attempts": 6,
+    "paywall_successes": 1,
+    "view_to_attempt_rate": 0.0164,
+    "attempt_to_success_rate": 0.1667,
+    "open_to_completed_rate": 0.0849,
+    "leaky_entry_points": {
+      "voice_gate": { "views": 118, "offer_selects": 22, "attempts": 0 },
+      "repeat_gate": { "views": 31, "attempts": 0 },
+      "unknown": { "views": 35, "attempts": 0 },
+      "qualified_training_gate": { "views": 11, "offer_selects": 0, "attempts": 0 }
+    },
+    "posthog_query_refs": [
+      "execute-sql paywall funnel 30d 2026-06-10",
+      "execute-sql wqtu 7d 2026-06-10",
+      "execute-sql entry_point breakdown 2026-06-10"
+    ]
+  },
+  "memory_recall": {
+    "store_publishing": "not verified (empty)",
+    "automation": "not verified (empty)",
+    "debugging": "not verified (empty)"
+  },
+  "roadmap_gap_math_ref": "docs/marketing/monetization-roadmap.md — $29.99 → ~$17.84 net → ~6 annual subs/day",
+  "no_scale_lock": {
+    "paid_distinct_users_30d_threshold": 0,
+    "live_value": 1,
+    "ads_blocked": true,
+    "ads_block_reason": "explicit effort=blocked; paid_traffic_signal false in north_star.json; budget $20/mo cap"
+  },
+  "ranked_actions": [
+    {
+      "rank": 1,
+      "action_id": "paywall_fix",
+      "title": "Refresh billing catalog while paywall open (voice/repeat/qualified gates)",
+      "effort_hours": 4,
+      "expected_daily_revenue_delta_usd": 1.5,
+      "confidence": 0.42,
+      "risk": 0.15,
+      "score": 0.134,
+      "score_calculation": "(1.50 / 4) * 0.42 * (1 - 0.15) = 0.134",
+      "rationale": "81% voice_gate views had no purchasable billing at open (22/118 offer_select); repeat+unknown+qualified add 77 more zero-attempt views. Billing refresh unlocks CTA for high-intent gates.",
+      "evidence_refs": [
+        "marketing/data/paywall_conversion_report.json",
+        "live PostHog voice_gate 118 views / 0 attempts / 22 offer_selects",
+        "marketing/data/monetization_decision_brief.json"
+      ],
+      "execution": "code_pr",
+      "pr_branch": "feat/paywall-billing-refresh"
+    },
+    {
+      "rank": 2,
+      "action_id": "aso",
+      "title": "Store listing ASO pass (keywords, screenshots, changelog)",
+      "effort_hours": 2,
+      "expected_daily_revenue_delta_usd": 0.25,
+      "confidence": 0.25,
+      "risk": 0.45,
+      "score": 0.017,
+      "score_calculation": "(0.25 / 2) * 0.25 * (1 - 0.45) = 0.017",
+      "rationale": "Organic install lift; low N, long attribution tail.",
+      "evidence_refs": ["marketing/data/store_downloads.json"],
+      "execution": "manual_metadata"
+    },
+    {
+      "rank": 3,
+      "action_id": "ios_ship",
+      "title": "Ship iOS parity build to App Store",
+      "effort_hours": 8,
+      "expected_daily_revenue_delta_usd": 0.36,
+      "confidence": 0.3,
+      "risk": 0.35,
+      "score": 0.009,
+      "score_calculation": "(0.36 / 8) * 0.3 * (1 - 0.35) = 0.009",
+      "rationale": "iOS 0 purchase_success; ~9% install share; review latency risk.",
+      "evidence_refs": ["marketing/data/executive_metrics.json"],
+      "execution": "release_branch"
+    },
+    {
+      "rank": 4,
+      "action_id": "price_test",
+      "title": "A/B price ladder ($19.99 vs $29.99)",
+      "effort_hours": 6,
+      "expected_daily_revenue_delta_usd": 0.2,
+      "confidence": 0.15,
+      "risk": 0.55,
+      "score": 0.002,
+      "score_calculation": "(0.20 / 6) * 0.15 * (1 - 0.55) = 0.002",
+      "rationale": "365 views meets 200 threshold but only 1 success — insufficient conversion signal.",
+      "evidence_refs": ["docs/marketing/monetization-roadmap.md"],
+      "execution": "defer"
+    },
+    {
+      "rank": 5,
+      "action_id": "ads",
+      "title": "Scale paid acquisition",
+      "effort_hours": "blocked",
+      "expected_daily_revenue_delta_usd": 0,
+      "confidence": 0,
+      "risk": 1.0,
+      "score": 0,
+      "score_calculation": "blocked — no-scale lock + $20/mo budget cap",
+      "rationale": "paid_distinct_users_30d was 0 until 2026-06-10 retail charge; no paid UTM attribution; guardrail active.",
+      "evidence_refs": ["marketing/data/north_star.json", "AGENTS.md guardrails"],
+      "execution": "blocked"
+    }
+  ],
+  "north_star_status": {
+    "wqtu_7d": 11,
+    "wqtu_target_q2": 25,
+    "on_track_quarter": false
+  },
+  "executed_rank_1": {
+    "action_id": "paywall_fix",
+    "artifact": "feat/paywall-billing-refresh PR",
+    "change_summary": "Poll billing catalog up to 6s while paywall visible so voice_gate/qualified_training gates reach purchasable CTA"
+  }
+}

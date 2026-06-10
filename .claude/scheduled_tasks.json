@@ -62,6 +62,13 @@
       "cron": "0 0 * * 0",
       "ceo_required": false,
       "artifact": "weekly-paywall-conversion-report"
+    },
+    {
+      "id": "monthly-pro-content-release",
+      "workflow": ".github/workflows/monthly-pro-content-release.yml",
+      "cron": "0 8 1 * *",
+      "ceo_required": false,
+      "artifact": "Pro voice callouts + sound pack (ElevenLabs)"
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-10T20:00:33+00:00",
+  "generated_at": "2026-06-10T20:11:59+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -15,7 +15,7 @@
   "top_failure_reasons": [
     {
       "reason": "failed",
-      "count": 251
+      "count": 250
     },
     {
       "reason": "user_cancelled",
@@ -35,8 +35,8 @@
       "platform": "android",
       "product_id": "unknown",
       "reason": "failed",
-      "failures": 251,
-      "users": 110
+      "failures": 250,
+      "users": 109
     },
     {
       "platform": "android",
@@ -134,15 +134,15 @@
     },
     {
       "platform": "android",
-      "product_id": "pro_base",
-      "failures": 147,
-      "users": 140
-    },
-    {
-      "platform": "android",
       "product_id": "elite_tactical",
       "failures": 147,
       "users": 139
+    },
+    {
+      "platform": "android",
+      "product_id": "pro_base",
+      "failures": 147,
+      "users": 140
     }
   ],
   "entry_points": [
