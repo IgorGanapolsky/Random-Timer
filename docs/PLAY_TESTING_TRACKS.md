@@ -6,6 +6,8 @@
 
 Random Timer uses a **Google Play business (LLC) account**. Business accounts can publish directly to production without Open testing. Open testing is optional and is **not** required for production releases.
 
+**License testing (mandatory for CEO IAP QA):** A retail Play account **not** listed under **Settings → License testing** is charged real money for production IAP — add `iganapolsky@gmail.com` before any paywall purchase test. Device scripts (`verify-billing-catalog.sh`) abort unless `PLAY_BILLING_TEST_MODE=1` or the device Google account is on the license-tester allowlist.
+
 ## Track definitions
 
 | Track | Play Console name | Who gets the build | Automation default |
