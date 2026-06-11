@@ -1,1 +1,1 @@
-Monthly Pro content update — June 2026
+Paywall improvements: billing refreshes while the upgrade sheet is open; clearer path to Pro on high-intent training gates. Reliability and analytics improvements behind the scenes.
