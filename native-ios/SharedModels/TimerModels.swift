@@ -381,6 +381,53 @@ public struct TimerConfig: Codable, Sendable, Equatable {
     }
 }
 
+// MARK: - Training Presets
+
+public struct TrainingPreset: Identifiable, Sendable, Equatable {
+    public let id: String
+    public let title: String
+    public let subtitle: String
+    public let minSeconds: Int
+    public let maxSeconds: Int
+    public let alarmDuration: Int
+    public let repeatEnabled: Bool
+    public let soundType: SoundType
+    public let vibrationEnabled: Bool
+
+    public func applying(to config: TimerConfig) -> TimerConfig {
+        TimerConfig(
+            minSeconds: minSeconds,
+            maxSeconds: maxSeconds,
+            alarmDuration: alarmDuration,
+            hiddenMode: false,
+            repeatEnabled: repeatEnabled,
+            soundType: soundType,
+            volume: config.volume,
+            vibrationEnabled: vibrationEnabled,
+            useExtendedRange: false,
+            voiceEnabled: config.voiceEnabled,
+            voiceGender: config.voiceGender,
+            repeatRounds: config.repeatRounds
+        )
+    }
+
+    public static let competitionWarmup = TrainingPreset(
+        id: "competition_warmup",
+        title: "Competition Warmup",
+        subtitle: "Reactive mat-ready cues for the 30 minutes before first call.",
+        minSeconds: 20,
+        maxSeconds: 90,
+        alarmDuration: 5,
+        repeatEnabled: true,
+        soundType: .intense,
+        vibrationEnabled: true
+    )
+
+    public static let all: [TrainingPreset] = [
+        .competitionWarmup,
+    ]
+}
+
 // MARK: - Range Adjustment
 
 /// Shared business rules for the "Goes Off In This Range" sliders.

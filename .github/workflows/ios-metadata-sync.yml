@@ -176,6 +176,14 @@ jobs:
             BUILD_FLAG="--skip-build-check"
           fi
 
+          # If using live version, use fastlane deliver directly instead of strict sync
+          if [[ "$SELECTED_VERSION" == "LIVE" ]]; then
+            echo "Using fastlane deliver with use_live_version for metadata-only sync"
+            cd native-ios
+            fastlane metadata use_live_version:true
+            exit $?
+          fi
+
           RETRY_FLAG="--retry-on-editable"
           if [[ "$IOS_STRICT_RETRY_ON_EDITABLE" != "true" ]]; then
             RETRY_FLAG="--no-retry-on-editable"
@@ -228,6 +236,26 @@ jobs:
           path: /tmp/ios-listing-snapshot.json
           if-no-files-found: ignore
           retention-days: 1
+
+      - name: Write iOS listing snapshot
+        if: always()
+        run: |
+          python scripts/listing_snapshot.py \
+            --platform ios \
+            --repo-root . \
+            --locale "${IOS_METADATA_LOCALE}" \
+            --app-store-version "${{ steps.asc_version.outputs.selected_version }}" \
+            --source-run-id "${{ github.run_id }}" \
+            --source-run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --output /tmp/ios-listing-snapshot.json
+
+      - name: Upload listing snapshot
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-listing-snapshot
+          path: /tmp/ios-listing-snapshot.json
+          if-no-files-found: ignore
 
       - name: Cleanup secrets
         if: always()

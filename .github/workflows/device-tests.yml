@@ -8,7 +8,7 @@ on:
 # Cancel superseded PR runs so stacked pushes do not burn macOS minutes in parallel.
 concurrency:
   group: device-tests-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   changes:

@@ -5,6 +5,10 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
   issue_comment:
     types: [created]
+  push:
+
+env:
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
 env:
   ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -12,7 +16,7 @@ env:
 jobs:
   claude-review:
     name: Claude Review
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     continue-on-error: true
     runs-on: ubuntu-latest
     outputs:
@@ -69,7 +73,7 @@ jobs:
           echo "Claude Review remains advisory and non-blocking."
 
       - name: Warn when Claude review crashes
-        if: steps.claude_review.outcome != 'success'
+        if: github.event_name == 'pull_request' && steps.claude_review.outcome != 'success'
         run: |
           echo "Claude review action failed/crashed; leaving non-blocking warning."
 
