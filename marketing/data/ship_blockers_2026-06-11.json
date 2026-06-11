@@ -1,0 +1,52 @@
+{
+  "artifact_id": "ship_blockers_2026-06-11",
+  "generated_at_utc": "2026-06-11T17:00:36Z",
+  "parent_task": "e057858d",
+  "p1_apple_cert": {
+    "status": "resolved_in_ci",
+    "runbook": ".github/workflows/ios-cert-regen.yml (fastlane regen_dist_certs = match nuke distribution + match appstore)",
+    "gh_secrets_verified": [
+      "MATCH_GIT_URL",
+      "MATCH_PASSWORD",
+      "MATCH_GIT_BASIC_AUTHORIZATION",
+      "APPSTORE_KEY_ID",
+      "APPSTORE_ISSUER_ID",
+      "APPSTORE_PRIVATE_KEY",
+      "APPLE_TEAM_ID",
+      "ADMIN_TOKEN"
+    ],
+    "local_match_secrets": "not_present",
+    "cert_regen_run": "https://github.com/IgorGanapolsky/Random-Timer/actions/runs/27351008130",
+    "apple_portal_verification": "not_verified_no_logged_in_developer_apple_com_tab",
+    "internal_distribution_v1_3_55": {
+      "sha": "436d2d2d37ea0c152951807c75fbe9df4e14960e",
+      "run": "https://github.com/IgorGanapolsky/Random-Timer/actions/runs/27303010981",
+      "internal_signoff_testflight": "success"
+    }
+  },
+  "p2_android_1_3_56": {
+    "pr": "https://github.com/IgorGanapolsky/Random-Timer/pull/1795",
+    "release_branch": "release/v1.3.56",
+    "sha": "2ad32169067dc5e63903b3ccf0b4f5a400d0f036",
+    "android_only_native_release_valid": true,
+    "workflow_contract": "native-release.yml workflow_dispatch platform=android from release/v* without develop merge",
+    "firebase_internal_proof_run": "https://github.com/IgorGanapolsky/Random-Timer/actions/runs/27359705213",
+    "android_production_dispatch": "https://github.com/IgorGanapolsky/Random-Timer/actions/runs/27359764616",
+    "play_managed_publish_reminder": "Publishing overview → Publish N changes after CI upload (docs/PLAY_CONSOLE_IAP_RUNBOOK.md)",
+    "pr_comment": "https://github.com/IgorGanapolsky/Random-Timer/pull/1795#issuecomment-4682438372",
+    "play_api_vs_console_reconcile": {
+      "version": "1.3.56",
+      "version_code": 1781194109,
+      "play_publisher_api_status": "completed",
+      "play_publisher_api_evidence": "native-release run 27359764616 verify-releases: Android production 1781194109 (1.3.56) completed",
+      "console_ui_status": "in_review",
+      "console_ui_evidence": "Play Console logged-in tab 2026-06-11T17:00Z: Production v1781194109 in review; Publishing overview Changes in review (no Publish changes button); managed publishing ON",
+      "prior_console_state": "Publishing overview listed Production / Start full rollout under Changes in review before submission",
+      "action_taken": "none — Start full rollout / Send for review / Publish changes not actionable; already in Google review queue",
+      "public_version_unchanged": true,
+      "live_production_release": "v1781012436 (prior; check_circle on Production Releases tab)",
+      "discrepancy_label": "Play Publisher API completed = upload accepted on production track; Console in review = managed publishing + Google policy review before manual Publish",
+      "next_manual_step": "After approval: Publishing overview → Publish changes to roll out 1.3.56"
+    }
+  }
+}
