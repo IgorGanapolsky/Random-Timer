@@ -1,0 +1,27 @@
+{
+  "artifact_id": "gsd_cycle_2_2026-06-11",
+  "generated_at_utc": "2026-06-11T19:12:18Z",
+  "cycle": 2,
+  "north_star": { "wqtu_7d": 11, "target_q2": 25 },
+  "revenue_proxy": { "paywall_purchase_success_7d": 1, "usd_per_day_estimate": 0.0 },
+  "paywall_funnel_30d": {
+    "viewed_users": 167,
+    "attempt_users": 4,
+    "success_users": 1,
+    "view_to_attempt_pct": 2.4,
+    "attempt_to_success_pct": 25.0
+  },
+  "voice_gate_30d": { "views": 118, "offer_selects": 22, "attempts": 0, "successes": 0 },
+  "android_1_3_56": {
+    "store_public": true,
+    "posthog_events_since_18_38z": 0,
+    "code_pr_eligible": false
+  },
+  "ios_1_3_55": {
+    "asc_state": "WAITING_FOR_REVIEW",
+    "public_version": "1.3.43",
+    "evidence_run": "https://github.com/IgorGanapolsky/Random-Timer/actions/runs/27362554124"
+  },
+  "decision": "update_brief_only_no_code_pr",
+  "next_action": "wait_ios_review_then_gate_json_poll_1_3_56_cohort"
+}
