@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-06-11T01:21:42+00:00",
+  "generated_at": "2026-06-11T07:59:19+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 677,
+    "views": 675,
     "offer_selects": 56,
     "purchase_attempts": 6,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.0827,
+    "view_to_select_rate": 0.083,
     "select_to_attempt_rate": 0.1071,
     "attempt_to_success_rate": 0.1667
   },
@@ -134,15 +134,15 @@
     },
     {
       "platform": "android",
-      "product_id": "elite_tactical",
-      "failures": 148,
-      "users": 140
-    },
-    {
-      "platform": "android",
       "product_id": "pro_base",
       "failures": 148,
       "users": 141
+    },
+    {
+      "platform": "android",
+      "product_id": "elite_tactical",
+      "failures": 148,
+      "users": 140
     }
   ],
   "entry_points": [
@@ -172,7 +172,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 35,
+      "views": 33,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -230,7 +230,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 35,
+      "views": 33,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -295,8 +295,8 @@
     },
     {
       "setting_name": "unknown",
-      "changes": 115,
-      "users": 6
+      "changes": 88,
+      "users": 5
     }
   ],
   "data_quality_warnings": [

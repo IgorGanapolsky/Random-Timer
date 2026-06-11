@@ -1,10 +1,10 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-11T01:21:42+00:00
+Generated: 2026-06-11T07:59:19+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **677**
+- Views: **675**
 - Offer Selects: **56**
 - Purchase Attempts: **6**
 - Purchase Successes: **1**
@@ -50,7 +50,7 @@ Window (days): 30
 | range_gate | 307 | 3 | 1 | 1.0% | 33.3% |
 | voice_gate | 230 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 54 | 0 | 0 | 0.0% | 0.0% |
-| unknown | 35 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 33 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 24 | 2 | 0 | 8.3% | 0.0% |
 | setup_upgrade_cta | 12 | 0 | 0 | 0.0% | 0.0% |
 | qualified_training_gate | 11 | 0 | 0 | 0.0% | 0.0% |
@@ -59,7 +59,7 @@ Window (days): 30
 ## Leaky Entry Points
 - `voice_gate` had **230** views and **0** purchase attempts.
 - `repeat_gate` had **54** views and **0** purchase attempts.
-- `unknown` had **35** views and **0** purchase attempts.
+- `unknown` had **33** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
@@ -75,7 +75,7 @@ Window (days): 30
 | repeat_rounds | 427 | 126 |
 | voice_gender | 375 | 229 |
 | use_extended_range | 307 | 171 |
-| unknown | 115 | 6 |
+| unknown | 88 | 5 |
 
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic
