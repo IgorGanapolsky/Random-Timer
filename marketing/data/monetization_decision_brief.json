@@ -1,146 +1,92 @@
 {
-  "generated_at": "2026-06-10T19:48:52Z",
-  "source": "gsd_stream_b_paywall_conversion_posthog_mcp_2026_06_10",
+  "generated_at": "2026-06-11T19:12:18Z",
+  "source": "gsd_cycle_2_posthog_live_mcp_execute_sql",
+  "gsd_cycle": 2,
   "window_days": 30,
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
+  "research_doc": "marketing/data/june_2026_monetization_research.md",
   "issue_ref": "https://github.com/IgorGanapolsky/Random-Timer/issues/1684",
-  "issue_1684": {
-    "state": "CLOSED",
-    "closed_at": "2026-06-10T17:04:50Z",
-    "close_evidence": "billing_product_catalog_status=ok + paywall_purchase_attempt on S25 (SM-S931U1) 1.3.55 @ 2026-06-10T17:03:49Z product_id=elite_tactical"
+  "north_star": {
+    "wqtu_7d": 11,
+    "wqtu_target_q2_2026": 25,
+    "wqtu_query": "distinct persons with >=3 timer_completed in trailing 7d (PostHog MCP execute-sql 2026-06-11T19:11:48Z)",
+    "status": "below_target"
+  },
+  "revenue_goal": {
+    "target_usd_per_day_after_tax": 100.0,
+    "pro_annual_price_usd": 29.99,
+    "net_per_sale_usd_estimate": 17.84,
+    "sales_per_day_needed": 6,
+    "posthog_revenue_proxy_usd_per_day": 0.0,
+    "posthog_revenue_proxy_7d_sum": 29.99,
+    "gap_usd_per_day": 100.0,
+    "metric_id": "paywall_purchase_success properties.revenue is telemetry proxy not ledger"
+  },
+  "paywall_funnel_30d": {
+    "paywall_viewed_users": 167,
+    "paywall_viewed_events": 381,
+    "paywall_offer_select_events": 61,
+    "paywall_purchase_attempt_users": 4,
+    "paywall_purchase_attempt_events": 6,
+    "paywall_purchase_success_users": 1,
+    "paywall_purchase_success_events": 1,
+    "paywall_purchase_success_7d": 1,
+    "view_to_attempt_pct": 2.4,
+    "attempt_to_success_pct": 25.0,
+    "view_to_success_pct": 0.6,
+    "billing_product_not_found_android_30d": 1099,
+    "posthog_query_evidence": "execute-sql 2026-06-11T19:11:48Z project 299775"
+  },
+  "voice_gate_30d": {
+    "views": 118,
+    "offer_selects": 22,
+    "attempts": 0,
+    "successes": 0,
+    "view_to_attempt_pct": 0.0,
+    "note": "Leak persists; billing refresh in 1.3.56 not yet measurable (n=0 PostHog events on 1.3.56 since publish)"
+  },
+  "entry_point_funnel_30d": {
+    "range_gate": { "views": 156, "offer_selects": 11, "attempts": 3, "successes": 1 },
+    "voice_gate": { "views": 118, "offer_selects": 22, "attempts": 0, "successes": 0 },
+    "repeat_gate": { "views": 31, "offer_selects": 20, "attempts": 0, "successes": 0 },
+    "sound_arsenal_gate": { "views": 14, "offer_selects": 8, "attempts": 2, "successes": 0 }
+  },
+  "android_1_3_56_cohort": {
+    "publish_cutoff_utc": "2026-06-11T18:38:00Z",
+    "posthog_events_since_publish": 0,
+    "posthog_android_versions_since_publish": { "1.3.55": 37, "0.1.9": 42 },
+    "store_public_version": "1.3.56",
+    "store_verify_evidence": "verify_public_store_versions.py 2026-06-11T19:11:39Z PASS android",
+    "n_threshold_for_code_pr": 10,
+    "code_pr_gate": "hold_no_n_ge_10"
+  },
+  "store_parity": {
+    "android_play_public_version": "1.3.56",
+    "ios_asc_submitted_version": "1.3.55",
+    "ios_asc_state": "WAITING_FOR_REVIEW",
+    "ios_asc_state_evidence": "native-release run 27362554124 ios-submit-review 2026-06-11T16:54:40Z",
+    "ios_public_version": "1.3.43",
+    "ios_public_evidence": "itunes lookup 2026-06-11T19:11:38Z",
+    "parity_gap": "iOS 1.3.55 in App Review; public listing still 1.3.43"
   },
   "ship_evidence": {
-    "workflow_run_id": 27209581950,
-    "workflow_conclusion": "success",
-    "git_tag": "v1.3.55",
-    "git_tag_sha": "2a03f3f8",
-    "ship_date_utc": "2026-06-09",
-    "play_api_track": "production",
-    "play_api_version_name": "1.3.55",
-    "play_api_version_code": 1781012436,
-    "play_api_status": "completed",
-    "public_listing_version_name": "1.3.43",
-    "public_listing_note": "Storefront HTML proxy still 1.3.43 at verify-releases 900s timeout; Play Publisher API production completed",
-    "monthly_catalog_fix_pr": 1757
+    "android_pr": "https://github.com/IgorGanapolsky/Random-Timer/pull/1795",
+    "android_workflow_run_id": 27359764616,
+    "ios_release_run_id": 27362554124,
+    "ios_release_run_url": "https://github.com/IgorGanapolsky/Random-Timer/actions/runs/27362554124",
+    "post_publish_gate_pr": "https://github.com/IgorGanapolsky/Random-Timer/pull/1800"
   },
-  "posthog_queries": [
-    "execute-sql: paywall funnel events 30d Android $app_version=1.3.55",
-    "execute-sql: billing_product_not_found breakdown by billing_response_label",
-    "execute-sql: billing_product_catalog_status breakdown by status"
-  ],
-  "paywall_funnel_1_3_55_android_30d": {
-    "cohort_filter": "properties.$app_version = '1.3.55' AND properties.$os = 'Android'",
-    "window": "30d trailing to 2026-06-10T19:47:48Z",
-    "distinct_users": 2,
-    "steps": {
-      "paywall_viewed": 9,
-      "paywall_offer_select": 5,
-      "paywall_purchase_attempt": 2,
-      "paywall_purchase_success": 1
-    },
-    "step_drop_offs": {
-      "viewed_to_attempt": 7,
-      "select_to_attempt": 3,
-      "attempt_to_success": 1
-    },
-    "primary_drop_off_step": "viewed_to_attempt",
-    "failure_telemetry": {
-      "billing_product_not_found": 21,
-      "billing_product_catalog_status_billing_not_ready": 3,
-      "paywall_dismissed": 1,
-      "billing_product_catalog_status_product_details_unsupported": 10,
-      "billing_product_catalog_status_play_store_update_required": 8
-    },
-    "product_not_found_detail": {
-      "billing_response_label": "FEATURE_NOT_SUPPORTED",
-      "per_product_counts": {
-        "elite_tactical": 7,
-        "elite_tactical_monthly": 7,
-        "pro_base": 7
-      },
-      "note": "Catalog probe telemetry on ProductDetails-unsupported path; not isolated to paywall CTA failure"
-    },
-    "only_product_with_attempts": "elite_tactical"
+  "decision": "gsd_cycle_2_hold_code_monitor_ios_review_android_1_3_56_public",
+  "priority_blocker": {
+    "rank": 1,
+    "category": "ios_app_review",
+    "reason": "iOS 1.3.55 WAITING_FOR_REVIEW blocks store parity and cross-platform paywall cohort. Android 1.3.56 live but zero PostHog telemetry on new version yet.",
+    "next_code_cycle": "deferred_until_1_3_56_n_ge_10_or_ios_public_parity"
   },
-  "ranked_fix_list": [
-    {
-      "rank": 1,
-      "fix": "license_tester_qa_before_more_iap",
-      "rationale": "Retail charge on S25 1.3.55; attempt→success n=1/2 on 1.3.55 — validate on license testers before more product changes",
-      "code_change": false,
-      "evidence": "purchase_success_1 attempt_2 users_2 on 1.3.55 Android 30d"
-    },
-    {
-      "rank": 2,
-      "fix": "monitor_select_to_attempt_gap",
-      "rationale": "5 offer_select → 2 attempt (3 silent drops); may be dismiss/not-now or billing gate toast without attempt event",
-      "code_change": false,
-      "evidence": "select_to_attempt drop 3 events / 30d 1.3.55"
-    },
-    {
-      "rank": 3,
-      "fix": "telemetry_gate_product_not_found_on_legacy_ok",
-      "rationale": "21 billing_product_not_found all FEATURE_NOT_SUPPORTED — reduce false-positive catalog noise after legacy SKU path populates cache",
-      "code_change": true,
-      "evidence": "billing_product_not_found 21 vs billing_not_ready 3 vs dismiss 1"
-    },
-    {
-      "rank": 4,
-      "fix": "monthly_elite_conversion_followup",
-      "rationale": "Broader 30d cohort: elite_tactical_monthly 33 selects / 1 attempt / 0 success — needs license-tester replay on 1.3.55+",
-      "code_change": false,
-      "evidence": "paywall_conversion_report.json product_funnel elite_tactical_monthly"
-    },
-    {
-      "rank": 5,
-      "fix": "hold_paid_ads",
-      "rationale": "WQTU + paywall volume too low to optimize conversion at scale",
-      "code_change": false,
-      "evidence": "2 distinct users on 1.3.55 Android 30d funnel"
-    }
-  ],
-  "snapshot": "GSD stream B: 1.3.55 Android 30d funnel viewed 9→attempt 2→success 1 (2 users). #1 step drop-off viewed→attempt (7 events). Among failure labels: product_not_found 21 (FEATURE_NOT_SUPPORTED probe), billing_not_ready 3, dismiss 1. No minimal code fix shipped — sample too small; retail IAP QA blocked on license testers.",
-  "counts": {
-    "purchase_success_7d": 1,
-    "purchase_success_30d": 1,
-    "purchase_success_distinct_users_7d": 1,
-    "purchase_attempts_today_1_3_55": 1,
-    "purchase_attempts_today_total": 1,
-    "purchase_success_today": 1,
-    "purchase_attempts_30d": 5,
-    "paywall_viewed_1_3_55_android_30d": 9,
-    "paywall_attempt_1_3_55_android_30d": 2,
-    "paywall_success_1_3_55_android_30d": 1,
-    "play_api_version_name": "1.3.55",
-    "play_api_version_code": 1781012436,
-    "public_listing_version_name": "1.3.43",
-    "issue_1684_state": "CLOSED"
-  },
-  "first_purchase_success_telemetry": {
-    "timestamp": "2026-06-10T18:00:04Z",
-    "app_version": "1.3.55",
-    "device_model": "SM-S931U1",
-    "platform": "android",
-    "product_id": "elite_tactical",
-    "revenue_telemetry": 29.99,
-    "source": "paywall",
-    "entry_point": "range_gate",
-    "license_tester": false,
-    "play_order_id": "GPA.3311-0689-1321-89557",
-    "revenue_semantics": "telemetry_proxy",
-    "telemetry_proxy": true,
-    "ledger_revenue": false,
-    "ground_truth": false,
-    "metric_id": "posthog_hogql_paywall_purchase_success_not_store_ledger",
-    "note": "Unintended retail charge — add CEO to Play license testers before further IAP QA."
-  },
-  "decision": "no_code_fix_shipped_insufficient_signal_license_tester_qa_first",
-  "code_fix_shipped": false,
-  "research_doc": "marketing/data/june_2026_monetization_research.md",
   "recommended_next_actions": [
-    "license_tester: add iganapolsky@gmail.com to Play Console Settings → License testing",
-    "refund_play_order: GPA.3311-0689-1321-89557 via Play Console Orders",
-    "Replay 5 offer_select → 2 attempt gap on license-tester device before CTA/billing code changes",
-    "Hold paid ads until attempt→success validated without retail charges"
+    "Monitor iOS 1.3.55 App Review (ASC state last verified WAITING_FOR_REVIEW 2026-06-11T16:54Z via run 27362554124)",
+    "On iOS approval: verify_public_store_versions ios + update post_publish_gate.json PR",
+    "Poll PostHog 1.3.56 Android cohort daily until n>=10 before any paywall code change",
+    "Hold paid ads ($20/mo cap); no real-charge device IAP tests"
   ]
 }
