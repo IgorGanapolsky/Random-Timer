@@ -1,21 +1,21 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-10T20:19:55+00:00
+Generated: 2026-06-11T01:21:42+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **681**
+- Views: **677**
 - Offer Selects: **56**
 - Purchase Attempts: **6**
 - Purchase Successes: **1**
-- View -> Offer Select: **8.2%**
+- View -> Offer Select: **8.3%**
 - Select -> Purchase Attempt: **10.7%**
 - Attempt -> Purchase Success: **16.7%**
 
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| failed | 251 |
+| failed | 245 |
 | user_cancelled | 6 |
 | cancelled | 2 |
 | item_unavailable | 2 |
@@ -23,7 +23,7 @@ Window (days): 30
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
-| android | unknown | failed | 251 | 110 |
+| android | unknown | failed | 245 | 107 |
 | android | unknown | user_cancelled | 4 | 1 |
 | ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 1 |
 | android | unknown | item_unavailable | 2 | 1 |
@@ -40,14 +40,14 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 431 | 166 |
-| android | elite_tactical | 375 | 180 |
-| android | pro_base | 263 | 172 |
+| android | elite_tactical_monthly | 425 | 165 |
+| android | elite_tactical | 374 | 180 |
+| android | pro_base | 264 | 173 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| range_gate | 311 | 3 | 1 | 1.0% | 33.3% |
+| range_gate | 307 | 3 | 1 | 1.0% | 33.3% |
 | voice_gate | 230 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 54 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 35 | 0 | 0 | 0.0% | 0.0% |
@@ -64,17 +64,17 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 3296 | 346 |
-| alarm_duration | 3092 | 324 |
-| volume | 2287 | 224 |
-| min_seconds | 2135 | 325 |
-| sound_type | 1515 | 264 |
-| repeat_enabled | 1367 | 314 |
-| voice_callouts_enabled | 829 | 196 |
-| vibration_enabled | 638 | 237 |
-| repeat_rounds | 432 | 127 |
-| voice_gender | 380 | 232 |
-| use_extended_range | 308 | 172 |
+| max_seconds | 3103 | 342 |
+| alarm_duration | 3060 | 321 |
+| volume | 2280 | 223 |
+| min_seconds | 2130 | 322 |
+| sound_type | 1498 | 261 |
+| repeat_enabled | 1357 | 312 |
+| voice_callouts_enabled | 822 | 195 |
+| vibration_enabled | 636 | 236 |
+| repeat_rounds | 427 | 126 |
+| voice_gender | 375 | 229 |
+| use_extended_range | 307 | 171 |
 | unknown | 115 | 6 |
 
 ## Data Quality Warnings
