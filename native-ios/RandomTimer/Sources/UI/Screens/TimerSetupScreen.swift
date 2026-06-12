@@ -605,6 +605,16 @@ struct TimerSetupScreen: View {
         timerManager.updateConfig(newConfig.clamped(isPro: proManager.isPro))
     }
 
+    private func applyTrainingPreset(_ preset: TrainingPreset) {
+        let newConfig = preset.applying(to: config).clamped(isPro: proManager.isPro)
+        persistActiveRangeProfile(
+            minSeconds: newConfig.minSeconds,
+            maxSeconds: newConfig.maxSeconds,
+            useExtendedRange: newConfig.useExtendedRange
+        )
+        timerManager.updateConfig(newConfig)
+    }
+
     private func repeatLoopDetailTitle(isPro: Bool) -> String {
         return "Round Selection"
     }
