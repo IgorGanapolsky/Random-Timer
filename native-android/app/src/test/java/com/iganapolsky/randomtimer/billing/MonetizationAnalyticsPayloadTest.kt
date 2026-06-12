@@ -72,4 +72,42 @@ class MonetizationAnalyticsPayloadTest {
         assertThat(properties[AnalyticsProperties.RESULT]).isEqualTo("failed")
         assertThat(properties[AnalyticsProperties.DEBUG_MESSAGE]).isEqualTo("")
     }
+
+    @Test
+    fun `resultProperties includes product id and failure reason when provided`() {
+        val properties =
+            MonetizationAnalyticsPayload.resultProperties(
+                success = false,
+                result = "failed",
+                source = MonetizationSources.PAYWALL,
+                entryPoint = "setup_upgrade_cta",
+                responseCode = 4,
+                debugMessage = "item unavailable",
+                productId = "elite_tactical_monthly",
+                reason = "item_unavailable",
+            )
+
+        assertThat(properties[AnalyticsProperties.PRODUCT_ID]).isEqualTo("elite_tactical_monthly")
+        assertThat(properties[AnalyticsProperties.REASON]).isEqualTo("item_unavailable")
+        assertThat(properties[AnalyticsProperties.RESULT]).isEqualTo("failed")
+        assertThat(properties[AnalyticsProperties.SUCCESS]).isEqualTo(false)
+    }
+
+    @Test
+    fun `resultProperties omits reason on success`() {
+        val properties =
+            MonetizationAnalyticsPayload.resultProperties(
+                success = true,
+                result = "success",
+                source = MonetizationSources.PAYWALL,
+                entryPoint = "setup_upgrade_cta",
+                responseCode = 0,
+                debugMessage = null,
+                productId = "pro_base",
+                reason = null,
+            )
+
+        assertThat(properties[AnalyticsProperties.PRODUCT_ID]).isEqualTo("pro_base")
+        assertThat(properties).doesNotContainKey(AnalyticsProperties.REASON)
+    }
 }

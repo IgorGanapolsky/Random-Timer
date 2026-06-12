@@ -66,6 +66,8 @@
 		A1B2C3D400000001DEADBEEF /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000002DEADBEEF /* Logger.swift */; };
 		A1UPGRADE0011223344556679 /* AppUpgradeTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1UPGRADE0011223344556676 /* AppUpgradeTracker.swift */; };
 		A1B2C3D400000003DEADBEEF /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000004DEADBEEF /* AnalyticsService.swift */; };
+		PHCFG00112233445566778802 /* PostHogAnalyticsConfigFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = PHCFG00112233445566778801 /* PostHogAnalyticsConfigFactory.swift */; };
+		PHCFG00112233445566778804 /* PostHogAnalyticsConfigFactoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = PHCFG00112233445566778803 /* PostHogAnalyticsConfigFactoryTests.swift */; };
 		A1B2C3D400000004SHARE01 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000004SHARE02 /* ShareSheet.swift */; };
 		DISTCH00112233445566778802 /* DistributionChannelResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DISTCH00112233445566778801 /* DistributionChannelResolverTests.swift */; };
 		A1UPGRADE0011223344556678 /* AppUpgradeTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1UPGRADE0011223344556677 /* AppUpgradeTrackerTests.swift */; };
@@ -76,6 +78,11 @@
 		QTWP00112233445566778804 /* QualifiedTrainingPaywallPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = QTWP00112233445566778803 /* QualifiedTrainingPaywallPolicyTests.swift */; };
 		RWAD00112233445566778802 /* RewardedAdSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = RWAD00112233445566778801 /* RewardedAdSupport.swift */; };
 		RWAD00112233445566778804 /* RewardedAdSupportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = RWAD00112233445566778803 /* RewardedAdSupportTests.swift */; };
+		RWAD00112233445566778806 /* ProSoundAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = RWAD00112233445566778805 /* ProSoundAccess.swift */; };
+		RWAD00112233445566778808 /* ProSoundAccessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = RWAD00112233445566778807 /* ProSoundAccessTests.swift */; };
+		RWAD0011223344556677880A /* RewardedAdCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = RWAD00112233445566778809 /* RewardedAdCoordinator.swift */; };
+		RWAD0011223344556677880C /* RewardedAdCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = RWAD0011223344556677880B /* RewardedAdCoordinatorTests.swift */; };
+		RWAD0011223344556677880E /* StubRewardedAdPort.swift in Sources */ = {isa = PBXBuildFile; fileRef = RWAD0011223344556677880D /* StubRewardedAdPort.swift */; };
 		DPCK00112233445566778802 /* DisciplinePackCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = DPCK00112233445566778801 /* DisciplinePackCatalog.swift */; };
 		DPCK00112233445566778804 /* DisciplinePackCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DPCK00112233445566778803 /* DisciplinePackCatalogTests.swift */; };
 		BC2E89FF69ECC3F835BB9D9D /* RandomTimerWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 05CD46A1911192043939F56F /* RandomTimerWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -184,6 +191,8 @@
 		965D6C9486FA65E74E5A03EC /* ActiveTimerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTimerScreen.swift; sourceTree = "<group>"; };
 		A1B2C3D400000002DEADBEEF /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		A1B2C3D400000004DEADBEEF /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
+		PHCFG00112233445566778801 /* PostHogAnalyticsConfigFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostHogAnalyticsConfigFactory.swift; sourceTree = "<group>"; };
+		PHCFG00112233445566778803 /* PostHogAnalyticsConfigFactoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostHogAnalyticsConfigFactoryTests.swift; sourceTree = "<group>"; };
 		A1B2C3D400000004SHARE02 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
 		A1UPGRADE0011223344556676 /* AppUpgradeTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpgradeTracker.swift; sourceTree = "<group>"; };
 		DISTCH00112233445566778801 /* DistributionChannelResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistributionChannelResolverTests.swift; sourceTree = "<group>"; };
@@ -201,6 +210,11 @@
 		QTWP00112233445566778803 /* QualifiedTrainingPaywallPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QualifiedTrainingPaywallPolicyTests.swift; sourceTree = "<group>"; };
 		RWAD00112233445566778801 /* RewardedAdSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardedAdSupport.swift; sourceTree = "<group>"; };
 		RWAD00112233445566778803 /* RewardedAdSupportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardedAdSupportTests.swift; sourceTree = "<group>"; };
+		RWAD00112233445566778805 /* ProSoundAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProSoundAccess.swift; sourceTree = "<group>"; };
+		RWAD00112233445566778807 /* ProSoundAccessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProSoundAccessTests.swift; sourceTree = "<group>"; };
+		RWAD00112233445566778809 /* RewardedAdCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardedAdCoordinator.swift; sourceTree = "<group>"; };
+		RWAD0011223344556677880B /* RewardedAdCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardedAdCoordinatorTests.swift; sourceTree = "<group>"; };
+		RWAD0011223344556677880D /* StubRewardedAdPort.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubRewardedAdPort.swift; sourceTree = "<group>"; };
 		DPCK00112233445566778801 /* DisciplinePackCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisciplinePackCatalog.swift; sourceTree = "<group>"; };
 		DPCK00112233445566778803 /* DisciplinePackCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisciplinePackCatalogTests.swift; sourceTree = "<group>"; };
 		B346A5600C70703BAB7FB9E6 /* siren.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; path = siren.mp3; sourceTree = "<group>"; };
@@ -261,12 +275,15 @@
 			children = (
 				ACTD00112233445566778801 /* ActivationDefaultsTests.swift */,
 				DISTCH00112233445566778801 /* DistributionChannelResolverTests.swift */,
+				PHCFG00112233445566778803 /* PostHogAnalyticsConfigFactoryTests.swift */,
 				A1C1001122334455667788CC /* AIVoiceCalloutServiceTests.swift */,
 				A1B2C3D4E5F60718A1B2C3D5 /* CircularTimerViewTests.swift */,
 				DEE000000000000000000003 /* DeepLinkRouterTests.swift */,
 				PRVT001122334455AABB0001 /* ProValidationTests.swift */,
 				QTWP00112233445566778803 /* QualifiedTrainingPaywallPolicyTests.swift */,
 				RWAD00112233445566778803 /* RewardedAdSupportTests.swift */,
+				RWAD00112233445566778807 /* ProSoundAccessTests.swift */,
+				RWAD0011223344556677880B /* RewardedAdCoordinatorTests.swift */,
 				DPCK00112233445566778803 /* DisciplinePackCatalogTests.swift */,
 				VOLKEY00112233445566778803 /* AlarmVolumeKeyPolicyTests.swift */,
 				C1D2E3F4A5B60718C1D2E3F5 /* SilenceAndStopAlarmTests.swift */,
@@ -308,6 +325,7 @@
 			children = (
 				A1UPGRADE0011223344556676 /* AppUpgradeTracker.swift */,
 				A1B2C3D400000004DEADBEEF /* AnalyticsService.swift */,
+				PHCFG00112233445566778801 /* PostHogAnalyticsConfigFactory.swift */,
 				CRSVC00112233445566778801 /* CrashReportingService.swift */,
 				A1B2C3D400000002DEADBEEF /* Logger.swift */,
 				VOLKEY00112233445566778801 /* AlarmVolumeKeyPolicy.swift */,
@@ -324,6 +342,9 @@
 				B1C2D3E4F5A6071800STATS2 /* TrainingStatsService.swift */,
 				QTWP00112233445566778801 /* QualifiedTrainingPaywallPolicy.swift */,
 				RWAD00112233445566778801 /* RewardedAdSupport.swift */,
+				RWAD00112233445566778805 /* ProSoundAccess.swift */,
+				RWAD00112233445566778809 /* RewardedAdCoordinator.swift */,
+				RWAD0011223344556677880D /* StubRewardedAdPort.swift */,
 				DPCK00112233445566778801 /* DisciplinePackCatalog.swift */,
 				A5A3DD46F85A68522E1B0902 /* ProManager.swift */,
 				AIVC00112233445566778800 /* AIVoiceCalloutService.swift */,
@@ -657,6 +678,7 @@
 			files = (
 				A1UPGRADE0011223344556679 /* AppUpgradeTracker.swift in Sources */,
 				A1B2C3D400000003DEADBEEF /* AnalyticsService.swift in Sources */,
+				PHCFG00112233445566778802 /* PostHogAnalyticsConfigFactory.swift in Sources */,
 				CRSVC00112233445566778802 /* CrashReportingService.swift in Sources */,
 				0D85510DFBFA57EC653BEFAC /* ActiveTimerScreen.swift in Sources */,
 				0B6A472176A53D70127E8133 /* CircularTimerView.swift in Sources */,
@@ -683,6 +705,9 @@
 				B1C2D3E4F5A6071800STATS1 /* TrainingStatsService.swift in Sources */,
 				QTWP00112233445566778802 /* QualifiedTrainingPaywallPolicy.swift in Sources */,
 				RWAD00112233445566778802 /* RewardedAdSupport.swift in Sources */,
+				RWAD00112233445566778806 /* ProSoundAccess.swift in Sources */,
+				RWAD0011223344556677880A /* RewardedAdCoordinator.swift in Sources */,
+				RWAD0011223344556677880E /* StubRewardedAdPort.swift in Sources */,
 				DPCK00112233445566778802 /* DisciplinePackCatalog.swift in Sources */,
 				A1B2C3D400000001DEADBEEF /* Logger.swift in Sources */,
 				85ABA1B34E3D14E790434638 /* ProManager.swift in Sources */,
@@ -707,12 +732,15 @@
 			files = (
 				ACTD00112233445566778802 /* ActivationDefaultsTests.swift in Sources */,
 				DISTCH00112233445566778802 /* DistributionChannelResolverTests.swift in Sources */,
+				PHCFG00112233445566778804 /* PostHogAnalyticsConfigFactoryTests.swift in Sources */,
 				A1C1001122334455667788AA /* AIVoiceCalloutServiceTests.swift in Sources */,
 				A1B2C3D4E5F60718A1B2C3D4 /* CircularTimerViewTests.swift in Sources */,
 				DEE000000000000000000004 /* DeepLinkRouterTests.swift in Sources */,
 				PRVT001122334455AABB0002 /* ProValidationTests.swift in Sources */,
 				QTWP00112233445566778804 /* QualifiedTrainingPaywallPolicyTests.swift in Sources */,
 				RWAD00112233445566778804 /* RewardedAdSupportTests.swift in Sources */,
+				RWAD00112233445566778808 /* ProSoundAccessTests.swift in Sources */,
+				RWAD0011223344556677880C /* RewardedAdCoordinatorTests.swift in Sources */,
 				DPCK00112233445566778804 /* DisciplinePackCatalogTests.swift in Sources */,
 				VOLKEY00112233445566778804 /* AlarmVolumeKeyPolicyTests.swift in Sources */,
 				C1D2E3F4A5B60718C1D2E3F4 /* SilenceAndStopAlarmTests.swift in Sources */,
@@ -776,7 +804,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.3.43;
+				MARKETING_VERSION = 1.3.56;
 				POSTHOG_API_KEY = "$(POSTHOG_API_KEY)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.igorganapolsky.randomtimer;
 				SDKROOT = iphoneos;
@@ -798,7 +826,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.3.43;
+				MARKETING_VERSION = 1.3.56;
 				PRODUCT_BUNDLE_IDENTIFIER = com.igorganapolsky.randomtimer.widget;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -886,7 +914,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.3.43;
+				MARKETING_VERSION = 1.3.56;
 				POSTHOG_API_KEY = "$(POSTHOG_API_KEY)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.igorganapolsky.randomtimer;
 				SDKROOT = iphoneos;
@@ -908,7 +936,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.3.43;
+				MARKETING_VERSION = 1.3.56;
 				PRODUCT_BUNDLE_IDENTIFIER = com.igorganapolsky.randomtimer.widget;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -1085,7 +1113,7 @@
 			repositoryURL = "https://github.com/PostHog/posthog-ios";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 3.41.1;
+				minimumVersion = 3.46.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

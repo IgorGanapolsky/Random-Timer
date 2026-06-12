@@ -22,7 +22,6 @@ import com.iganapolsky.randomtimer.domain.model.TimerConfig
 import com.iganapolsky.randomtimer.domain.model.TimerState
 import com.iganapolsky.randomtimer.domain.model.TimerStatus
 import com.iganapolsky.randomtimer.domain.model.VoiceGender
-import com.iganapolsky.randomtimer.domain.model.TrainingPreset
 import com.iganapolsky.randomtimer.domain.repository.TimerRepository
 import com.iganapolsky.randomtimer.domain.usecase.StartTimerUseCase
 import com.iganapolsky.randomtimer.review.StoreReviewManager
@@ -147,19 +146,6 @@ class TimerViewModel
             }
             viewModelScope.launch {
                 repository.saveTimerConfig(newConfig)
-            }
-        }
-
-        fun applyPresetAndStart(preset: TrainingPreset) {
-            val newConfig = preset.applyTo(config.value)
-            trackTrainingPresetApplied(
-                presetId = preset.id,
-                minSeconds = preset.minSeconds,
-                maxSeconds = preset.maxSeconds,
-            )
-            viewModelScope.launch {
-                repository.saveTimerConfig(newConfig)
-                startTimer(newConfig)
             }
         }
 
@@ -397,21 +383,6 @@ class TimerViewModel
             analyticsService.track(
                 AnalyticsEvents.VOICE_GENDER_SELECTED,
                 mapOf(AnalyticsProperties.GENDER to gender.name.lowercase()),
-            )
-        }
-
-        fun trackTrainingPresetApplied(
-            presetId: String,
-            minSeconds: Int,
-            maxSeconds: Int,
-        ) {
-            analyticsService.track(
-                AnalyticsEvents.TRAINING_PRESET_APPLIED,
-                mapOf(
-                    AnalyticsProperties.PRESET_ID to presetId,
-                    "min_duration" to minSeconds,
-                    "max_duration" to maxSeconds,
-                ),
             )
         }
 

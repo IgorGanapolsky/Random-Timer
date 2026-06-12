@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import os
@@ -125,6 +126,76 @@ def _select_pack(
         if pack["id"] == resolved_id:
             return pack
     raise SystemExit(f"Could not find audio pack {resolved_id!r}.")
+
+
+_MONTH_THEME_SLUGS: dict[str, tuple[str, str]] = {
+    "2026-06": ("conditioning_lane", "Conditioning lane"),
+    "2026-07": ("range_day", "Range day"),
+    "2026-08": ("field_ops", "Field ops"),
+    "2026-09": ("combatives_reset", "Combatives reset"),
+    "2026-10": ("operator_tempo", "Operator tempo"),
+    "2026-11": ("fight_camp", "Fight camp"),
+    "2026-12": ("year_end_drive", "Year-end drive"),
+}
+
+
+def _release_month_label(release_month: str) -> str:
+    year_text, month_text = release_month.split("-", 1)
+    month_index = int(month_text)
+    month_names = (
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+    )
+    if month_index < 1 or month_index > 12:
+        raise SystemExit(f"Invalid release month {release_month!r}; expected YYYY-MM.")
+    return f"{month_names[month_index - 1]} {year_text}"
+
+
+def _theme_slug_for_release_month(release_month: str) -> tuple[str, str]:
+    if release_month in _MONTH_THEME_SLUGS:
+        return _MONTH_THEME_SLUGS[release_month]
+    year_text, month_text = release_month.split("-", 1)
+    return (f"m{month_text}_rotation", f"Monthly rotation ({year_text}-{month_text})")
+
+
+def ensure_release_month_pack(manifest: dict[str, Any], release_month: str) -> tuple[dict[str, Any], bool]:
+    """Clone the active pack when the scheduled release month is missing from the manifest."""
+    matches = [pack for pack in manifest["packs"] if pack.get("releaseMonth") == release_month]
+    if matches:
+        return manifest, False
+
+    active_pack_id = manifest["activePackId"]
+    active_pack = next((pack for pack in manifest["packs"] if pack["id"] == active_pack_id), None)
+    if active_pack is None:
+        raise SystemExit(f"Active Pro audio pack '{active_pack_id}' is missing from the manifest.")
+
+    slug, theme_name = _theme_slug_for_release_month(release_month)
+    month_label = _release_month_label(release_month)
+    new_pack = copy.deepcopy(active_pack)
+    new_pack_id = f"{release_month}_{slug}"
+    new_pack["id"] = new_pack_id
+    new_pack["releaseMonth"] = release_month
+    new_pack["theme"] = f"{theme_name} ({month_label} content window)"
+
+    manifest["packs"].append(new_pack)
+    manifest["activePackId"] = new_pack_id
+    return manifest, True
+
+
+def _persist_manifest(manifest_path: Path, manifest: dict[str, Any]) -> None:
+    resolved = _resolve_repo_path(manifest_path, must_exist=True)
+    serialized = json.dumps(manifest, indent=2) + "\n"
+    resolved.write_text(serialized, encoding="utf-8")
 
 
 def _runtime_elapsed_cues(pack: dict[str, Any]) -> list[dict[str, Any]]:
@@ -597,10 +668,19 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = _resolve_output_paths(parse_args())
     manifest = _load_manifest(args.manifest)
+    release_month = args.release_month.strip() or None
+    if release_month:
+        manifest, created_pack = ensure_release_month_pack(manifest, release_month)
+        if created_pack:
+            _persist_manifest(args.manifest, manifest)
+            print(
+                f"Scaffolded Pro audio pack {manifest['activePackId']} "
+                f"for releaseMonth {release_month}."
+            )
     pack = _select_pack(
         manifest,
         args.pack_id.strip() or None,
-        args.release_month.strip() or None,
+        release_month,
     )
     defaults = manifest["defaults"]
     entitlement = defaults["entitlement"]

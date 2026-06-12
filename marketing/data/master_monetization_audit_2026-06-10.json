@@ -1,0 +1,305 @@
+{
+  "generated_at": "2026-06-10T19:52:00Z",
+  "source": "master_synthesizer_jun10_session",
+  "session_id": "962ce8ef-5438-40bd-8f77-d8df3de3e1c2",
+  "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
+  "subagent_coverage": {
+    "transcripts_total": 293,
+    "transcripts_success": 90,
+    "parallel_streams": {
+      "gsd_ios": { "agent_id": "0c430303-ac85-45c0-841f-2d8a471713b7", "status": "incomplete", "artifact": null },
+      "paywall": { "agent_id": "01444f30-482c-4f10-9094-b9778b6b37d8", "status": "success", "artifact": "PR #1780" },
+      "analytics_gsd": { "agent_id": "6376b065-2c90-4639-833b-b0f2bee3b879", "status": "incomplete", "artifact": null },
+      "posthog_ds": { "agent_id": "089e7454-88c5-41cb-9bf3-244ebece4373", "status": "success", "artifact": "ceo_money_observability_audit" },
+      "rag": { "agent_id": "7a5ae2d5-22aa-4f4e-bb32-636639604887", "status": "success", "artifact": "PR #1778 + rag_lessons_2026-06-10.json" },
+      "ml_rank": { "agent_id": "a9fd207f-d0f2-44cc-b5fb-8d76e96e6a87", "status": "success", "artifact": "PR #1782 + monetization_ml_rank_2026-06-10.json" },
+      "revenue_play_publish": { "agent_id": "92c47cff-9a92-49a3-b2fa-ff09b6005f04", "status": "success", "artifact": "Play 1.3.55 published #1684" },
+      "ios_audit": { "agent_id": "537db2a4-8ded-4b68-8049-bce8fd4f9ead", "status": "incomplete", "artifact": null },
+      "observability": { "agent_id": "700d77b4-2f73-4fff-a303-06c7d808d18d", "status": "incomplete", "artifact": null },
+      "competitive": { "agent_id": "e973278f-cdb7-4b03-8214-7be6d0bef0c4", "status": "incomplete", "artifact": null },
+      "license_refund": { "agent_id": "0a5e58a9-f556-4cda-802b-1ab8c1e74aa2", "status": "success", "artifact": "refund + license tester enabled" },
+      "post_publish_gate": { "agent_id": "2a680bfc-9461-48ba-bfc3-cb4b3f836a32", "status": "success", "artifact": "post_publish_gate.json" },
+      "gsd_cycle1": { "agent_id": "f5219aa6-6489-4cf1-9b4b-3c0978d92738", "status": "success", "artifact": "PR #1777" }
+    }
+  },
+  "live_posthog_fresh": {
+    "queried_at": "2026-06-10T19:49:01Z",
+    "method": "posthog_mcp_execute_sql",
+    "wqtu_7d": 11,
+    "wqtu_target_q2": 25,
+    "funnel_30d": {
+      "paywall_viewed": { "events": 378, "persons": 169 },
+      "paywall_purchase_attempt": { "events": 6, "persons": 4 },
+      "paywall_purchase_success": { "events": 1, "persons": 1 },
+      "paywall_purchase_failed": { "events": 5, "persons": 4 },
+      "billing_product_catalog_status": { "events": 472, "persons": 235 }
+    },
+    "paywall_revenue_telemetry_sum_30d_usd": 29.99,
+    "paywall_revenue_note": "telemetry proxy from paywall_purchase_success properties.revenue — retail charge GPA.3311-0689-1321-89557 refunded; not ledger proceeds",
+    "funnel_1_3_55_android_30d": {
+      "paywall_viewed": 9,
+      "paywall_purchase_attempt": 2,
+      "paywall_purchase_success": 1,
+      "distinct_users": 2
+    }
+  },
+  "revenue_gap_math": {
+    "target_usd_per_day_after_tax": 100.0,
+    "net_revenue_per_annual_sub_usd": 17.84,
+    "subs_per_day_required": 5.97,
+    "current_subs_per_day_proxy": 0.033,
+    "calculation_current": "1 paywall_purchase_success / 30 days = 0.033 subs/day",
+    "gap_usd_per_day": 99.41,
+    "calculation_gap": "100 - (0.033 × 17.84) = 99.41 USD/day",
+    "telemetry_revenue_30d_usd": 29.99,
+    "telemetry_avg_usd_per_day": 1.0,
+    "store_ledger_revenue_30d_usd": null,
+    "store_ledger_metric_id": "not_wired_in_executive_snapshot",
+    "admob_status": "skipped_no_credentials",
+    "making_money_verdict": "no",
+    "making_money_detail": "One retail telemetry success (refunded); $0 sustainable daily revenue proxy; not on $100/day path"
+  },
+  "every_stone_turned_checklist": {
+    "posthog_wqtu_live": true,
+    "posthog_paywall_funnel_live": true,
+    "executive_metrics_snapshot": true,
+    "executive_metrics_stale_jun8": true,
+    "monetization_decision_brief": true,
+    "post_publish_gate": true,
+    "paywall_conversion_report": true,
+    "monetization_ml_rank": true,
+    "rag_lessons_ingest": true,
+    "memory_recall_store_publishing": true,
+    "play_api_1_3_55_production": true,
+    "play_public_listing_1_3_55": true,
+    "play_managed_publishing_publish": true,
+    "ios_asc_public_1_3_43": true,
+    "ios_ship_1_3_55": false,
+    "license_tester_ceo_enabled": true,
+    "retail_charge_refunded": true,
+    "billing_guard_pr_1776_merged": true,
+    "issue_1684_closed": true,
+    "first_purchase_success_telemetry": true,
+    "open_prs_audited": true,
+    "gh_environments_signoff_checked": "unknown",
+    "crashlytics_bigquery": false,
+    "admob_revenue": false,
+    "store_ledger_revenue": false,
+    "apple_ads_serving": "unknown",
+    "competitive_aso_research": false,
+    "observability_gaps_audit_complete": false,
+    "ios_error_tracking_autocapture": false,
+    "posthog_exception_events_live": false,
+    "executive_hogql_http_400_fixed": true,
+    "wqtu_health_ci_snapshot": false,
+    "north_star_ci_snapshot_credentials": false
+  },
+  "ml_ranked_top_10_actions": [
+    {
+      "rank": 1,
+      "action_id": "paywall_billing_refresh",
+      "title": "Poll Play billing while paywall open (voice/repeat/qualified gates)",
+      "score": 0.134,
+      "effort_hours": 4,
+      "expected_daily_revenue_delta_usd": 1.5,
+      "status": "pr_open",
+      "pr": 1782,
+      "evidence": "voice_gate 118 views / 0 attempts; leaky gates dominate funnel"
+    },
+    {
+      "rank": 2,
+      "action_id": "license_tester_iap_qa",
+      "title": "License-tester IAP QA on 1.3.55 (no retail charges)",
+      "score": 0.12,
+      "effort_hours": 2,
+      "expected_daily_revenue_delta_usd": 0.5,
+      "status": "ready",
+      "evidence": "CEO on license list + saved; billing guard merged; 1 retail success refunded"
+    },
+    {
+      "rank": 3,
+      "action_id": "publish_play_managed_publishing",
+      "title": "Publish Play Managed Publishing (done — verify propagation)",
+      "score": 0.11,
+      "effort_hours": 1,
+      "expected_daily_revenue_delta_usd": 2.0,
+      "status": "completed",
+      "evidence": "92c47cff: public 1.3.55 PASS; S25 adb 1.3.55"
+    },
+    {
+      "rank": 4,
+      "action_id": "ios_ship_1_3_55",
+      "title": "Ship iOS 1.3.55 to App Store (production-signoff gated)",
+      "score": 0.009,
+      "effort_hours": 8,
+      "expected_daily_revenue_delta_usd": 0.36,
+      "status": "blocked_signoff",
+      "evidence": "ASC public 1.3.43; iOS purchase_success 0"
+    },
+    {
+      "rank": 5,
+      "action_id": "aso_listing_pass",
+      "title": "ASO metadata + screenshots refresh",
+      "score": 0.017,
+      "effort_hours": 2,
+      "expected_daily_revenue_delta_usd": 0.25,
+      "status": "not_started",
+      "evidence": "store_downloads low; competitive stream incomplete"
+    },
+    {
+      "rank": 6,
+      "action_id": "refresh_executive_metrics",
+      "title": "Re-run executive_metrics_snapshot (fix CI credentials)",
+      "score": 0.08,
+      "effort_hours": 2,
+      "expected_daily_revenue_delta_usd": 0,
+      "status": "automation",
+      "evidence": "Jun 8 snapshot contradicts Jun 10 purchase telemetry"
+    },
+    {
+      "rank": 7,
+      "action_id": "ios_posthog_error_tracking",
+      "title": "Ship iOS PostHog $exception autocapture",
+      "score": 0.05,
+      "effort_hours": 4,
+      "expected_daily_revenue_delta_usd": 0,
+      "status": "pr_open",
+      "pr": 1783,
+      "evidence": "089e7454: observability grade B-; $exception 0 events"
+    },
+    {
+      "rank": 8,
+      "action_id": "wire_store_ledger",
+      "title": "Wire App Store Connect + Play ledger into executive snapshot",
+      "score": 0.04,
+      "effort_hours": 6,
+      "expected_daily_revenue_delta_usd": 0,
+      "status": "not_started",
+      "evidence": "store_ledger_revenue_usd_30d null in executive_metrics"
+    },
+    {
+      "rank": 9,
+      "action_id": "price_ab_test",
+      "title": "Defer price ladder A/B until attempt→success validated",
+      "score": 0.002,
+      "effort_hours": 6,
+      "expected_daily_revenue_delta_usd": 0.2,
+      "status": "deferred",
+      "evidence": "1 success / 365 views — insufficient signal"
+    },
+    {
+      "rank": 10,
+      "action_id": "paid_ads_scale",
+      "title": "Scale paid acquisition",
+      "score": 0,
+      "effort_hours": "blocked",
+      "expected_daily_revenue_delta_usd": 0,
+      "status": "blocked",
+      "evidence": "$20/mo cap; no paid UTM; hold until IAP QA clean"
+    }
+  ],
+  "open_prs_jun10": [
+    { "number": 1777, "title": "GSD cycle 1 monetization brief", "checks": "green_path_aware" },
+    { "number": 1778, "title": "RAG lessons Jun 10", "checks": "pending" },
+    { "number": 1779, "title": "monetization brief + dismiss UX", "checks": "pending" },
+    { "number": 1780, "title": "GSD stream B paywall funnel", "checks": "pending" },
+    { "number": 1781, "title": "GSD monetization brief refresh", "checks": "pending" },
+    { "number": 1782, "title": "paywall billing refresh ML #1", "checks": "pending_android_ci" },
+    { "number": 1783, "title": "iOS PostHog error tracking", "checks": "pending" }
+  ],
+  "ceo_verdicts": {
+    "making_money": "no",
+    "full_analytics": "partial",
+    "full_observability": "partial",
+    "wqtu_on_track_q2": false,
+    "wqtu_7d": 11,
+    "wqtu_target_q2": 25
+  },
+  "contradictions_resolved": [
+    {
+      "id": "executive_vs_live",
+      "detail": "executive_metrics Jun 8 shows 0 purchases; live PostHog + brief Jun 10 show 1 success (refunded retail)"
+    },
+    {
+      "id": "public_vs_api",
+      "detail": "Resolved 2026-06-10: Play public now 1.3.55 after Publish 7 changes; post_publish_gate.json predates publish"
+    },
+    {
+      "id": "north_star_wqtu",
+      "detail": "north_star.json wqtu_7d=10 (stale credentials) vs live MCP wqtu_7d=11"
+    }
+  ],
+  "execution_plan_48h": [
+    {
+      "hours": "0-4",
+      "owner": "automation",
+      "action": "Merge green data PRs (#1778, #1780, #1777) after CI; refresh post_publish_gate store_public_pass=true",
+      "ceo_manual": false,
+      "gate": null
+    },
+    {
+      "hours": "0-6",
+      "owner": "automation",
+      "action": "Merge PR #1782 paywall billing refresh when Android CI green; dispatch no new release yet",
+      "ceo_manual": false,
+      "gate": null
+    },
+    {
+      "hours": "4-12",
+      "owner": "automation",
+      "action": "License-tester IAP QA on S25 1.3.55: range_gate + voice_gate attempt→success without retail charge",
+      "ceo_manual": false,
+      "gate": "PLAY_BILLING_TEST_MODE=1 or license tester account"
+    },
+    {
+      "hours": "12-24",
+      "owner": "automation",
+      "action": "Bump iOS MARKETING_VERSION to 1.3.55, verify fastlane metadata; open release PR",
+      "ceo_manual": false,
+      "gate": null
+    },
+    {
+      "hours": "24-36",
+      "owner": "automation",
+      "action": "Request production-signoff environment approval; dispatch native-release ios+android 1.3.55 parity",
+      "ceo_manual": true,
+      "gate": "production-signoff GitHub environment"
+    },
+    {
+      "hours": "24-48",
+      "owner": "automation",
+      "action": "Merge PR #1783 iOS error tracking when CI green; verify $exception after iOS ship",
+      "ceo_manual": false,
+      "gate": null
+    },
+    {
+      "hours": "36-48",
+      "owner": "automation",
+      "action": "Re-run executive_metrics_snapshot + wqtu_health CI; wire PostHog credentials in snapshot scripts",
+      "ceo_manual": false,
+      "gate": null
+    },
+    {
+      "hours": "48",
+      "owner": "automation",
+      "action": "Hold paid ads; re-score ML rank after license-tester funnel evidence",
+      "ceo_manual": false,
+      "gate": "budget $20/mo cap"
+    }
+  ],
+  "evidence_commands": [
+    "posthog_mcp: WQTU HogQL count >=3 timer_completed 7d → 11",
+    "posthog_mcp: paywall funnel 30d events/persons",
+    "gh pr list --state open",
+    "python3 .claude/scripts/memory/memory_manager.py --recall --scene store-publishing",
+    "python3 scripts/verify_public_store_versions.py --platform android --expected-version 1.3.55",
+    "marketing/data/monetization_ml_rank_2026-06-10.json",
+    "marketing/data/monetization_decision_brief.json",
+    "marketing/data/rag_lessons_2026-06-10.json (PR #1778)"
+  ],
+  "budget": {
+    "cap_usd_per_month": 20,
+    "month_to_date_spend_usd": "not verified",
+    "ads_blocked": true
+  }
+}

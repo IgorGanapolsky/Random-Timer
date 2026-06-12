@@ -66,6 +66,7 @@ jobs:
           path: |
             native-ios/RandomTimer/Resources/Audio
             native-android/app/src/main/res/raw
+            retention-days: 1
 
       - name: Create PR with regenerated audio
         env:

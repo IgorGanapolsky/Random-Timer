@@ -83,6 +83,10 @@ internal val HIGH_INTENT_ANNUAL_ENTRY_POINTS: Set<String> =
         "repeat_gate",
     )
 
+/** High-intent gates keep dismiss in the sticky footer only so users see value + CTA first. */
+internal fun shouldShowTopPaywallDismiss(entryPoint: String): Boolean =
+    entryPoint !in HIGH_INTENT_ANNUAL_ENTRY_POINTS
+
 internal fun paywallFeatureContext(entryPoint: String): PaywallFeatureContext =
     when (entryPoint) {
         "setup_upgrade_cta" ->
@@ -141,6 +145,7 @@ fun PaywallSheet(
     trialEligibilityByProductId: Map<String, Boolean> = emptyMap(),
     availableProductIds: Set<String> = emptySet(),
     billingCatalogProbed: Boolean = false,
+    billingReady: Boolean = true,
     onPurchase: (String) -> Unit,
     onPlanSelected: (plan: String, productId: String, selectionSource: String) -> Unit = { _, _, _ -> },
     onRestore: () -> Unit,
@@ -163,7 +168,8 @@ fun PaywallSheet(
             selectedPlan = fallbackPaywallPlan(availableProductIds, billingCatalogProbed)
         }
     }
-    val hasPurchasablePlan = hasPurchasablePaywallPlan(availableProductIds, billingCatalogProbed)
+    val hasPurchasablePlan =
+        hasPurchasablePaywallPlan(availableProductIds, billingCatalogProbed, billingReady)
     var initialOfferSelectTracked by remember(entryPoint) { mutableStateOf(false) }
     LaunchedEffect(entryPoint, billingCatalogProbed, hasPurchasablePlan, selectedPlan) {
         if (
@@ -235,7 +241,14 @@ fun PaywallSheet(
                     PrimaryButton(
                         text = if (hasPurchasablePlan) ctaLabel else "Purchases unavailable",
                         onClick = {
-                            if (!hasPurchasablePlan) {
+                            if (
+                                !isPaywallPurchaseAllowed(
+                                    billingCatalogProbed = billingCatalogProbed,
+                                    billingReady = billingReady,
+                                    availableProductIds = availableProductIds,
+                                    selectedProductId = purchaseProductId,
+                                )
+                            ) {
                                 return@PrimaryButton
                             }
                             onPlanSelected(planNameForSelection(selectedPlan), purchaseProductId, "primary_cta")
@@ -303,17 +316,19 @@ fun PaywallSheet(
                         .padding(bottom = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(
-                    text = "Not now",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = TimerColors.TextSecondary,
-                    modifier =
-                        Modifier
-                            .align(Alignment.Start)
-                            .clickable(onClick = onDismiss),
-                )
+                if (shouldShowTopPaywallDismiss(entryPoint)) {
+                    Text(
+                        text = "Not now",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TimerColors.TextSecondary,
+                        modifier =
+                            Modifier
+                                .align(Alignment.Start)
+                                .clickable(onClick = onDismiss),
+                    )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
 
                 Text(
                     text = headline,
@@ -511,11 +526,24 @@ internal fun shouldShowPaywallPlan(
 internal fun hasPurchasablePaywallPlan(
     availableProductIds: Set<String>,
     billingCatalogProbed: Boolean,
+    billingReady: Boolean = true,
 ): Boolean =
     billingCatalogProbed &&
+        billingReady &&
         SubscriptionPlanSelection.entries.any {
             shouldShowPaywallPlan(it, availableProductIds, billingCatalogProbed)
         }
+
+/** Gate purchase taps on a live billing connection, not only the catalog snapshot from paywall open. */
+internal fun isPaywallPurchaseAllowed(
+    billingCatalogProbed: Boolean,
+    billingReady: Boolean,
+    availableProductIds: Set<String>,
+    selectedProductId: String,
+): Boolean =
+    billingCatalogProbed &&
+        billingReady &&
+        availableProductIds.contains(selectedProductId)
 
 internal fun fallbackPaywallPlan(
     availableProductIds: Set<String>,

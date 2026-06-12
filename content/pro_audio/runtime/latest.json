@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "packId": "2026-05_combatives_corner",
-  "releaseMonth": "2026-05",
+  "packId": "2026-06_conditioning_lane",
+  "releaseMonth": "2026-06",
   "entitlement": "pro",
-  "generatedAt": "2026-05-04T12:28:56.173850Z",
+  "generatedAt": "2026-06-03T14:24:19.721637Z",
   "voiceCatalog": {
     "previewElapsed": {
       "filename": "preview_elapsed",
@@ -152,8 +152,8 @@
     ]
   },
   "soundCatalog": {
-    "packId": "2026-05_combatives_corner",
-    "releaseMonth": "2026-05",
+    "packId": "2026-06_conditioning_lane",
+    "releaseMonth": "2026-06",
     "entitlement": "pro",
     "sounds": [
       {
@@ -212,266 +212,266 @@
     {
       "kind": "voice",
       "filename": "cmd_breathe_recover_press",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_breathe_recover_press.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_breathe_recover_press.mp3",
-      "sha256": "20e379e5819849c7386ea236d07b49dbcc507549d667eb99c34ccf446e9aab15",
-      "bytes": 33898
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_breathe_recover_press.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_breathe_recover_press.mp3",
+      "sha256": "f2b2019255ae30972870ed4286dd6d8c9e8405864f1bfce67968b8feb56e51b3",
+      "bytes": 39332
     },
     {
       "kind": "voice",
       "filename": "cmd_do_not_coast",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_do_not_coast.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_do_not_coast.mp3",
-      "sha256": "e5f351576477b850b26f36fa572ffd45b1b55c9227fa9fc867f5fe82b00302a4",
-      "bytes": 20942
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_do_not_coast.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_do_not_coast.mp3",
+      "sha256": "62c9b15558e67c9cbf51a1f75da0f788c6cd62a38c65945122ec7753e70b282f",
+      "bytes": 40586
     },
     {
       "kind": "voice",
       "filename": "cmd_drive_through_it",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_drive_through_it.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_drive_through_it.mp3",
-      "sha256": "d194aa434223da5f507ae74b18fc445f742d52533c46ca98d61db53e434ac939",
-      "bytes": 22613
-    },
-    {
-      "kind": "voice",
-      "filename": "cmd_eyes_up_keep_moving",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_eyes_up_keep_moving.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_eyes_up_keep_moving.mp3",
-      "sha256": "a132ce9bef550106296503b26761498ca2d7fdac7e9717fadcf629d452e259dc",
-      "bytes": 25539
-    },
-    {
-      "kind": "voice",
-      "filename": "cmd_finish_rep_keep_pushing",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_finish_rep_keep_pushing.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_finish_rep_keep_pushing.mp3",
-      "sha256": "285fa4fbb13921374b229a442862bfa97754846b13e89b103faef19d1bec5917",
-      "bytes": 39750
-    },
-    {
-      "kind": "voice",
-      "filename": "cmd_instant_response_go",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_instant_response_go.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_instant_response_go.mp3",
-      "sha256": "56672e0f2e4e06eaea0d84a70cc44622f1c850ba20ae78ea3b123dc7b570a376",
-      "bytes": 32226
-    },
-    {
-      "kind": "voice",
-      "filename": "cmd_keep_pressure_on",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_keep_pressure_on.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_keep_pressure_on.mp3",
-      "sha256": "88de4c559e7452ba220853847013b36a479c1427ccdf55923eae0dc2ddbedf0a",
-      "bytes": 22613
-    },
-    {
-      "kind": "voice",
-      "filename": "cmd_keep_tempo_high",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_keep_tempo_high.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_keep_tempo_high.mp3",
-      "sha256": "44f56d4b35b2084a0a60425dd4c45757c015d56daf16f1192ba13a33c7adcb0a",
-      "bytes": 25539
-    },
-    {
-      "kind": "voice",
-      "filename": "cmd_keep_your_bearing",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_keep_your_bearing.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_keep_your_bearing.mp3",
-      "sha256": "8d7c17955d672962fcacf348531a8262390d5ab16de26a4cf20939b56f6e0682",
-      "bytes": 26375
-    },
-    {
-      "kind": "voice",
-      "filename": "cmd_maintain_your_interval",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_maintain_your_interval.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_maintain_your_interval.mp3",
-      "sha256": "38ff2fd49125ea4f0746eff269baf06ba8c5b2e71747bc42c3b621890955537e",
-      "bytes": 24703
-    },
-    {
-      "kind": "voice",
-      "filename": "cmd_most_ricky_tick",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_most_ricky_tick.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_most_ricky_tick.mp3",
-      "sha256": "d6a9ee2eda0d0ae25ce0c06cda47c86404c4de0dbab49df32de14534dbd1b72d",
-      "bytes": 48527
-    },
-    {
-      "kind": "voice",
-      "filename": "cmd_move_fast_stay_precise",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_move_fast_stay_precise.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_move_fast_stay_precise.mp3",
-      "sha256": "ea604197c114abd66d28a8e3a1543fa3a7834c71bb8ad57cc45e819ab91bac41",
-      "bytes": 37660
-    },
-    {
-      "kind": "voice",
-      "filename": "cmd_move_with_a_purpose",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_move_with_a_purpose.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_move_with_a_purpose.mp3",
-      "sha256": "eb81cd04ecd22b96131bf0b12bc41b75a903f0c43551d17e3487d22a11abd538",
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_drive_through_it.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_drive_through_it.mp3",
+      "sha256": "157b6019abeec092059e7ef0f2f2ed41e6bdf3013bfcf821d36d387d39714488",
       "bytes": 29301
     },
     {
       "kind": "voice",
+      "filename": "cmd_eyes_up_keep_moving",
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_eyes_up_keep_moving.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_eyes_up_keep_moving.mp3",
+      "sha256": "eafbe2d35b365e5b4668715de6f1f297cfafe89e2c7977e26ea391e453cb4510",
+      "bytes": 36824
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_finish_rep_keep_pushing",
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_finish_rep_keep_pushing.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_finish_rep_keep_pushing.mp3",
+      "sha256": "fbc7605272292880fd23e968c5841f0cb5d4ae009c0a33e78ff3e63330d936a3",
+      "bytes": 28047
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_instant_response_go",
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_instant_response_go.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_instant_response_go.mp3",
+      "sha256": "d28bdaf54f13f8d323562e192f653a032ad46df828e647d3fd4ed92c39096e15",
+      "bytes": 38078
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_keep_pressure_on",
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_keep_pressure_on.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_keep_pressure_on.mp3",
+      "sha256": "eb507de979df7c4113a0c491427ca8bd7c297604d6a3dcd25c31a593b9dc34e2",
+      "bytes": 23031
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_keep_tempo_high",
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_keep_tempo_high.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_keep_tempo_high.mp3",
+      "sha256": "ea1007f2ef656c33f1b750c7401ea451103c2939bf23614597c36747515f8878",
+      "bytes": 41839
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_keep_your_bearing",
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_keep_your_bearing.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_keep_your_bearing.mp3",
+      "sha256": "3b2d207af2e262962295e838045add898d9caeb2965997fbef95e28a0ed03288",
+      "bytes": 36824
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_maintain_your_interval",
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_maintain_your_interval.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_maintain_your_interval.mp3",
+      "sha256": "2cd883cb3a5a1e06ee1973159cf83c8b9bf0ccbcaa2e03901dab34a6b7dc546a",
+      "bytes": 49781
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_most_ricky_tick",
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_most_ricky_tick.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_most_ricky_tick.mp3",
+      "sha256": "25890ec2c665a8812445cd97edc2e007f35245d992091fef0c82466888cbde20",
+      "bytes": 44765
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_move_fast_stay_precise",
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_move_fast_stay_precise.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_move_fast_stay_precise.mp3",
+      "sha256": "ec60cf5523a11708b520d8687be160b85e7f8f896fb0affcceed492ee87d1bc9",
+      "bytes": 40586
+    },
+    {
+      "kind": "voice",
+      "filename": "cmd_move_with_a_purpose",
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_move_with_a_purpose.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_move_with_a_purpose.mp3",
+      "sha256": "f724cdd4ededa4c699499842870e9e6bbf07f85c170871dd2eac114cf02e368f",
+      "bytes": 25539
+    },
+    {
+      "kind": "voice",
       "filename": "cmd_no_hesitation_move",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_no_hesitation_move.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_no_hesitation_move.mp3",
-      "sha256": "7dd74098d83bfc894cd1f85a64008a794a69324638c772749e4b19e71b9fc4d8",
-      "bytes": 34316
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_no_hesitation_move.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_no_hesitation_move.mp3",
+      "sha256": "8bc270010ca6fc9a63e9b7b4abe3ba32e132a758db69ff6962651c40ccd1b288",
+      "bytes": 46019
     },
     {
       "kind": "voice",
       "filename": "cmd_own_this_rep",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_own_this_rep.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_own_this_rep.mp3",
-      "sha256": "7bfcfee08422017ae28f5a30b708c356d18461a057eb4063744be7c2726a7de6",
-      "bytes": 29996
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_own_this_rep.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_own_this_rep.mp3",
+      "sha256": "f049e6299360b3cfa9271d05294dd308d9310069b319207a96d6d6074ddcfa9c",
+      "bytes": 21359
     },
     {
       "kind": "voice",
       "filename": "cmd_pick_it_up",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_pick_it_up.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_pick_it_up.mp3",
-      "sha256": "2e6f78c2e0f2fa47781760cf6f6c92f462d9479559c55ad262393c252c10562c",
-      "bytes": 18016
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_pick_it_up.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_pick_it_up.mp3",
+      "sha256": "8dc9799aef349beb29da2726e4c18080f9c7a912d27c9f68fabfd50441ddd7b7",
+      "bytes": 40586
     },
     {
       "kind": "voice",
       "filename": "cmd_reset_and_attack",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_reset_and_attack.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_reset_and_attack.mp3",
-      "sha256": "29b85b862d0ee74cde7b8c3d40b44324ea67bdd33e536b22eb6b8f26294b2d2c",
-      "bytes": 36824
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_reset_and_attack.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_reset_and_attack.mp3",
+      "sha256": "7e38d9dae27b1f4fa68f3ca9bc8b5b2847ee7fc932f47481b18798df2bf325d9",
+      "bytes": 31808
     },
     {
       "kind": "voice",
       "filename": "cmd_sharp_movement_sharp_focus",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_sharp_movement_sharp_focus.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_sharp_movement_sharp_focus.mp3",
-      "sha256": "0bb663a8ba49668e86ad7c4cdfb59784c5cd12e5a1ba5824adf826840dd6acc9",
-      "bytes": 36824
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_sharp_movement_sharp_focus.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_sharp_movement_sharp_focus.mp3",
+      "sha256": "d5dbde7efeadb9d809fb88c8342ea200055318577a8c9d85d7f954f9f072449f",
+      "bytes": 39332
     },
     {
       "kind": "voice",
       "filename": "cmd_snap_back_and_drive",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_snap_back_and_drive.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_snap_back_and_drive.mp3",
-      "sha256": "65a849215968d4cd9d53546ba599b1c2aeb3f7203040542a7d5ae628f374975c",
-      "bytes": 27211
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_snap_back_and_drive.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_snap_back_and_drive.mp3",
+      "sha256": "9b6c515c27722ec240a95c790921128c5c5e44ee343a5079e34e85586528642a",
+      "bytes": 52288
     },
     {
       "kind": "voice",
       "filename": "cmd_sound_off_and_drive",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_sound_off_and_drive.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_sound_off_and_drive.mp3",
-      "sha256": "87ad0efe71161a55e7d142891b1dc2a8da84c67f520e9143c97cab3c84a7411b",
-      "bytes": 30137
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_sound_off_and_drive.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_sound_off_and_drive.mp3",
+      "sha256": "366e09ea1ff9abbf7c137f825da85384c5c4ef88ebd55b57f896011a051ffb8a",
+      "bytes": 40586
     },
     {
       "kind": "voice",
       "filename": "cmd_stay_disciplined",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_stay_disciplined.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_stay_disciplined.mp3",
-      "sha256": "5772646787cd0e3819d9915e1a2f54c8d37ee1359c366ef39cb99b8b4b057e2d",
-      "bytes": 19688
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_stay_disciplined.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_stay_disciplined.mp3",
+      "sha256": "6222ee491ee9de4d17ba042a87de3d02343a5cc2f9f3b0473924d6e4ebae6d28",
+      "bytes": 52288
     },
     {
       "kind": "voice",
       "filename": "cmd_stay_in_the_fight",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_stay_in_the_fight.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_stay_in_the_fight.mp3",
-      "sha256": "560d9db055250e75bfa13dd4846a9c935a1c0bbc74cf365d4ec01fee4412c2cc",
-      "bytes": 24285
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_stay_in_the_fight.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_stay_in_the_fight.mp3",
+      "sha256": "20305bf1f2e7c51d5efcc1aceb4b9d9549fc16f3eb8fdfe2b98db95df5d17c63",
+      "bytes": 30555
     },
     {
       "kind": "voice",
       "filename": "cmd_stay_locked_in",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_stay_locked_in.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_stay_locked_in.mp3",
-      "sha256": "93e9a206892926b5df832012c80c05639b9953453d4945946d6fb799d2a5a8bc",
-      "bytes": 21777
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_stay_locked_in.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_stay_locked_in.mp3",
+      "sha256": "7840098897e183a4c459aae4df078c251698987a76ec80fff343b8741dd13b04",
+      "bytes": 44765
     },
     {
       "kind": "voice",
       "filename": "cmd_strong_feet_strong_pace",
-      "relativePath": "packs/2026-05_combatives_corner/voice/cmd_strong_feet_strong_pace.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/cmd_strong_feet_strong_pace.mp3",
-      "sha256": "a3b4257c710c34f508ab47f55e47d47fce6fbe242834d40f54283cca4774d65c",
+      "relativePath": "packs/2026-06_conditioning_lane/voice/cmd_strong_feet_strong_pace.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/cmd_strong_feet_strong_pace.mp3",
+      "sha256": "974f92816c1fae11f925a055bf00d94cdb76bb20fc3ab6c7362d0cc19485b944",
       "bytes": 34316
     },
     {
       "kind": "voice",
       "filename": "elapsed_120s",
-      "relativePath": "packs/2026-05_combatives_corner/voice/elapsed_120s.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/elapsed_120s.mp3",
-      "sha256": "0bdec0cf2c0f95eac97663bf1b481315ebfc0a6d9cf8fd2b71449521d71d02c3",
-      "bytes": 48812
+      "relativePath": "packs/2026-06_conditioning_lane/voice/elapsed_120s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/elapsed_120s.mp3",
+      "sha256": "b41744b204accc8501ffe0185a9435b2c28e3cda33060cb59ae180fb82009e51",
+      "bytes": 52288
     },
     {
       "kind": "voice",
       "filename": "elapsed_180s",
-      "relativePath": "packs/2026-05_combatives_corner/voice/elapsed_180s.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/elapsed_180s.mp3",
-      "sha256": "63b8aa4de42f13007a126e2a133e8ac70d8b1b443663455970c5e9572a3b9f5c",
-      "bytes": 39596
+      "relativePath": "packs/2026-06_conditioning_lane/voice/elapsed_180s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/elapsed_180s.mp3",
+      "sha256": "d5343af1cd43238610d4017eba83ce237423a26fb8088bc397be5222355013a8",
+      "bytes": 61066
     },
     {
       "kind": "voice",
       "filename": "elapsed_240s",
-      "relativePath": "packs/2026-05_combatives_corner/voice/elapsed_240s.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/elapsed_240s.mp3",
-      "sha256": "23786f48d561b6969f79ed59ea36dcc6710f4e30f0cd839dc8d429c814917b33",
-      "bytes": 47691
+      "relativePath": "packs/2026-06_conditioning_lane/voice/elapsed_240s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/elapsed_240s.mp3",
+      "sha256": "c9b7171e8d92d5fbd3d3f544698cc41ba02098a0d641212ef350c0d27fb9dd6a",
+      "bytes": 74022
     },
     {
       "kind": "voice",
       "filename": "elapsed_300s",
-      "relativePath": "packs/2026-05_combatives_corner/voice/elapsed_300s.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/elapsed_300s.mp3",
-      "sha256": "29531eb10ec91f582187a85b222420ef77ae3f136c2fa0c428aefda6e71ddf5a",
-      "bytes": 44972
+      "relativePath": "packs/2026-06_conditioning_lane/voice/elapsed_300s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/elapsed_300s.mp3",
+      "sha256": "922f4d5c9f13b9a431f1f114b002887db5e1ea87dc5e61a6c785cbea9bbc27c2",
+      "bytes": 47273
     },
     {
       "kind": "voice",
       "filename": "elapsed_420s",
-      "relativePath": "packs/2026-05_combatives_corner/voice/elapsed_420s.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/elapsed_420s.mp3",
-      "sha256": "300e718f3e1b024a5bb2084b1e08a5d2e5b82ee8bc01d6dcbec1409641f7948f",
-      "bytes": 53960
+      "relativePath": "packs/2026-06_conditioning_lane/voice/elapsed_420s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/elapsed_420s.mp3",
+      "sha256": "8a7678dd1a98ce32b95ae8c22df20bca7acf60fed5995e594f3f88faa1559b64",
+      "bytes": 84471
     },
     {
       "kind": "voice",
       "filename": "elapsed_540s",
-      "relativePath": "packs/2026-05_combatives_corner/voice/elapsed_540s.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/elapsed_540s.mp3",
-      "sha256": "28ec6f911913f526c6732f3de29d29e3b54b527d22e3b5d4774c5f8e4f848b20",
-      "bytes": 66499
+      "relativePath": "packs/2026-06_conditioning_lane/voice/elapsed_540s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/elapsed_540s.mp3",
+      "sha256": "783fea02789e27f28475d1c3fc56c0ec31a75390d01f728c315ddd718b9c2b3d",
+      "bytes": 62319
     },
     {
       "kind": "voice",
       "filename": "elapsed_600s",
-      "relativePath": "packs/2026-05_combatives_corner/voice/elapsed_600s.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/elapsed_600s.mp3",
-      "sha256": "1901fa33923bba378db672e894a3544fb95cd7b8756c70fea99dd7d6aa10d661",
-      "bytes": 63573
+      "relativePath": "packs/2026-06_conditioning_lane/voice/elapsed_600s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/elapsed_600s.mp3",
+      "sha256": "2351612cbae32d009838d4cff2f8279f5c1f87923d82b220cbb6bf019f8e1344",
+      "bytes": 82799
     },
     {
       "kind": "voice",
       "filename": "elapsed_60s",
-      "relativePath": "packs/2026-05_combatives_corner/voice/elapsed_60s.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/elapsed_60s.mp3",
-      "sha256": "5ee7061912039b7e1cd92eba944f76cef5935c9850d08494036be1428ea06454",
-      "bytes": 35372
+      "relativePath": "packs/2026-06_conditioning_lane/voice/elapsed_60s.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/elapsed_60s.mp3",
+      "sha256": "285902c6bc2fa030c269d9a1ecae2779c44fa2c1325921334fa1dedf4c801933",
+      "bytes": 59812
     },
     {
       "kind": "voice",
       "filename": "preview_elapsed",
-      "relativePath": "packs/2026-05_combatives_corner/voice/preview_elapsed.mp3",
-      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-05_combatives_corner/voice/preview_elapsed.mp3",
-      "sha256": "56a889bdf577df38d3bb612e0f950c8f7cfb54ea57d4a5c048ba4f54b847362e",
-      "bytes": 63573
+      "relativePath": "packs/2026-06_conditioning_lane/voice/preview_elapsed.mp3",
+      "url": "https://raw.githubusercontent.com/IgorGanapolsky/Random-Timer/develop/content/pro_audio/runtime/packs/2026-06_conditioning_lane/voice/preview_elapsed.mp3",
+      "sha256": "7152e60c3a8e3030c6409fffd61fbdafaeca598db3379c555a5914481a574988",
+      "bytes": 63991
     }
   ]
 }

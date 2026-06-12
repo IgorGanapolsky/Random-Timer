@@ -77,6 +77,7 @@ jobs:
             marketing/data/engagement_dashboard.json
             marketing/data/abandon_rate.json
             /tmp/readiness.json
+            retention-days: 1
 
       - name: Create alert issue if WQTU drops
         if: steps.wqtu.outputs.status == 'alert'

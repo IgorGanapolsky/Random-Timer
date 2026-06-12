@@ -36,4 +36,4 @@ jobs:
           path: |
             marketing/data/north_star_ops.json
             marketing/data/north_star_ops.md
-          retention-days: 14
+          retention-days: 1

@@ -65,3 +65,4 @@ jobs:
           path: |
             marketing/data/review_velocity_report.md
             marketing/data/review_velocity.json
+            retention-days: 1

@@ -5,8 +5,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 ANDROID_ANALYTICS = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/analytics/AnalyticsService.kt"
+ANDROID_POSTHOG_CONFIG = (
+    ROOT
+    / "native-android/app/src/main/java/com/iganapolsky/randomtimer/analytics/PostHogAnalyticsConfigFactory.kt"
+)
 ANDROID_NAV = ROOT / "native-android/app/src/main/java/com/iganapolsky/randomtimer/ui/navigation/Navigation.kt"
 IOS_ANALYTICS = ROOT / "native-ios/RandomTimer/Sources/Services/AnalyticsService.swift"
+IOS_POSTHOG_CONFIG = (
+    ROOT / "native-ios/RandomTimer/Sources/Services/PostHogAnalyticsConfigFactory.swift"
+)
 IOS_TIMER_MANAGER = ROOT / "native-ios/RandomTimer/Sources/Services/TimerManager.swift"
 IOS_SETUP_SCREEN = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/TimerSetupScreen.swift"
 IOS_ACTIVE_SCREEN = ROOT / "native-ios/RandomTimer/Sources/UI/Screens/ActiveTimerScreen.swift"
@@ -64,7 +71,12 @@ class MobileAnalyticsParityTests(unittest.TestCase):
         # exposes a "+5 min" extend-running-timer action (see
         # TimerForegroundService.kt around line 430). iOS doesn't ship that
         # affordance, so the event has no legitimate iOS emission point.
-        android_only_events = {"timer_extended"}
+        android_only_events = {
+            "timer_extended",
+            "billing_client_setup",
+            "billing_product_query_retry",
+            "billing_diagnostic",
+        }
         self.assertEqual(
             android_events - android_only_events,
             ios_events - ios_only_events,
@@ -110,9 +122,23 @@ class MobileAnalyticsParityTests(unittest.TestCase):
 
     def test_lifecycle_autocapture_disabled_on_both_platforms(self):
         android_source = ANDROID_ANALYTICS.read_text(encoding="utf-8")
+        android_config = ANDROID_POSTHOG_CONFIG.read_text(encoding="utf-8")
         ios_source = IOS_ANALYTICS.read_text(encoding="utf-8")
-        self.assertIn("captureApplicationLifecycleEvents = false", android_source)
-        self.assertIn("config.captureApplicationLifecycleEvents = false", ios_source)
+        ios_config = IOS_POSTHOG_CONFIG.read_text(encoding="utf-8")
+        self.assertIn(
+            "captureApplicationLifecycleEvents = false",
+            android_source + android_config,
+        )
+        self.assertIn(
+            "captureApplicationLifecycleEvents = false",
+            ios_source + ios_config,
+        )
+
+    def test_error_tracking_autocapture_gated_for_internal_users(self):
+        android_config = ANDROID_POSTHOG_CONFIG.read_text(encoding="utf-8")
+        ios_config = IOS_POSTHOG_CONFIG.read_text(encoding="utf-8")
+        self.assertIn("errorTrackingConfig.autoCapture = !isInternalUser", android_config)
+        self.assertIn("errorTrackingConfig.autoCapture = !isInternalUser", ios_config)
 
     def test_manual_lifecycle_events_tracked_on_initialize(self):
         android_source = ANDROID_ANALYTICS.read_text(encoding="utf-8")

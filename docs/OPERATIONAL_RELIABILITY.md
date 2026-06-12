@@ -106,6 +106,16 @@ CI: workflow `operational-verification-bundle.yml` (on schedule, `workflow_dispa
 
 The CEO may require explicit approval for any irreversible or high-blast-radius action. Agents must honor that when stated for a task.
 
+## 10. Release verification contract (binding)
+
+No production `native-release.yml` ship claim without all of the following:
+
+- **Full `connectedDebugAndroidTest` gate:** `android-device-test-gate` runs `scripts/device-tests/ci-connected-all.sh` — six instrumentation classes, one Gradle invocation per class, `am force-stop` only between classes (never in `@AfterClass` on the last class of a run).
+- **Store API verify:** `android-release` / `ios-testflight` upload succeeds; `verify-releases` runs `scripts/verify_release.py` with `--wait` (Tier 0).
+- **Public listing read-back (Tier 2):** `verify_play_public_listing.py` on production track is advisory (`continue-on-error: true`); lag does not block tag/submit.
+- **PostHog billing proof:** After upload, confirm paywall / purchase telemetry read-back in-session (proxy events, not ledger revenue).
+- **No skip:** Do not waive `android-device-test-gate` to PR smoke-only, skip `verify-releases`, or treat Android-only dispatch as iOS/TestFlight shipped.
+
 ---
 
 **Canonical path:** `docs/OPERATIONAL_RELIABILITY.md`  

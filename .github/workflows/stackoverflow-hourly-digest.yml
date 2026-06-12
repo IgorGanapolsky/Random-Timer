@@ -63,4 +63,4 @@ jobs:
         with:
           name: stackoverflow-hourly-digest
           path: so_hourly_out/
-          retention-days: 14
+          retention-days: 1

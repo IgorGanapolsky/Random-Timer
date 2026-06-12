@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "updated": "2026-06-02T20:40:00Z",
+  "description": "Canonical HogQL saved queries and alert templates for billing/revenue observability. Apply via scripts/posthog_observability_bootstrap.py.",
+  "posthog_host": "https://us.i.posthog.com",
+  "saved_queries": [
+    {
+      "id": "billing_catalog_empty_play",
+      "title": "Android Play — empty billing catalog (7d)",
+      "purpose": "Detect production Play builds where SKU queries succeeded but returned no catalog (billing ready + product details supported).",
+      "hogql": "SELECT count() AS events, uniq(person_id) AS users FROM events WHERE event = 'billing_product_catalog_status' AND coalesce(toString(properties.status), '') = 'empty' AND coalesce(toString(properties.probe_blocked_reason), '') = '' AND coalesce(toString(properties.distribution_channel), 'legacy') IN ('play_store', 'legacy') AND timestamp > now() - interval 7 day"
+    },
+    {
+      "id": "billing_catalog_probe_blocked_play",
+      "title": "Android Play — billing catalog probe blocked (7d)",
+      "purpose": "Billing unavailable, product-details unsupported, or client not ready (not a Play SKU miss).",
+      "hogql": "SELECT coalesce(toString(properties.status), 'unknown') AS status, count() AS events, uniq(person_id) AS users FROM events WHERE event = 'billing_product_catalog_status' AND coalesce(toString(properties.status), '') IN ('billing_not_ready', 'product_details_unsupported', 'catalog_probe_pending') AND coalesce(toString(properties.distribution_channel), 'legacy') IN ('play_store', 'legacy') AND timestamp > now() - interval 7 day GROUP BY status ORDER BY events DESC"
+    },
+    {
+      "id": "billing_product_not_found_feature_unsupported",
+      "title": "Play — FEATURE_NOT_SUPPORTED on SKU query (7d)",
+      "purpose": "Revenue blocker: billing_response_code -2 on product details.",
+      "hogql": "SELECT coalesce(toString(properties.product_id), 'unknown') AS product_id, count() AS events, uniq(person_id) AS users FROM events WHERE event = 'billing_product_not_found' AND toInt(coalesce(properties.billing_response_code, 0)) = -2 AND coalesce(toString(properties.distribution_channel), 'legacy') IN ('play_store', 'legacy') AND timestamp > now() - interval 7 day GROUP BY product_id ORDER BY events DESC"
+    },
+    {
+      "id": "paywall_views_no_offer_select",
+      "title": "Paywall views without offer select (7d)",
+      "purpose": "Funnel leak: users see paywall but never select a plan.",
+      "hogql": "SELECT count(DISTINCT e.person_id) AS paywall_users FROM events e WHERE e.event IN ('paywall_view', 'paywall_viewed') AND e.timestamp > now() - interval 7 day AND e.person_id NOT IN ( SELECT person_id FROM events WHERE event = 'paywall_offer_select' AND timestamp > now() - interval 7 day )"
+    },
+    {
+      "id": "billing_client_setup_non_ok",
+      "title": "Billing client setup failures (7d)",
+      "purpose": "Play Billing connection did not reach OK on setup.",
+      "hogql": "SELECT coalesce(toString(properties.billing_response_label), 'unknown') AS label, count() AS events FROM events WHERE event = 'billing_client_setup' AND coalesce(toInt64(properties.billing_response_code), 0) != 0 AND timestamp > now() - interval 7 day GROUP BY label ORDER BY events DESC"
+    },
+    {
+      "id": "billing_query_retries",
+      "title": "Billing product query retries (24h)",
+      "purpose": "Transient SKU query failures before final not_found.",
+      "hogql": "SELECT coalesce(toString(properties.billing_response_label), 'unknown') AS label, count() AS events FROM events WHERE event = 'billing_product_query_retry' AND timestamp > now() - interval 1 day GROUP BY label ORDER BY events DESC"
+    }
+  ],
+  "log_alert_templates": [
+    {
+      "id": "ci_billing_error_logs",
+      "name": "RTT CI — billing error logs",
+      "enabled": false,
+      "note": "Enable after OTLP log export from CI/scripts uses service name random-timer-automation.",
+      "window_minutes": 5,
+      "threshold_count": 1,
+      "threshold_operator": "above",
+      "filters": {
+        "severityLevels": ["error"],
+        "filterGroup": {
+          "type": "AND",
+          "values": [
+            {
+              "type": "AND",
+              "values": [
+                {
+                  "key": "body",
+                  "type": "log",
+                  "operator": "icontains",
+                  "value": "billing"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

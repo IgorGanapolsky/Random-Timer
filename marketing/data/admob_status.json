@@ -1,0 +1,42 @@
+{
+  "source": "admob_metrics_snapshot",
+  "generated_at": "2026-06-10T15:32:45Z",
+  "publisher_id": "pub-5173650670360699",
+  "app_ads": {
+    "expected_line": "google.com, pub-5173650670360699, DIRECT, f08c47fec0942fa0",
+    "checks": [
+      {
+        "url": "https://igorganapolsky.github.io/Random-Timer/app-ads.txt",
+        "ok": true,
+        "message": "ok: found authorized line for pub-5173650670360699 at https://igorganapolsky.github.io/Random-Timer/app-ads.txt"
+      },
+      {
+        "url": "https://igorganapolsky.github.io/app-ads.txt",
+        "ok": true,
+        "message": "ok: found authorized line for pub-5173650670360699 at https://igorganapolsky.github.io/app-ads.txt"
+      },
+      {
+        "url": "https://igorganapolsky.github.io/Random-Timer/support/app-ads.txt",
+        "ok": true,
+        "message": "ok: found authorized line for pub-5173650670360699 at https://igorganapolsky.github.io/Random-Timer/support/app-ads.txt"
+      }
+    ],
+    "all_pass": true
+  },
+  "api": null,
+  "rewarded_rollout": {
+    "posthog_flag": "rewarded_ads_enabled",
+    "posthog_flag_default": "off",
+    "android_app_approval_state": null,
+    "app_ads_hosting_all_pass": true,
+    "ready_for_internal_flag_test": false,
+    "ready_for_production_rewarded": false,
+    "production_blockers": [
+      "Complete AdMob payment setup (payouts / full serving)",
+      "Enable PostHog flag with staged rollout (start internal / 5%)",
+      "Wire AdMobRewardedAdPort (SDK) \u2014 StubRewardedAdPort is default",
+      "IAP catalog must be healthy before mixing ads + paywall (see monetization_decision_brief)"
+    ],
+    "ceo_email_evidence": "AdMob app approved email 2026-05-30 aligns with appApprovalState APPROVED when API creds present"
+  }
+}

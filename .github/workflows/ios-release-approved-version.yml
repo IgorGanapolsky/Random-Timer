@@ -43,3 +43,4 @@ jobs:
           name: ios-release-result
           path: ios-release-result.json
           if-no-files-found: warn
+          retention-days: 1

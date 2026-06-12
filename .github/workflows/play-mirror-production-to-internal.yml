@@ -1,0 +1,133 @@
+name: Play Mirror Production to Internal
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: "Android versionCode to mirror from production (e.g., 1781012436)"
+        required: true
+      release_name:
+        description: "Release name (e.g., 1.3.55)"
+        required: true
+        default: "1.3.55"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: play-mirror-internal-${{ github.event.inputs.version_code }}
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: python -m pip install --quiet google-api-python-client==2.149.0 google-auth==2.35.0
+
+      - name: Mirror production release to internal track
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+          FIREBASE_REQUIRED_TESTER_EMAIL: ${{ secrets.FIREBASE_REQUIRED_TESTER_EMAIL }}
+          PKG: com.iganapolsky.randomtimer
+          VERSION_CODE: ${{ inputs.version_code }}
+          RELEASE_NAME: ${{ inputs.release_name }}
+        run: |
+          python - <<'PY'
+          import json, os, sys
+          from pathlib import Path
+          from google.oauth2 import service_account
+          from googleapiclient.discovery import build
+
+          key = os.environ["GOOGLE_PLAY_JSON_KEY"]
+          pkg = os.environ["PKG"]
+          vcode = os.environ["VERSION_CODE"].strip()
+          rname = os.environ["RELEASE_NAME"].strip()
+          tester_email = (os.environ.get("FIREBASE_REQUIRED_TESTER_EMAIL") or "").strip()
+
+          creds = service_account.Credentials.from_service_account_info(
+              json.loads(key),
+              scopes=["https://www.googleapis.com/auth/androidpublisher"],
+          )
+          svc = build("androidpublisher", "v3", credentials=creds, cache_discovery=False)
+
+          edit = svc.edits().insert(packageName=pkg, body={}).execute()
+          eid = edit["id"]
+          committed = False
+          try:
+              prod_track = svc.edits().tracks().get(packageName=pkg, editId=eid, track="production").execute()
+              prod_release = None
+              for r in prod_track.get("releases", []):
+                  if vcode in [str(c) for c in r.get("versionCodes", [])]:
+                      prod_release = r
+                      break
+              if not prod_release:
+                  print(f"❌ versionCode {vcode} not found on production track")
+                  sys.exit(2)
+
+              release_notes = prod_release.get("releaseNotes", [])
+              if not release_notes:
+                  notes_path = Path(f"native-android/fastlane/metadata/android/en-US/changelogs/{vcode}.txt")
+                  if not notes_path.is_file():
+                      notes_path = Path("native-android/fastlane/metadata/android/en-US/changelogs/default.txt")
+                  text = notes_path.read_text(encoding="utf-8") if notes_path.is_file() else "New release."
+                  release_notes = [{"language": "en-US", "text": text[:500]}]
+
+              body_release = {
+                  "name": rname,
+                  "versionCodes": [vcode],
+                  "status": "completed",
+                  "releaseNotes": release_notes,
+              }
+
+              print(f"Mirroring versionCode={vcode} ({rname}) from production to internal")
+              svc.edits().tracks().update(
+                  packageName=pkg,
+                  editId=eid,
+                  track="internal",
+                  body={"releases": [body_release]},
+              ).execute()
+
+              # Play edits.testers API supports googleGroups only (not individual emails).
+              if tester_email:
+                  print(
+                      "ℹ️ FIREBASE_REQUIRED_TESTER_EMAIL is set; "
+                      "individual emails must be managed in Play Console UI (API limitation)."
+                  )
+              else:
+                  print("⚠️ FIREBASE_REQUIRED_TESTER_EMAIL not set")
+
+              commit = svc.edits().commit(
+                  packageName=pkg,
+                  editId=eid,
+              ).execute()
+              committed = True
+              print(f"✅ Edit committed. edit_id={commit.get('id','')}")
+          finally:
+              if not committed:
+                  try:
+                      svc.edits().delete(packageName=pkg, editId=eid).execute()
+                  except Exception:
+                      pass
+          PY
+
+      - name: Verify internal track read-back
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+          VERSION_CODE: ${{ inputs.version_code }}
+          RELEASE_NAME: ${{ inputs.release_name }}
+        run: |
+          python -m pip install --quiet google-api-python-client==2.149.0 google-auth==2.35.0 requests==2.32.5
+          printf '%s' "$GOOGLE_PLAY_JSON_KEY" > /tmp/play-service-account.json
+          export GOOGLE_PLAY_JSON_KEY=/tmp/play-service-account.json
+          python scripts/verify_release.py \
+            --platform android \
+            --track internal \
+            --version-code "$VERSION_CODE" \
+            --version "$RELEASE_NAME"

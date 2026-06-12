@@ -1,33 +1,33 @@
 TRAIN FOR CHAOS. NOT RHYTHM.
 
-Unpredictable random timer for boxing, MMA, BJJ, HIIT, CrossFit, and tactical drills.
+Random Tactical Timer is an unpredictable interval and round timer for boxing, MMA, BJJ, wrestling, Muay Thai, kickboxing, HIIT, and tactical drills.
 
-Most timers teach anticipation. Random Tactical Timer trains reaction.
-
-Instead of firing on a predictable beat, it triggers at an unpredictable moment inside your chosen time window, forcing real response under pressure.
-
-Built for combat sports, HIIT, CrossFit, and reaction training.
+Most timers teach anticipation. This one trains reaction: the cue hits at a random moment inside your range so you stay present under pressure.
 
 FEATURES
-- Random trigger timing inside your selected range
-- Competition Warmup preset for BJJ, judo, wrestling, and fight-day prep
-- Hidden countdown mode to stop timer watching
-- Male or female AI coach voice callouts (Pro)
-- Loop mode with optional round limits (Pro)
-- Extended session range up to 60 minutes (Pro)
-- Sound Arsenal and richer alarm options for serious sessions (Pro)
+• Random trigger timing inside your selected min/max range
+• Hidden countdown mode—no clock watching
+• High-intensity alarms and haptics for gym use
+• Loop mode for continuous random rounds
+
+PRO TACTICAL (OPTIONAL)
+• Coach voice callouts—male or female tactical cues mid-round
+• Command-cue previews and elapsed-time callouts for pressure drills
+• Sound Arsenal: expanded alarm library for serious sessions
+• Round selection (1–100) and sessions up to 60 minutes
+• Fresh Pro voice callouts and sounds added monthly
 
 TRAINING USES
-- Boxing pad rounds, bag work, and shadowboxing flurries
-- MMA, Muay Thai, kickboxing, and sparring reaction drills
-- BJJ scrambles and positional transition drills
-- Military combatives and self-defense scenario training
-- HIIT, tabata, and conditioning sessions that punish predictability
+• Boxing pad rounds, bag work, and shadowboxing flurries
+• MMA, Muay Thai, and kickboxing reaction drills
+• BJJ scrambles and positional transitions
+• Wrestling and grappling prep
+• HIIT, Tabata, and CrossFit conditioning that punishes predictability
 
 Stop timing your drills. Start training your response.
 
 SUBSCRIPTION INFO
-Pro Tactical is offered as auto-renewable subscriptions (including monthly and annual options where available) and a one-time upgrade may be offered depending on App Store configuration in your region. Example list pricing when configured in App Store Connect: $3.99/month and $29.99/year; actual price is shown on Apple’s purchase confirmation sheet before you buy. Payment is charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Manage subscriptions in Settings > Apple ID > Subscriptions.
+Pro Tactical is offered as auto-renewable subscriptions (monthly and annual options where available). A one-time upgrade may be offered depending on App Store configuration in your region. Example list pricing when configured in App Store Connect: $3.99/month and $29.99/year; actual price is shown on Apple’s purchase confirmation sheet before you buy. Payment is charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Manage subscriptions in Settings > Apple ID > Subscriptions.
 
 Optional product analytics may be collected to improve stability and features—see the Privacy Policy below.
 

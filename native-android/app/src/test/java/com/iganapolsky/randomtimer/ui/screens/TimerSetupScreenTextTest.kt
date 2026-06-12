@@ -58,16 +58,6 @@ class TimerSetupScreenTextTest {
     }
 
     @Test
-    fun competitionPrepSectionTitleMatchesIOS() {
-        assertThat(competitionPrepSectionTitle()).isEqualTo("Competition Prep")
-    }
-
-    @Test
-    fun competitionPrepIsAvailableWithoutPro() {
-        assertThat(isCompetitionPrepProGated()).isFalse()
-    }
-
-    @Test
     fun soundArsenalFooterExplainsPreviewWhenTrialInactive() {
         assertThat(soundArsenalFreeFooterText(canEquipProSounds = false))
             .contains("preview")

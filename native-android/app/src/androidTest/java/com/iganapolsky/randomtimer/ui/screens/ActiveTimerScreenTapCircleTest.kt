@@ -1,6 +1,7 @@
 package com.iganapolsky.randomtimer.ui.screens
 
 import androidx.activity.ComponentActivity
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -95,11 +96,11 @@ class ActiveTimerScreenTapCircleTest {
             }
         }
 
-        // RUNNING state shows "Timer running" accessibility label, not "Timer complete"
-        // The circle should NOT be clickable during RUNNING state
+        // RUNNING: CircularTimer exposes "Timer running, range …" and is not clickable.
         composeRule
-            .onNodeWithContentDescription("Timer running")
-            .performTouchInput { click() }
+            .onNodeWithContentDescription("Timer running", substring = true)
+            .assertExists()
+            .assertHasNoClickAction()
 
         composeRule.runOnIdle {
             assertTrue(!dismissed)

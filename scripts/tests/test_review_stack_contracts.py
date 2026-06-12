@@ -51,6 +51,12 @@ def test_ci_ai_review_gate_covers_copilot_and_sentry_threads() -> None:
     assert '"copilot-pull-request-reviewer[bot]"' in content
 
 
+def test_claude_review_runs_on_pull_request_only() -> None:
+    content = CLAUDE_REVIEW_WORKFLOW.read_text(encoding="utf-8")
+    assert "pull_request:" in content
+    assert "\n  push:\n" not in content
+
+
 def test_ci_config_documents_tighter_review_requirements() -> None:
     content = CI_CONFIG.read_text(encoding="utf-8")
 

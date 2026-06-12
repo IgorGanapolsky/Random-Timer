@@ -97,6 +97,7 @@ jobs:
           name: operational-verification-bundle
           path: marketing/data/operational_verification_bundle.json
           if-no-files-found: error
+          retention-days: 1
 
       - name: Summary
         if: always()

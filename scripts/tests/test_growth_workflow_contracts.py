@@ -23,8 +23,19 @@ PLAY_IAP_READBACK_WORKFLOW = ROOT / ".github/workflows/play-iap-product-readback
 WIKI_SYNC_WORKFLOW = ROOT / ".github/workflows/wiki-sync.yml"
 ACTIONS_BUDGET_DOC = ROOT / "docs/ACTIONS_BUDGET.md"
 STORE_RATINGS_SNAPSHOT_WORKFLOW = ROOT / ".github/workflows/store-ratings-snapshot.yml"
+ADMOB_APP_ADS_VERIFY_WORKFLOW = ROOT / ".github/workflows/admob-app-ads-verify.yml"
 AGENTS_DOC = ROOT / "AGENTS.md"
 ANDROID_AGENT_WORKFLOW_DOC = ROOT / "docs/ANDROID_AGENT_WORKFLOW.md"
+
+
+def test_admob_app_ads_verify_workflow_checks_hosted_files():
+    source = ADMOB_APP_ADS_VERIFY_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "admob_status.py" in source
+    assert "admob_metrics_snapshot.py" in source
+    assert "--also-check-play-contact-path" in source
+    assert "contents: write" in source
+    assert "marketing/data/admob_status.json" in source
 
 
 def test_store_ratings_snapshot_workflow_invokes_script_with_read_only_secrets():
@@ -230,16 +241,22 @@ def test_ios_submit_review_workflow_guards_ios_version_lineage():
     assert "fastlane submit_review" not in source
 
 
-def test_ios_metadata_sync_falls_back_to_live_storefront_when_metadata_only_version_is_review_locked():
+def test_ios_metadata_sync_fails_fast_when_no_editable_app_store_version():
     source = IOS_METADATA_SYNC_WORKFLOW.read_text(encoding="utf-8")
 
     resolve_section = source.split("- name: Resolve editable App Store version", 1)[1].split(
         "- name: Strict screenshot replacement + metadata upload", 1
     )[0]
-    assert 'if [[ "$IOS_METADATA_ONLY" == "true" ]]' in resolve_section
+    upload_section = source.split("- name: Strict screenshot replacement + metadata upload", 1)[1].split(
+        "- name: Upload readiness report", 1
+    )[0]
+    assert "asc_resolve_version.py" in resolve_section
     assert "from scripts.asc.asc_resolve_version import _is_editable_state" in resolve_section
-    assert "selected version state '$SELECTED_STATE' is not editable" in resolve_section
-    assert 'SELECTED_VERSION="LIVE"' in resolve_section
+    assert "Blocked on ASC" in resolve_section
+    assert "asc_list_versions.py" in resolve_section
+    assert 'SELECTED_VERSION="LIVE"' not in resolve_section
+    assert "use_live_version:true" not in upload_section
+    assert "asc_strict_screenshot_sync.py" in upload_section
 
 
 def test_native_release_workflow_disables_hidden_play_fallback_and_verifies_requested_platforms_only():
@@ -413,9 +430,9 @@ def test_device_tests_workflow_covers_ios_simulator_maestro_and_agent_device():
     ios_script = (ROOT / "scripts/device-tests/ci-maestro-ios.sh").read_text(encoding="utf-8")
     trigger_section = source.split("concurrency:", 1)[0]
 
-    assert "cancel-in-progress: false" in source
+    assert "cancel-in-progress: true" in source
     assert "pull_request:" in trigger_section
-    assert "branches: [develop, main]" in trigger_section
+    assert "branches: [develop, main, 'release/**', 'hotfix/**']" in trigger_section
     assert "paths:" not in trigger_section
     assert "iOS Simulator + Maestro + Agent Device" in source
     assert "scripts/device-tests/ci-maestro-ios.sh" in source
@@ -567,6 +584,8 @@ def test_play_iap_readback_workflow_scheduled_on_develop():
     assert "play_activate_iap_products.py" in source
     assert 'PYTHONPATH: ${{ github.workspace }}' in source
     assert "GOOGLE_PLAY_JSON_KEY" in source
+    assert "marketing/data/play_iap_catalog.json" in source
+    assert "contents: write" in source
 
 
 def test_wiki_sync_builds_wqtu_health_snapshot():
@@ -617,10 +636,14 @@ def test_ci_crashlytics_job_uses_dedicated_runtime_secret_and_is_not_best_effort
 def test_actions_budget_throttles_high_frequency_schedules():
     wiki = WIKI_SYNC_WORKFLOW.read_text(encoding="utf-8")
     watcher = (ROOT / ".github/workflows/store-release-watcher.yml").read_text(encoding="utf-8")
+    main_metrics = (ROOT / ".github/workflows/main.yml").read_text(encoding="utf-8")
     resolve = (ROOT / ".github/workflows/resolve-bot-comments.yml").read_text(encoding="utf-8")
+    budget_doc = ACTIONS_BUDGET_DOC.read_text(encoding="utf-8")
 
-    assert "cron: '0 */6 * * *'" in wiki
-    assert "cron: '0 */6 * * *'" in watcher
+    assert "cron: '5 */6 * * *'" in wiki
+    assert "cron: '10 */6 * * *'" in watcher
+    assert "cron: '20 */6 * * *'" in main_metrics
     assert "schedule:" not in resolve.split("workflow_dispatch:", 1)[0]
     assert ACTIONS_BUDGET_DOC.exists()
-    assert "CI_IOS_DEVICE_TIER" in ACTIONS_BUDGET_DOC.read_text(encoding="utf-8")
+    assert "CI_IOS_DEVICE_TIER" in budget_doc
+    assert "public" in budget_doc.lower()

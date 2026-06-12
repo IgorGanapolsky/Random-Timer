@@ -71,7 +71,7 @@ on:
         description: "Artifact retention days."
         required: false
         type: string
-        default: "14"
+        default: "1"
     secrets:
       OPENAI_API_KEY:
         required: false

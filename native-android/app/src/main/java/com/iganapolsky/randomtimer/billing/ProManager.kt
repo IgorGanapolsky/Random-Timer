@@ -77,6 +77,18 @@ class ProManager
                 if (productId in alreadyReported) return false
                 return true
             }
+
+            /**
+             * Play can connect billing while [BillingClient.FeatureType.PRODUCT_DETAILS] returns
+             * FEATURE_NOT_SUPPORTED. Emit [AnalyticsEvents.BILLING_PRODUCT_CATALOG_STATUS] on setup
+             * so catalog probes are not silent until paywall (fetchAllProductDetails skips query).
+             */
+            internal fun shouldTrackCatalogStatusOnBillingSetupFinished(
+                billingSetupResponseCode: Int,
+                productDetailsFeatureSupported: Boolean?,
+            ): Boolean =
+                billingSetupResponseCode == BillingClient.BillingResponseCode.OK &&
+                    productDetailsFeatureSupported == false
         }
 
         private val _entitlementLevel = MutableStateFlow(EntitlementLevel.NONE)
@@ -101,12 +113,17 @@ class ProManager
                     PendingPurchasesParams
                         .newBuilder()
                         .enableOneTimeProducts()
+                        .enablePrepaidPlans()
                         .build(),
                 ).build()
 
         private val cachedProductDetails = mutableMapOf<String, com.android.billingclient.api.ProductDetails>()
         private val reportedBillingProductNotFound = ConcurrentHashMap.newKeySet<String>()
+        private val productQueryFailureReasons = ConcurrentHashMap<String, String>()
+        private val productQueryRetryTelemetryCounts = ConcurrentHashMap<String, Int>()
         private var lastCatalogStatusSignature: String? = null
+        private var productDetailsFeatureSupported: Boolean? = null
+        private var legacySkuCatalogProbed = false
         private var pendingPurchaseEntryPoint: String? = null
 
         /** Last SKU passed to `launchBillingFlow` — Play sometimes omits `products` on failure callbacks. */
@@ -129,7 +146,39 @@ class ProManager
             billingClient.startConnection(
                 object : BillingClientStateListener {
                     override fun onBillingSetupFinished(result: BillingResult) {
-                        if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                        val responseCode = result.responseCode
+                        analyticsService.track(
+                            AnalyticsEvents.BILLING_CLIENT_SETUP,
+                            mapOf(
+                                "billing_response_code" to responseCode,
+                                "billing_response_label" to BillingResponseLabels.labelFor(responseCode),
+                                "billing_debug_message" to result.debugMessage,
+                                AnalyticsProperties.DISTRIBUTION_CHANNEL to analyticsService.distributionChannel(),
+                            ),
+                        )
+                        if (responseCode == BillingClient.BillingResponseCode.OK) {
+                            val featureResult =
+                                billingClient.isFeatureSupported(BillingClient.FeatureType.PRODUCT_DETAILS)
+                            productDetailsFeatureSupported =
+                                featureResult.responseCode == BillingClient.BillingResponseCode.OK
+                            analyticsService.track(
+                                AnalyticsEvents.BILLING_DIAGNOSTIC,
+                                mapOf<String, Any>(
+                                    "message" to "billing_product_details_feature",
+                                    "level" to "info",
+                                    "product_details_supported" to (productDetailsFeatureSupported == true),
+                                    "billing_response_code" to featureResult.responseCode,
+                                    "billing_response_label" to BillingResponseLabels.labelFor(featureResult.responseCode),
+                                ),
+                            )
+                            if (
+                                shouldTrackCatalogStatusOnBillingSetupFinished(
+                                    billingSetupResponseCode = responseCode,
+                                    productDetailsFeatureSupported = productDetailsFeatureSupported,
+                                )
+                            ) {
+                                trackProductCatalogStatus()
+                            }
                             externalScope.launch {
                                 restorePurchases(
                                     source = MonetizationSources.AUTO_RESTORE,
@@ -142,6 +191,7 @@ class ProManager
                     }
 
                     override fun onBillingServiceDisconnected() {
+                        invalidatePaywallCatalogCache()
                         externalScope.launch {
                             delay(1000)
                             connectAndRestore()
@@ -230,13 +280,14 @@ class ProManager
             pendingPurchaseEntryPoint = entryPoint
             pendingLaunchProductId = productID
             clearPendingTrialOffer()
-            if (!ensureBillingReadyForPurchase()) {
+            if (!ensureBillingReadyForPurchase(purchaseLaunch = true)) {
                 trackPurchaseResult(
                     success = false,
                     source = MonetizationSources.PAYWALL,
                     entryPoint = entryPoint,
                     responseCode = BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
                     debugMessage = "billing_not_ready",
+                    productId = productID,
                 )
                 clearPendingPaywallLaunch()
                 return false
@@ -256,6 +307,7 @@ class ProManager
                     entryPoint = entryPoint,
                     responseCode = BillingClient.BillingResponseCode.ITEM_UNAVAILABLE,
                     debugMessage = "product_details_unavailable",
+                    productId = productID,
                 )
                 clearPendingPaywallLaunch()
                 return false
@@ -295,6 +347,7 @@ class ProManager
                     entryPoint = entryPoint,
                     responseCode = BillingClient.BillingResponseCode.ITEM_UNAVAILABLE,
                     debugMessage = "subscription_offer_unavailable",
+                    productId = productID,
                 )
                 clearPendingPaywallLaunch()
                 return false
@@ -346,6 +399,7 @@ class ProManager
                     entryPoint = entryPoint,
                     responseCode = result.responseCode,
                     debugMessage = result.debugMessage,
+                    productId = productID,
                 )
                 clearPendingPaywallLaunch()
                 clearPendingTrialOffer()
@@ -354,12 +408,13 @@ class ProManager
             return true
         }
 
-        private suspend fun ensureBillingReadyForPurchase(): Boolean {
+        private suspend fun ensureBillingReadyForPurchase(purchaseLaunch: Boolean = false): Boolean {
             if (billingClient.isReady) {
                 return true
             }
             connectAndRestore()
-            repeat(6) {
+            val maxAttempts = if (purchaseLaunch) 16 else 6
+            repeat(maxAttempts) {
                 delay(500)
                 if (billingClient.isReady) {
                     return true
@@ -368,12 +423,64 @@ class ProManager
             return billingClient.isReady
         }
 
+        fun isBillingClientReady(): Boolean = billingClient.isReady
+
+        internal fun invalidatePaywallCatalogCache() {
+            cachedProductDetails.clear()
+            productQueryFailureReasons.clear()
+            lastCatalogStatusSignature = null
+        }
+
         private suspend fun fetchAllProductDetails() {
-            fetchProductDetails(BASE_PRODUCT_ID)
-            fetchProductDetails(ELITE_PRODUCT_ID)
-            fetchProductDetails(MONTHLY_PRODUCT_ID)
+            if (!billingClient.isReady) {
+                trackProductCatalogStatus()
+                return
+            }
+            refreshProductDetailsFeatureSupport()
+            if (productDetailsFeatureSupported != true) {
+                if (shouldAttemptLegacySkuCatalogProbe(productDetailsFeatureSupported)) {
+                    fetchPaywallCatalogViaLegacySkuFallback()
+                }
+                trackProductCatalogStatus()
+                return
+            }
+            fetchPaywallCatalogBatched()
             syncMonthlyCatalogFromEliteFallback()
             trackProductCatalogStatus()
+        }
+
+        /**
+         * BL7 removed querySkuDetailsAsync; when PRODUCT_DETAILS is unsupported we still attempt
+         * queryProductDetails (Play may return backward-compatible SKU payloads on older stores).
+         */
+        private suspend fun fetchPaywallCatalogViaLegacySkuFallback() {
+            if (!shouldAttemptLegacySkuCatalogProbe(productDetailsFeatureSupported)) {
+                return
+            }
+            legacySkuCatalogProbed = true
+            analyticsService.track(
+                AnalyticsEvents.BILLING_DIAGNOSTIC,
+                mapOf(
+                    "message" to "billing_legacy_sku_catalog_probe",
+                    "level" to "info",
+                    "catalog_probe_path" to "legacy_sku_query",
+                    "product_details_supported" to false,
+                ),
+            )
+            fetchPaywallCatalogBatched(forceLegacySkuQuery = true)
+            syncMonthlyCatalogFromEliteFallback()
+        }
+
+        /** Batched INAPP + SUBS probes (deduped Play ids) with shared retry/reconnect policy. */
+        private suspend fun fetchPaywallCatalogBatched(forceLegacySkuQuery: Boolean = false) {
+            val specsByType =
+                groupPaywallCatalogSpecsByProductType(buildPaywallCatalogQuerySpecs())
+            paywallCatalogProductTypesInFetchOrder().forEach { productType ->
+                val specs = specsByType[productType].orEmpty()
+                if (specs.isNotEmpty()) {
+                    fetchProductDetailsBatch(productType, specs, forceLegacySkuQuery = forceLegacySkuQuery)
+                }
+            }
         }
 
         /** Fallback when Play hosts P1M on `elite_tactical` instead of `elite_tactical_monthly`. */
@@ -387,75 +494,189 @@ class ProManager
             }
         }
 
-        suspend fun availablePaywallProductIds(): Set<String> {
+        suspend fun availablePaywallProductIds(forPurchaseLaunch: Boolean = false): Set<String> {
+            if (!ensureBillingReadyForPurchase(purchaseLaunch = forPurchaseLaunch)) {
+                trackProductCatalogStatus()
+                return emptySet()
+            }
             fetchAllProductDetails()
-            return cachedProductDetails.keys.toSet()
+            return cachedProductDetails.keys.intersect(
+                setOf(BASE_PRODUCT_ID, ELITE_PRODUCT_ID, MONTHLY_PRODUCT_ID),
+            )
+        }
+
+        private fun refreshProductDetailsFeatureSupport(): Boolean {
+            if (!billingClient.isReady) {
+                return false
+            }
+            val featureResult =
+                billingClient.isFeatureSupported(BillingClient.FeatureType.PRODUCT_DETAILS)
+            productDetailsFeatureSupported =
+                featureResult.responseCode == BillingClient.BillingResponseCode.OK
+            return productDetailsFeatureSupported == true
         }
 
         private fun trackProductCatalogStatus() {
             val requiredProductIds = setOf(BASE_PRODUCT_ID, ELITE_PRODUCT_ID, MONTHLY_PRODUCT_ID)
-            val availableProductIds = cachedProductDetails.keys.sorted()
-            val missingProductIds = requiredProductIds.minus(availableProductIds.toSet()).sorted()
-            val status =
-                when {
-                    availableProductIds.isEmpty() -> "empty"
-                    missingProductIds.isNotEmpty() -> "missing_required_products"
-                    else -> "ok"
-                }
-            val signature = "$status|${availableProductIds.joinToString()}|${missingProductIds.joinToString()}"
+            val cachedLogicalProductIds =
+                cachedProductDetails.keys.intersect(requiredProductIds)
+            val catalogStatus =
+                resolveBillingProductCatalogStatus(
+                    billingReady = billingClient.isReady,
+                    productDetailsSupported = productDetailsFeatureSupported,
+                    requiredProductIds = requiredProductIds,
+                    cachedLogicalProductIds = cachedLogicalProductIds,
+                    productQueryFailureReasons = productQueryFailureReasons,
+                    legacySkuCatalogProbed = legacySkuCatalogProbed,
+                )
+            val signature =
+                "${catalogStatus.status}|${catalogStatus.probeBlockedReason.orEmpty()}|" +
+                    "${catalogStatus.availableProductIds.joinToString()}|" +
+                    catalogStatus.missingProductIds.joinToString()
             if (lastCatalogStatusSignature == signature) {
                 return
             }
             lastCatalogStatusSignature = signature
             analyticsService.track(
                 AnalyticsEvents.BILLING_PRODUCT_CATALOG_STATUS,
-                mapOf(
-                    AnalyticsProperties.STATUS to status,
-                    AnalyticsProperties.AVAILABLE_PRODUCT_IDS to availableProductIds,
-                    AnalyticsProperties.MISSING_PRODUCT_IDS to missingProductIds,
-                    AnalyticsProperties.PRODUCT_COUNT to availableProductIds.size,
-                ),
+                buildMap {
+                    put(AnalyticsProperties.STATUS, catalogStatus.status)
+                    put(AnalyticsProperties.AVAILABLE_PRODUCT_IDS, catalogStatus.availableProductIds)
+                    put(AnalyticsProperties.MISSING_PRODUCT_IDS, catalogStatus.missingProductIds)
+                    put(AnalyticsProperties.PRODUCT_COUNT, catalogStatus.availableProductIds.size)
+                    put(
+                        AnalyticsProperties.DISTRIBUTION_CHANNEL,
+                        analyticsService.distributionChannel(),
+                    )
+                    catalogStatus.probeBlockedReason?.let { put("probe_blocked_reason", it) }
+                    put("billing_ready", billingClient.isReady)
+                    put(
+                        "product_details_supported",
+                        productDetailsFeatureSupported == true,
+                    )
+                    put("legacy_sku_catalog_probed", legacySkuCatalogProbed)
+                    if (legacySkuCatalogProbed) {
+                        put("catalog_probe_path", "legacy_sku_query")
+                    }
+                },
             )
         }
 
         private suspend fun fetchProductDetails(productID: String): com.android.billingclient.api.ProductDetails? {
-            val billingProductId = playBillingProductId(productID)
-            val productType =
-                if (billingProductId == ELITE_PRODUCT_ID) {
-                    BillingClient.ProductType.SUBS
-                } else {
-                    BillingClient.ProductType.INAPP
-                }
-
-            val productList =
-                listOf(
-                    QueryProductDetailsParams.Product
-                        .newBuilder()
-                        .setProductId(billingProductId)
-                        .setProductType(productType)
-                        .build(),
-                )
-
-            val params =
-                QueryProductDetailsParams
-                    .newBuilder()
-                    .setProductList(productList)
-                    .build()
-
-            val result = billingClient.queryProductDetails(params)
-            val details = result.productDetailsList?.firstOrNull()
-            if (details != null) {
-                cachedProductDetails[productID] = details
-                if (billingProductId != productID) {
-                    cachedProductDetails[billingProductId] = details
-                }
-                if (billingProductId == ELITE_PRODUCT_ID) {
-                    syncMonthlyCatalogFromEliteFallback()
-                }
-            } else {
-                maybeReportBillingProductNotFound(billingProductId, result.billingResult)
+            if (!billingClient.isReady) {
+                return null
             }
-            return details
+            if (productDetailsFeatureSupported == false) {
+                if (!legacySkuCatalogProbed) {
+                    fetchPaywallCatalogViaLegacySkuFallback()
+                    trackProductCatalogStatus()
+                }
+                return cachedProductDetails[productID]
+            }
+            val spec =
+                buildPaywallCatalogQuerySpecs(listOf(productID))
+                    .firstOrNull { it.logicalProductId == productID }
+                    ?: return null
+            fetchProductDetailsBatch(spec.productType, listOf(spec))
+            return cachedProductDetails[productID]
+        }
+
+        private suspend fun fetchProductDetailsBatch(
+            productType: String,
+            specs: List<BillingProductQuerySpec>,
+            forceLegacySkuQuery: Boolean = false,
+        ) {
+            if (!billingClient.isReady || specs.isEmpty()) {
+                return
+            }
+            if (!forceLegacySkuQuery && productDetailsFeatureSupported == false) {
+                return
+            }
+            val billingProductIds = specs.map { it.billingProductId }.distinct()
+            val params = buildQueryProductDetailsParams(productType, billingProductIds)
+            val telemetryKey = "${productType}:${billingProductIds.joinToString()}"
+
+            var attempt = 0
+            while (true) {
+                attempt++
+                val result = billingClient.queryProductDetails(params)
+                val detailsByPlayId = result.productDetailsList.orEmpty().associateBy { it.productId }
+                specs.forEach { spec ->
+                    detailsByPlayId[spec.billingProductId]?.let { details ->
+                        cacheProductDetailsForSpec(spec, details)
+                    }
+                }
+                val unresolvedBillingIds =
+                    billingProductIds.filter { playId -> cachedProductDetails[playId] == null }
+                if (unresolvedBillingIds.isEmpty()) {
+                    if (billingProductIds.any { it == ELITE_PRODUCT_ID }) {
+                        syncMonthlyCatalogFromEliteFallback()
+                    }
+                    return
+                }
+
+                val responseCode = result.billingResult.responseCode
+                if (BillingResponseLabels.shouldRetryProductDetailsQuery(responseCode, attempt)) {
+                    val emittedCount = productQueryRetryTelemetryCounts[telemetryKey] ?: 0
+                    if (BillingResponseLabels.shouldEmitProductQueryRetryTelemetry(emittedCount)) {
+                        productQueryRetryTelemetryCounts[telemetryKey] = emittedCount + 1
+                        specs.forEach { spec ->
+                            analyticsService.track(
+                                AnalyticsEvents.BILLING_PRODUCT_QUERY_RETRY,
+                                mapOf(
+                                    "logical_product_id" to spec.logicalProductId,
+                                    "billing_product_id" to spec.billingProductId,
+                                    "attempt" to attempt,
+                                    "billing_response_code" to responseCode,
+                                    "billing_response_label" to BillingResponseLabels.labelFor(responseCode),
+                                    "query_batch" to productType,
+                                ),
+                            )
+                        }
+                    }
+                    if (BillingResponseLabels.shouldReconnectBillingClient(responseCode)) {
+                        reconnectBillingClientForCatalogProbe()
+                    }
+                    delay(BillingResponseLabels.productQueryRetryDelayMs(attempt))
+                    continue
+                }
+
+                unresolvedBillingIds.forEach { billingProductId ->
+                    logicalProductIdsForPlayProduct(specs, billingProductId).forEach { logicalProductId ->
+                        recordProductQueryFailure(logicalProductId, responseCode)
+                    }
+                    maybeReportBillingProductNotFound(billingProductId, result.billingResult)
+                }
+                return
+            }
+        }
+
+        private fun cacheProductDetailsForSpec(
+            spec: BillingProductQuerySpec,
+            details: com.android.billingclient.api.ProductDetails,
+        ) {
+            productQueryFailureReasons.remove(spec.logicalProductId)
+            cachedProductDetails[spec.logicalProductId] = details
+            if (spec.billingProductId != spec.logicalProductId) {
+                cachedProductDetails[spec.billingProductId] = details
+            }
+        }
+
+        private suspend fun reconnectBillingClientForCatalogProbe() {
+            connectAndRestore()
+            ensureBillingReadyForPurchase()
+            refreshProductDetailsFeatureSupport()
+        }
+
+        private fun recordProductQueryFailure(
+            productID: String,
+            responseCode: Int,
+        ) {
+            when (responseCode) {
+                BillingClient.BillingResponseCode.NETWORK_ERROR ->
+                    productQueryFailureReasons[productID] = "network_error"
+                else -> productQueryFailureReasons.remove(productID)
+            }
         }
 
         private fun maybeReportBillingProductNotFound(
@@ -463,18 +684,39 @@ class ProManager
             billingResult: BillingResult,
         ) {
             val channel = analyticsService.distributionChannel()
-            if (!billingClient.isReady) return
-            if (channel == AndroidInstallChannel.NON_PLAY_INSTALL) return
-            if (!reportedBillingProductNotFound.add(productID)) return
+            if (
+                !shouldReportBillingProductNotFound(
+                    billingReady = billingClient.isReady,
+                    distributionChannel = channel,
+                    alreadyReported = reportedBillingProductNotFound,
+                    productId = productID,
+                )
+            ) {
+                return
+            }
+            reportedBillingProductNotFound.add(productID)
+            val responseCode = billingResult.responseCode
+            val responseLabel = BillingResponseLabels.labelFor(responseCode)
             analyticsService.track(
                 "billing_product_not_found",
                 mapOf(
                     "product_id" to productID,
                     AnalyticsProperties.DISTRIBUTION_CHANNEL to channel,
                     "billing_ready" to billingClient.isReady,
-                    "billing_response_code" to billingResult.responseCode,
+                    "billing_response_code" to responseCode,
+                    "billing_response_label" to responseLabel,
                     "billing_debug_message" to billingResult.debugMessage,
                 ),
+            )
+            analyticsService.trackBillingDiagnostic(
+                message = "billing_product_not_found",
+                level = "error",
+                properties =
+                    mapOf(
+                        "product_id" to productID,
+                        "billing_response_code" to responseCode,
+                        "billing_response_label" to responseLabel,
+                    ),
             )
         }
 
@@ -669,12 +911,40 @@ class ProManager
                     mapOf(AnalyticsProperties.PRODUCT_ID to purchasedProductId),
                 )
             }
+            val failureReason =
+                if (hasPurchased) {
+                    null
+                } else {
+                    when (result.responseCode) {
+                        BillingClient.BillingResponseCode.USER_CANCELED -> "user_cancelled"
+                        BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> "service_disconnected"
+                        BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> "item_unavailable"
+                        BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> "item_already_owned"
+                        BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> "billing_unavailable"
+                        BillingClient.BillingResponseCode.ERROR -> "billing_error"
+                        BillingClient.BillingResponseCode.NETWORK_ERROR -> "network_error"
+                        else -> "unknown_${result.responseCode}"
+                    }
+                }
+            val failureProductId =
+                if (hasPurchased) {
+                    null
+                } else {
+                    purchases
+                        ?.firstOrNull()
+                        ?.products
+                        ?.firstOrNull()
+                        ?.takeIf { it.isNotBlank() }
+                        ?: pendingLaunchProductId
+                }
             trackPurchaseResult(
                 success = hasPurchased,
                 source = if (pendingPurchaseEntryPoint.isNullOrBlank()) MonetizationSources.BILLING_CALLBACK else MonetizationSources.PAYWALL,
                 entryPoint = pendingPurchaseEntryPoint,
                 responseCode = result.responseCode,
                 debugMessage = result.debugMessage,
+                productId = failureProductId,
+                reason = failureReason,
             )
             clearPendingPaywallLaunch()
             clearPendingTrialOffer()
@@ -735,7 +1005,19 @@ class ProManager
             entryPoint: String?,
             responseCode: Int,
             debugMessage: String?,
+            productId: String? = null,
+            reason: String? = null,
         ) {
+            val resolvedProductId =
+                productId?.takeIf { it.isNotBlank() }
+                    ?: pendingLaunchProductId?.takeIf { it.isNotBlank() }
+                    ?: "unknown"
+            val resolvedReason =
+                when {
+                    success -> null
+                    !reason.isNullOrBlank() -> reason
+                    else -> billingFailureReason(responseCode)
+                }
             analyticsService.track(
                 AnalyticsEvents.PAYWALL_PURCHASE_RESULT,
                 MonetizationAnalyticsPayload.resultProperties(
@@ -745,6 +1027,8 @@ class ProManager
                     entryPoint = entryPoint,
                     responseCode = responseCode,
                     debugMessage = debugMessage,
+                    productId = resolvedProductId,
+                    reason = resolvedReason,
                 ),
             )
         }
@@ -768,6 +1052,18 @@ class ProManager
                 ),
             )
         }
+
+        private fun billingFailureReason(responseCode: Int): String =
+            when (responseCode) {
+                BillingClient.BillingResponseCode.USER_CANCELED -> "user_cancelled"
+                BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> "service_disconnected"
+                BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> "item_unavailable"
+                BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> "item_already_owned"
+                BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> "billing_unavailable"
+                BillingClient.BillingResponseCode.ERROR -> "billing_error"
+                BillingClient.BillingResponseCode.NETWORK_ERROR -> "network_error"
+                else -> "unknown_$responseCode"
+            }
 
         private fun purchaseResultValue(
             success: Boolean,
@@ -844,8 +1140,15 @@ internal data class SubscriptionOffer(
         get() = pricingPhases.any { it.isFree }
 }
 
-/** Maps paywall logical SKU to Play Billing product id (identity — monthly uses Play catalog SKU). */
+/** Maps paywall logical SKU to Play Billing product id (Play hosts monthly on elite_tactical_monthly). */
 internal fun playBillingProductId(logicalProductId: String): String = logicalProductId
+
+/** Play Billing product type for the logical paywall SKU. */
+internal fun billingProductTypeForLogicalProductId(logicalProductId: String): String =
+    when (logicalProductId) {
+        ProManager.ELITE_PRODUCT_ID, ProManager.MONTHLY_PRODUCT_ID -> BillingClient.ProductType.SUBS
+        else -> BillingClient.ProductType.INAPP
+    }
 
 internal fun monthlyOfferAvailableFromEliteOffers(offers: List<SubscriptionOffer>): Boolean =
     selectSubscriptionOfferByPeriod(offers, "P1M") != null
@@ -922,13 +1225,17 @@ internal object MonetizationAnalyticsPayload {
         entryPoint: String?,
         responseCode: Int,
         debugMessage: String?,
+        productId: String? = null,
+        reason: String? = null,
     ): Map<String, Any> =
-        mapOf(
-            AnalyticsProperties.RESULT to result,
-            AnalyticsProperties.SUCCESS to success,
-            AnalyticsProperties.SOURCE to source,
-            AnalyticsProperties.ENTRY_POINT to (entryPoint ?: source),
-            AnalyticsProperties.RESPONSE_CODE to responseCode,
-            AnalyticsProperties.DEBUG_MESSAGE to (debugMessage ?: ""),
-        )
+        buildMap {
+            put(AnalyticsProperties.RESULT, result)
+            put(AnalyticsProperties.SUCCESS, success)
+            put(AnalyticsProperties.SOURCE, source)
+            put(AnalyticsProperties.ENTRY_POINT, entryPoint ?: source)
+            put(AnalyticsProperties.RESPONSE_CODE, responseCode)
+            put(AnalyticsProperties.DEBUG_MESSAGE, debugMessage ?: "")
+            productId?.let { put(AnalyticsProperties.PRODUCT_ID, it) }
+            reason?.let { put(AnalyticsProperties.REASON, it) }
+        }
 }

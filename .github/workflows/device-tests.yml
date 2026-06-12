@@ -2,14 +2,13 @@ name: Device Tests
 
 on:
   pull_request:
-    branches: [develop, main]
+    branches: [develop, main, 'release/**', 'hotfix/**']
   workflow_dispatch:
 
-# Do not cancel in-flight device jobs: iOS Maestro + Agent Device often runs 15–25+ minutes.
-# A new push would previously abort mid-flow (looks like a flake, blocks merge, wastes runner time).
+# Cancel superseded PR runs so stacked pushes do not burn macOS minutes in parallel.
 concurrency:
   group: device-tests-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   changes:

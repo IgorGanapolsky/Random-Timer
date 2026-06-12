@@ -77,8 +77,6 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
         if let s = raw as? String, let n = Int(s) { return n }
         return 0
     }
-    private let host = "https://us.i.posthog.com"
-
 #if DEBUG
     var testEventHandler: ((_ event: String, _ properties: [String: Any]?) -> Void)?
 #endif
@@ -177,22 +175,7 @@ final class AnalyticsService { // swiftlint:disable:this type_body_length
         }
 
 #if canImport(PostHog)
-        let config = PostHogConfig(apiKey: apiKey, host: host)
-        // Emit lifecycle events manually so every event includes our live/dev context tags.
-        config.captureApplicationLifecycleEvents = false
-        config.captureScreenViews = false
-        // Session replay: live device only; enable "Record user sessions" in PostHog.
-        // SwiftUI needs screenshotMode. Masking protects text/images. Tune volume in PostHog project settings
-        // (SDK has no client sampleRate on this pinned version).
-        if !isInternalUser {
-            config.sessionReplay = true
-            config.sessionReplayConfig.maskAllTextInputs = true
-            config.sessionReplayConfig.maskAllImages = true
-            config.sessionReplayConfig.captureLogs = true
-            config.sessionReplayConfig.captureNetworkTelemetry = true
-            config.sessionReplayConfig.screenshotMode = true
-            config.sessionReplayConfig.throttleDelay = 1.0
-        }
+        let config = PostHogAnalyticsConfigFactory.make(apiKey: apiKey, isInternalUser: isInternalUser)
         PostHogSDK.shared.setup(config)
 #endif
         initialized = true
@@ -563,7 +546,6 @@ enum AnalyticsEvents {
     static let rewardedAdCompleted = "rewarded_ad_completed"
     static let rewardedAdUnlock = "rewarded_ad_unlock"
     static let paywallGateFirstTimer = "paywall_gate_first_timer"
-    static let trainingPresetApplied = "training_preset_applied"
 
     // Attribution
     static let deepLinkOpened = "deep_link_opened"
@@ -603,7 +585,6 @@ enum AnalyticsProperties {
     static let trialVerified = "trial_verified"
     static let gender = "gender"
     static let feature = "feature"
-    static let presetId = "preset_id"
     static let alarmResponseTime = "alarm_response_time"
     static let environment = "environment"
     static let buildAudience = "build_audience"

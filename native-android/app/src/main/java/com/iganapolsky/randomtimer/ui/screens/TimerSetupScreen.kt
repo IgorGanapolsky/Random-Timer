@@ -91,7 +91,6 @@ import com.iganapolsky.randomtimer.domain.model.RangeToggleProfiles
 import com.iganapolsky.randomtimer.domain.model.SoundType
 import com.iganapolsky.randomtimer.domain.model.TimeRangeAdjuster
 import com.iganapolsky.randomtimer.domain.model.TimerConfig
-import com.iganapolsky.randomtimer.domain.model.TrainingPreset
 import com.iganapolsky.randomtimer.domain.model.VoiceGender
 import com.iganapolsky.randomtimer.domain.model.activationLegacyRangePresetIfEligible
 import com.iganapolsky.randomtimer.domain.model.sanitizedStoredRange
@@ -154,10 +153,6 @@ internal fun primaryStartButtonCaption(hasFirstCompleted: Boolean): String? =
         "Quick start: the default drill fires in 5-30 seconds."
     }
 
-internal fun competitionPrepSectionTitle(): String = "Competition Prep"
-
-internal fun isCompetitionPrepProGated(): Boolean = false
-
 internal fun readHasFirstCompleted(context: Context): Boolean =
     context
         .getSharedPreferences(AnalyticsService.PREFS_NAME, Context.MODE_PRIVATE)
@@ -178,7 +173,6 @@ fun TimerSetupScreen(
     isElite: Boolean = false,
     onUpgradeTap: (String) -> Unit = {},
     onVoiceGenderSelected: (VoiceGender) -> Unit = {},
-    onTrainingPresetApplied: (TrainingPreset) -> Unit = {},
     onSecretUnlock: () -> Unit = {},
     proSoundTrialActive: Boolean = false,
     showRewardedAdOffer: Boolean = false,
@@ -368,72 +362,6 @@ fun TimerSetupScreen(
                                 style = MaterialTheme.typography.labelSmall,
                                 color = TimerColors.AccentPrimary,
                             )
-                        }
-                    }
-                }
-
-                if (!isCompetitionPrepProGated()) {
-                    item {
-                        Text(
-                            text = "STANDARD OPS",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = TimerColors.TextMuted,
-                            modifier = Modifier.padding(start = 4.dp),
-                        )
-                    }
-                    item {
-                        GlassCard(modifier = Modifier.fillMaxWidth(), padding = spacing.cardContent) {
-                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Text(
-                                    text = competitionPrepSectionTitle(),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = TimerColors.TextPrimary,
-                                )
-
-                                TrainingPreset.ALL.forEach { preset ->
-                                    Surface(
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            onTrainingPresetApplied(preset)
-                                        },
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = TimerColors.GlassBackground,
-                                        border = BorderStroke(1.dp, TimerColors.GlassBorder),
-                                        modifier = Modifier.fillMaxWidth(),
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                        ) {
-                                            Column(
-                                                modifier = Modifier.weight(1f),
-                                                verticalArrangement = Arrangement.spacedBy(4.dp),
-                                            ) {
-                                                Text(
-                                                    text = preset.title,
-                                                    style = MaterialTheme.typography.labelMedium,
-                                                    fontWeight = FontWeight.SemiBold,
-                                                    color = TimerColors.TextPrimary,
-                                                )
-                                                Text(
-                                                    text = preset.subtitle,
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = TimerColors.TextMuted,
-                                                )
-                                            }
-                                            Text(
-                                                text = "${formatTime(preset.minSeconds)}-${formatTime(preset.maxSeconds)}",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.Bold,
-                                                color = TimerColors.AccentPrimary,
-                                            )
-                                        }
-                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -1281,7 +1209,12 @@ private fun TimeRangeSliders(
                     },
                     enabled = enabled,
                     valueRange = minFloorSeconds.toFloat()..(maxSliderRangeInt - minGapSeconds).toFloat(),
-                    modifier = Modifier.weight(1f).semantics { contentDescription = "Minimum time slider" },
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .semantics(mergeDescendants = true) {
+                                contentDescription = "Minimum time slider"
+                            },
                     colors =
                         SliderDefaults.colors(
                             thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,
@@ -1327,7 +1260,12 @@ private fun TimeRangeSliders(
                     },
                     enabled = enabled,
                     valueRange = minGapSeconds.toFloat()..maxSliderRange,
-                    modifier = Modifier.weight(1f).semantics { contentDescription = "Maximum time slider" },
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .semantics(mergeDescendants = true) {
+                                contentDescription = "Maximum time slider"
+                            },
                     colors =
                         SliderDefaults.colors(
                             thumbColor = if (enabled) TimerColors.AccentPrimary else TimerColors.TextMuted,

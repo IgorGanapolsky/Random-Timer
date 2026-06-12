@@ -1,0 +1,1 @@
+Paywall improvements: billing refreshes while the upgrade sheet is open so purchase is ready on voice and repeat gates; clearer path to Pro on high-intent training gates.

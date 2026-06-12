@@ -66,6 +66,8 @@ class AscResolveVersionUnitTests(unittest.TestCase):
         self.assertTrue(_is_editable_state("PREPARE_FOR_SUBMISSION"))
         self.assertFalse(_is_editable_state("READY_FOR_SALE"))
         self.assertFalse(_is_editable_state("WAITING_FOR_REVIEW"))
+        self.assertFalse(_is_editable_state("UNKNOWN_409_BLOCKED"))
+        self.assertFalse(_is_editable_state("UNKNOWN"))
 
     def test_reuses_preferred_when_editable(self):
         client = _FakeClient([_version("1.1.2", "PREPARE_FOR_SUBMISSION")])

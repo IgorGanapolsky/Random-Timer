@@ -91,3 +91,4 @@ jobs:
           name: attribution-report
           path: marketing/data/attribution-report.md
           if-no-files-found: ignore
+          retention-days: 1

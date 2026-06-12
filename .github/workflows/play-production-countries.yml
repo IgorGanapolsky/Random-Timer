@@ -57,3 +57,4 @@ jobs:
         with:
           name: play-production-countries-artifacts
           path: tests/playwright/test-results/play-production-countries
+          retention-days: 1

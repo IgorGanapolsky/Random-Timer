@@ -23,7 +23,7 @@ on:
         type: boolean
         default: true
       use_live_version:
-        description: "Force metadata sync against the current live App Store version."
+        description: "Deprecated. Ignored — listing sync always targets an editable App Store version from asc_resolve_version.py (fastlane use_live_version cannot run when ASC has zero editable IOS versions)."
         required: true
         type: boolean
         default: false
@@ -127,37 +127,34 @@ jobs:
           APPSTORE_PRIVATE_KEY: /tmp/appstore_key.p8
           VERSION_RESOLVED: ${{ steps.version.outputs.version }}
         run: |
+          set -euo pipefail
           if [[ "$IOS_USE_LIVE_VERSION" == "true" ]]; then
-            echo "selected_version=LIVE" >> "$GITHUB_OUTPUT"
-            echo "Using live App Store version for metadata sync"
-            exit 0
+            echo "⚠️ use_live_version is deprecated; resolving an editable App Store version via ASC API instead of fastlane use_live_version."
           fi
 
           python scripts/asc/asc_resolve_version.py \
             --preferred-version "$VERSION_RESOLVED" \
             --create-if-needed \
             --auto-next-patch \
-            --json-out /tmp/asc_version.json || true
-          if [ -f /tmp/asc_version.json ]; then
-            SELECTED_VERSION=$(python -c 'import json; d=json.load(open("/tmp/asc_version.json")); print(d["selected_version"])')
-            SELECTED_STATE=$(python -c 'import json; d=json.load(open("/tmp/asc_version.json")); print(d.get("selected_state",""))')
-          else
-            SELECTED_VERSION="$VERSION_RESOLVED"
-            SELECTED_STATE="UNKNOWN"
+            --json-out /tmp/asc_version.json
+          SELECTED_VERSION=$(python -c 'import json; d=json.load(open("/tmp/asc_version.json")); print(d["selected_version"])')
+          SELECTED_STATE=$(python -c 'import json; d=json.load(open("/tmp/asc_version.json")); print(d.get("selected_state",""))')
+          SELECTED_REASON=$(python -c 'import json; d=json.load(open("/tmp/asc_version.json")); print(d.get("reason",""))')
+
+          if ! SELECTED_STATE="$SELECTED_STATE" python -c 'from scripts.asc.asc_resolve_version import _is_editable_state; import os, sys; sys.exit(0 if _is_editable_state(os.environ.get("SELECTED_STATE", "")) else 1)'; then
+            echo "❌ Blocked on ASC: App Store version ${SELECTED_VERSION} is not editable (state=${SELECTED_STATE}, reason=${SELECTED_REASON})."
+            echo "Preferred repo version: ${VERSION_RESOLVED}"
+            echo "Deliver/fastlane cannot update IOS listing metadata or screenshots without an editable App Store version."
+            echo "ASC version inventory:"
+            python scripts/asc/asc_list_versions.py || true
+            echo ""
+            echo "Remediation: run native-release for ios (TestFlight build + attach to App Store version) or wait until the in-review version becomes editable."
+            exit 1
           fi
-          # If version is blocked/unknown, fall back to live version metadata update
-          if echo "$SELECTED_STATE" | grep -qiE "UNKNOWN|409|BLOCKED"; then
-            echo "⚠️ Cannot create/find editable version $SELECTED_VERSION — will use live version for metadata"
-            SELECTED_VERSION="LIVE"
-          fi
-          # In metadata-only mode, review-locked versions are not editable. Push to the
-          # current live storefront instead of pretending the pending review version can change.
-          if [[ "$IOS_METADATA_ONLY" == "true" ]] && ! SELECTED_STATE="$SELECTED_STATE" python -c 'from scripts.asc.asc_resolve_version import _is_editable_state; import os, sys; sys.exit(0 if _is_editable_state(os.environ.get("SELECTED_STATE", "")) else 1)'; then
-            echo "⚠️ metadata_only=true and selected version state '$SELECTED_STATE' is not editable — using live version storefront"
-            SELECTED_VERSION="LIVE"
-          fi
+
           echo "selected_version=$SELECTED_VERSION" >> "$GITHUB_OUTPUT"
-          echo "Using editable App Store version: $SELECTED_VERSION"
+          echo "selected_state=$SELECTED_STATE" >> "$GITHUB_OUTPUT"
+          echo "Using editable App Store version: $SELECTED_VERSION (state=$SELECTED_STATE reason=$SELECTED_REASON)"
 
       - name: Strict screenshot replacement + metadata upload
         env:
@@ -177,14 +174,6 @@ jobs:
           if [[ "$IOS_METADATA_ONLY" == "true" ]]; then
             echo "⚠️ metadata_only=true: build attached/VALID check is intentionally skipped."
             BUILD_FLAG="--skip-build-check"
-          fi
-
-          # If using live version, use fastlane deliver directly instead of strict sync
-          if [[ "$SELECTED_VERSION" == "LIVE" ]]; then
-            echo "Using fastlane deliver with use_live_version for metadata-only sync"
-            cd native-ios
-            fastlane metadata use_live_version:true
-            exit $?
           fi
 
           RETRY_FLAG="--retry-on-editable"
@@ -209,6 +198,7 @@ jobs:
             /tmp/asc_ready.json
             /tmp/asc_screenshot_sync.json
           if-no-files-found: ignore
+          retention-days: 1
 
       - name: Upload version resolution report
         if: always()
@@ -216,6 +206,7 @@ jobs:
         with:
           name: asc-version-resolution
           path: /tmp/asc_version.json
+          retention-days: 1
 
       - name: Write iOS listing snapshot
         if: always()
@@ -236,6 +227,7 @@ jobs:
           name: ios-listing-snapshot
           path: /tmp/ios-listing-snapshot.json
           if-no-files-found: ignore
+          retention-days: 1
 
       - name: Cleanup secrets
         if: always()

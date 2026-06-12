@@ -1,0 +1,100 @@
+{
+  "source": "post_publish_revenue_gate",
+  "generated_at": "2026-06-10T19:49:02Z",
+  "expected_source": "github_latest_release",
+  "expected_ios": "1.3.55",
+  "expected_android": "1.3.55",
+  "store_public_pass": false,
+  "stores": [
+    {
+      "platform": "ios",
+      "passed": false,
+      "expected_version": "1.3.55",
+      "observed_version": "1.3.43",
+      "status": "VERSION_MISMATCH"
+    },
+    {
+      "platform": "android",
+      "passed": true,
+      "expected_version": "1.3.55",
+      "observed_version": "1.3.55",
+      "status": "PUBLIC"
+    }
+  ],
+  "billing_catalog_gate": {
+    "issue_ref": "https://github.com/IgorGanapolsky/Random-Timer/issues/1684",
+    "state": "CLOSED",
+    "closed_at": "2026-06-10T17:04:50Z",
+    "evidence": "billing_product_catalog_status=ok + paywall_purchase_attempt SM-S931U1 1.3.55 @ 2026-06-10T17:03:49Z"
+  },
+  "paywall_proxy": {
+    "generated_at": "2026-06-10T19:49:02Z",
+    "metric_id": "posthog_hogql_count_events_paywall_purchase_success",
+    "ledger_revenue": false,
+    "note": "Telemetry proxy from paywall_purchase_success — not store ledger proceeds",
+    "wqtu_7d": 11,
+    "purchase_successes_7d": 1,
+    "purchase_successes_30d": 1,
+    "purchase_attempts_7d": 2,
+    "purchase_attempts_30d": 6,
+    "paywall_views_7d": 27,
+    "paywall_views_30d": 415,
+    "revenue_telemetry_gross_sum_7d": 29.99,
+    "revenue_telemetry_gross_sum_30d": 29.99,
+    "revenue_telemetry_net_usd_per_day_30d": 0.59,
+    "target_usd_per_day_after_tax": 100.0,
+    "gap_usd_per_day_after_tax_30d_proxy": 99.41,
+    "last_attempt": {
+      "timestamp": "2026-06-10T17:03:49Z",
+      "app_version": "1.3.55",
+      "device_model": "SM-S931U1",
+      "product_id": "elite_tactical"
+    },
+    "first_purchase_success_telemetry": {
+      "timestamp": "2026-06-10T18:00:04Z",
+      "app_version": "1.3.55",
+      "device_model": "SM-S931U1",
+      "platform": "android",
+      "product_id": "elite_tactical",
+      "revenue_telemetry": 29.99,
+      "source": "paywall",
+      "entry_point": "range_gate",
+      "license_tester": false,
+      "play_order_id": "GPA.3311-0689-1321-89557",
+      "revenue_semantics": "telemetry_proxy",
+      "telemetry_proxy": true,
+      "ledger_revenue": false,
+      "ground_truth": false,
+      "metric_id": "posthog_hogql_paywall_purchase_success_not_store_ledger",
+      "note": "Unintended retail charge — CEO account not on Play license testers; refund via Play Console Orders."
+    }
+  },
+  "gap_math": {
+    "anchor_price_gross_usd": 29.99,
+    "net_per_annual_sub_after_tax_usd": 17.84,
+    "required_annual_subs_per_day": 5.6,
+    "gap_annual_subs_per_day_30d_proxy": 5.57,
+    "source_doc": "docs/marketing/monetization-roadmap.md"
+  },
+  "revenue_note": "store_public_pass does not imply revenue; paywall_purchase_success is telemetry proxy only (not ledger revenue).",
+  "ship_evidence": {
+    "workflow_run_id": 27209581950,
+    "workflow_conclusion": "success",
+    "git_tag": "v1.3.55",
+    "git_tag_sha": "2a03f3f8",
+    "play_api_track": "production",
+    "play_api_version_name": "1.3.55",
+    "play_api_version_code": 1781012436,
+    "play_api_status": "completed",
+    "public_listing_version_name_android": "1.3.55",
+    "public_listing_version_name_ios": "1.3.43",
+    "public_listing_note": "post_publish_revenue_gate 2026-06-10: Android PUBLIC 1.3.55; iOS VERSION_MISMATCH 1.3.43"
+  },
+  "gate_script_run": {
+    "script": "scripts/post_publish_revenue_gate.py",
+    "run_at": "2026-06-10T19:48:54Z",
+    "exit_code": 1,
+    "store_public_pass": false,
+    "reason": "iOS public listing VERSION_MISMATCH (expected 1.3.55, observed 1.3.43)"
+  }
+}

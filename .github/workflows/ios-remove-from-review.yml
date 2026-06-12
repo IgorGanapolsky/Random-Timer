@@ -78,6 +78,7 @@ jobs:
         with:
           name: ios-remove-from-review
           path: /tmp/asc_remove_from_review.json
+          retention-days: 1
 
       - name: Cleanup key
         if: always()

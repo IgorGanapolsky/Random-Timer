@@ -7,7 +7,6 @@ import android.os.Build
 import com.iganapolsky.randomtimer.BuildConfig
 import com.posthog.PostHog
 import com.posthog.android.PostHogAndroid
-import com.posthog.android.PostHogAndroidConfig
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -67,26 +66,10 @@ class AnalyticsService
             }
 
             val config =
-                PostHogAndroidConfig(
+                PostHogAnalyticsConfigFactory.create(
                     apiKey = apiKey,
-                    host = "https://us.i.posthog.com",
-                ).apply {
-                    // Emit lifecycle events manually so every event includes our live/dev context tags.
-                    captureApplicationLifecycleEvents = false
-                    captureDeepLinks = true
-                    captureScreenViews = false // We track manually for better control
-                    preloadFeatureFlags = true
-                    // Session replay: production installs only (enable in PostHog Project Settings → Session replay).
-                    // Jetpack Compose requires screenshot mode. No client sampleRate in SDK 3.8.2 — tune in PostHog + debouncerDelayMs.
-                    if (!isInternalUser) {
-                        sessionReplay = true
-                        sessionReplayConfig.maskAllTextInputs = true
-                        sessionReplayConfig.maskAllImages = true
-                        sessionReplayConfig.captureLogcat = true
-                        sessionReplayConfig.screenshot = true
-                        sessionReplayConfig.debouncerDelayMs = 1000L
-                    }
-                }
+                    isInternalUser = isInternalUser,
+                )
 
             PostHogAndroid.setup(application, config)
             analyticsContextProperties =
@@ -123,6 +106,22 @@ class AnalyticsService
         ) {
             if (!initialized) return
             PostHog.capture(event, properties = mergeProperties(properties))
+        }
+
+        /** Structured billing signal for HogQL dashboards (complements PostHog Logs when OTLP is added). */
+        fun trackBillingDiagnostic(
+            message: String,
+            level: String = "info",
+            properties: Map<String, Any>? = null,
+        ) {
+            val payload =
+                mutableMapOf<String, Any>(
+                    "message" to message,
+                    "level" to level,
+                    "subsystem" to "billing",
+                )
+            properties?.let { payload.putAll(it) }
+            track(AnalyticsEvents.BILLING_DIAGNOSTIC, payload)
         }
 
         fun screen(
@@ -433,6 +432,9 @@ object AnalyticsEvents {
     const val PAYWALL_PURCHASE_RESULT = "paywall_purchase_result"
     const val PAYWALL_RESTORE_RESULT = "paywall_restore_result"
     const val BILLING_PRODUCT_CATALOG_STATUS = "billing_product_catalog_status"
+    const val BILLING_CLIENT_SETUP = "billing_client_setup"
+    const val BILLING_PRODUCT_QUERY_RETRY = "billing_product_query_retry"
+    const val BILLING_DIAGNOSTIC = "billing_diagnostic"
 
     // Loop
     const val LOOP_ROUND_COMPLETED = "loop_round_completed"
@@ -457,7 +459,6 @@ object AnalyticsEvents {
     const val REWARDED_AD_COMPLETED = "rewarded_ad_completed"
     const val REWARDED_AD_UNLOCK = "rewarded_ad_unlock"
     const val PAYWALL_GATE_FIRST_TIMER = "paywall_gate_first_timer"
-    const val TRAINING_PRESET_APPLIED = "training_preset_applied"
 
     // Attribution
     const val DEEP_LINK_OPENED = "deep_link_opened"
@@ -492,7 +493,6 @@ object AnalyticsProperties {
     const val RUNTIME_TARGET = "runtime_target"
     const val GENDER = "gender"
     const val FEATURE = "feature"
-    const val PRESET_ID = "preset_id"
     const val ALARM_RESPONSE_TIME = "alarm_response_time"
     const val DURATION_SECONDS = "duration_seconds"
     const val ABANDON_REASON = "abandon_reason"

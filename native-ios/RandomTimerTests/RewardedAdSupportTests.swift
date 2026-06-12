@@ -19,4 +19,29 @@ final class RewardedAdSupportTests: XCTestCase {
         XCTAssertEqual(RewardedAdAnalytics.completedEvent, "rewarded_ad_completed")
         XCTAssertEqual(RewardedAdAnalytics.unlockEvent, "rewarded_ad_unlock")
     }
+
+    func testResolvedRewardedUnitIdUsesTestIdInTestMode() {
+        XCTAssertEqual(
+            RewardedAdConfig.resolvedRewardedUnitId(useTestAds: true),
+            RewardedAdConfig.testRewardedUnitIdIOS
+        )
+    }
+
+    func testProductionIOSAdMobIdsRemainEmptyUntilConfigured() {
+        XCTAssertEqual(RewardedAdConfig.productionAppIdIOS, "")
+        XCTAssertEqual(RewardedAdConfig.productionRewardedUnitIdIOS, "")
+    }
+
+    func testResolvedRewardedUnitIdForDebugBuildUsesTestUnit() {
+        #if DEBUG
+        XCTAssertEqual(
+            RewardedAdConfig.resolvedRewardedUnitIdForCurrentBuild(),
+            RewardedAdConfig.testRewardedUnitIdIOS
+        )
+        #endif
+    }
+
+    func testEntryPointSoundArsenalMatchesAndroidContract() {
+        XCTAssertEqual(RewardedAdPolicy.entryPointSoundArsenal, "sound_arsenal_gate")
+    }
 }

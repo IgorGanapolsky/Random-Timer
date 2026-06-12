@@ -325,7 +325,7 @@ def _revenue_section(
     )
 
     purchase_revenue = _scalar_float(
-        f"SELECT sum(toFloat64OrZero(toString(coalesce(properties.revenue, properties.price, '0')))) "
+        f"SELECT sum(toFloatOrZero(toString(coalesce(properties.revenue, toString(properties.price), '0')))) "
         f"FROM events "
         f"WHERE event = 'paywall_purchase_success' "
         f"AND timestamp > now() - interval {win} AND {f}",

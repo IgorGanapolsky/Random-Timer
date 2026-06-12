@@ -1,0 +1,68 @@
+package com.iganapolsky.randomtimer.billing
+
+import com.android.billingclient.api.BillingClient
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class BillingResponseLabelsTest {
+    @Test
+    fun `labelFor maps FEATURE_NOT_SUPPORTED`() {
+        assertEquals(
+            "FEATURE_NOT_SUPPORTED",
+            BillingResponseLabels.labelFor(BillingClient.BillingResponseCode.FEATURE_NOT_SUPPORTED),
+        )
+    }
+
+    @Test
+    fun `shouldRetryProductDetailsQuery allows transient codes under max attempts`() {
+        assertTrue(
+            BillingResponseLabels.shouldRetryProductDetailsQuery(
+                BillingClient.BillingResponseCode.FEATURE_NOT_SUPPORTED,
+                attempt = 1,
+            ),
+        )
+    }
+
+    @Test
+    fun `shouldRetryProductDetailsQuery stops at max attempts`() {
+        assertFalse(
+            BillingResponseLabels.shouldRetryProductDetailsQuery(
+                BillingClient.BillingResponseCode.FEATURE_NOT_SUPPORTED,
+                attempt = BillingResponseLabels.DEFAULT_PRODUCT_QUERY_MAX_ATTEMPTS,
+            ),
+        )
+    }
+
+    @Test
+    fun `shouldReconnectBillingClient only for service disconnected`() {
+        assertTrue(
+            BillingResponseLabels.shouldReconnectBillingClient(
+                BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
+            ),
+        )
+        assertFalse(
+            BillingResponseLabels.shouldReconnectBillingClient(
+                BillingClient.BillingResponseCode.NETWORK_ERROR,
+            ),
+        )
+    }
+
+    @Test
+    fun `shouldRetryProductDetailsQuery ignores OK`() {
+        assertFalse(
+            BillingResponseLabels.shouldRetryProductDetailsQuery(
+                BillingClient.BillingResponseCode.OK,
+                attempt = 1,
+            ),
+        )
+    }
+
+    @Test
+    fun `shouldEmitProductQueryRetryTelemetry allows up to three events per sku`() {
+        assertTrue(BillingResponseLabels.shouldEmitProductQueryRetryTelemetry(emittedCount = 0))
+        assertTrue(BillingResponseLabels.shouldEmitProductQueryRetryTelemetry(emittedCount = 2))
+        assertFalse(BillingResponseLabels.shouldEmitProductQueryRetryTelemetry(emittedCount = 3))
+    }
+}

@@ -1,0 +1,204 @@
+{
+  "generated_at": "2026-06-10T19:52:04Z",
+  "source": "web_search_fallback + posthog_mcp_execute_sql",
+  "external_research_method": "WebSearch (PERPLEXITY_API_KEY not in .env; Perplexity skill unavailable)",
+  "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
+  "posthog_crosscheck": {
+    "query_window_days": 30,
+    "queried_at_utc": "2026-06-10T19:52:04Z",
+    "tool": "posthog:execute-sql",
+    "guardrails_from_agents_md": {
+      "wqtu_quarter_target": 25,
+      "open_to_completed_rate_target": 0.25,
+      "d30_retention_target": 0.06,
+      "paid_cpi_target_usd": 3.0
+    },
+    "live_metrics": {
+      "wqtu_7d": 11,
+      "open_to_completed_rate_30d": 0.336,
+      "open_to_completed_numerator": 88,
+      "open_to_completed_denominator": 262,
+      "d30_retention_timer_completed": 0.015,
+      "d30_retention_cohort_n": 136,
+      "d30_retained_n": 2,
+      "wau": 177,
+      "dau": 12,
+      "paywall_viewers_30d": 169,
+      "paywall_attempts_30d": 6,
+      "paywall_successes_30d": 1,
+      "view_to_attempt_rate": 0.036,
+      "attempt_to_success_rate": 0.167,
+      "billing_catalog_ok_vs_empty_30d": "58 ok / 302 empty",
+      "paid_distinct_users_30d": 1
+    },
+    "guardrail_verdict": {
+      "wqtu": "fail (11 vs 25 quarter target)",
+      "open_to_completed_rate": "pass (33.6% vs 25%)",
+      "d30_retention": "fail (1.5% vs 6%)",
+      "paid_cpi": "not_applicable (0 paid campaigns)",
+      "monetization_proxy": "first paywall_purchase_success 2026-06-10; catalog still 84% empty telemetry"
+    }
+  },
+  "our_pricing": {
+    "annual_elite_tactical_usd": 29.99,
+    "monthly_band_usd": "4.99-9.99",
+    "lifetime_pro_base_usd": 4.99,
+    "source": "monetization_decision_brief.json + play_iap_catalog.json",
+    "positioning_note": "Annual ~2.4× SmartWOD ($12.49) and ~1.5× Intervals Pro ($19.99); above category median"
+  },
+  "competitors": [
+    {
+      "name": "SmartWOD Timer",
+      "category": "CrossFit/WOD interval",
+      "model": "freemium_subscription",
+      "pricing_usd": { "monthly": 1.99, "annual": 12.49, "lifetime": 39.99 },
+      "conversion_tactics": ["annual + monthly auto-renew", "lifetime upsell", "special promo tiers"],
+      "citation": "https://apps.apple.com/us/app/smartwod-timer-wod-clock/id1248966041"
+    },
+    {
+      "name": "Seconds Pro Interval Timer",
+      "category": "HIIT/Tabata",
+      "model": "one_time_purchase",
+      "pricing_usd": { "lifetime": 7.99 },
+      "conversion_tactics": ["no subscription friction", "feature depth vs free Box Timer"],
+      "citation": "https://boxtimer.app/box-timer-vs-seconds-pro/"
+    },
+    {
+      "name": "Box Timer",
+      "category": "CrossFit WOD",
+      "model": "free_no_iap",
+      "pricing_usd": { "free": 0 },
+      "conversion_tactics": ["zero friction", "gym-clock UX", "no paywall"],
+      "citation": "https://boxtimer.app/box-timer-vs-seconds-pro/"
+    },
+    {
+      "name": "BoxTime - Boxing Timer",
+      "category": "boxing/MMA round",
+      "model": "freemium_subscription",
+      "pricing_usd": { "monthly_low": 0.99, "mid": 3.49, "annual_band": 4.99 },
+      "conversion_tactics": ["freemium core timer", "premium for history/stats/ad-free", "1/6/12 mo plans"],
+      "citation": "https://apps.apple.com/us/app/boxtime-boxing-timer/id6759327767"
+    },
+    {
+      "name": "Interval Timer HIIT Workouts",
+      "category": "HIIT",
+      "model": "freemium_subscription",
+      "pricing_usd": { "monthly": 1.99, "lifetime": 19.99 },
+      "conversion_tactics": ["1 workout/day free cap", "lifetime unlock", "voice guides"],
+      "citation": "https://boxtimer.app/box-timer-vs-interval-timer/"
+    },
+    {
+      "name": "Intervals Pro",
+      "category": "HIIT/running",
+      "model": "freemium_subscription",
+      "pricing_usd": { "monthly": 2.99, "annual": 19.99, "lifetime": 69.99 },
+      "conversion_tactics": ["free single timer", "multi-timer paywall", "annual + lifetime ladder"],
+      "citation": "https://apps.apple.com/us/app/intervals-pro-hiit-timer/id957586938"
+    },
+    {
+      "name": "INTVL",
+      "category": "interval training",
+      "model": "subscription_annual",
+      "pricing_usd": { "annual": 39.99 },
+      "conversion_tactics": ["free trial", "annual-only Pro", "unlimited presets gate"],
+      "citation": "https://apps.apple.com/us/app/intvl-interval-timer/id6759198513"
+    },
+    {
+      "name": "SmartFight Timer",
+      "category": "combat sports",
+      "model": "free_plus_iap_packages",
+      "pricing_usd": { "packages_from": 2.0 },
+      "conversion_tactics": ["free forever no ads", "one-time sport/training packages", "random cue sounds as differentiator"],
+      "citation": "https://smartfighttimer.com/"
+    },
+    {
+      "name": "Burst - Smart Interval Timer",
+      "category": "combat/agility random beeps",
+      "model": "ad_supported_freemium",
+      "pricing_usd": { "core": "free", "ads": "between sessions only" },
+      "conversion_tactics": ["TRUE random beeps USP", "no paywall on core", "ads never during workout"],
+      "citation": "https://play.google.com/store/apps/details?id=com.molven.burst"
+    }
+  ],
+  "industry_paywall_benchmarks_2026": {
+    "health_fitness_d35_download_to_paid_median": 0.029,
+    "health_fitness_d35_top_quartile": 0.062,
+    "onboarding_paywall_trial_install_to_paid": 0.0178,
+    "install_to_trial_median": 0.112,
+    "annual_revenue_mix_health_fitness": "majority annual plans",
+    "citations": [
+      "https://www.revenuecat.com/state-of-subscription-apps-2026-health-and-fitness/",
+      "https://adapty.io/blog/health-fitness-app-subscription-benchmarks/",
+      "https://growthpad.blog/2026/04/15/whats-actually-working-in-app-distribution-in-2026/"
+    ]
+  },
+  "aso_keyword_clusters_2026": {
+    "head_terms_avoid": ["interval timer", "workout timer", "fitness timer"],
+    "long_tail_own": [
+      "random interval timer",
+      "reaction training timer",
+      "tactical timer",
+      "MMA round timer",
+      "boxing round timer",
+      "fight timer",
+      "unpredictable beep timer",
+      "stress inoculation training"
+    ],
+    "current_listing": {
+      "title": "Random Tactical Timer",
+      "subtitle": "MMA & Boxing Round Timer",
+      "keywords": "bjj,hiit,sparring,wrestling,muaythai,tabata,crossfit,reaction,jiujitsu,wod,kickboxing",
+      "gap": "missing explicit random/reaction/tactical phrases in title and keyword field"
+    },
+    "localization_priority": ["pt-BR", "ja", "es"],
+    "citations": [
+      "https://dev.to/lalo132/app-store-optimization-for-niche-fitness-apps-ng",
+      "https://www.apptweak.com/en/aso-blog/app-store-keyword-research-aso",
+      "https://www.applyra.io/blog/complete-aso-guide-indie-developers"
+    ]
+  },
+  "paywall_leak_evidence_30d": {
+    "top_entry_points": [
+      { "entry_point": "range_gate", "views": 159, "attempts": 3, "successes": 1 },
+      { "entry_point": "voice_gate", "views": 118, "attempts": 0, "successes": 0 },
+      { "entry_point": "repeat_gate", "views": 31, "attempts": 0, "successes": 0 }
+    ],
+    "source": "posthog:execute-sql 2026-06-10"
+  },
+  "recommendations": [
+    {
+      "priority": 1,
+      "action": "Reprice annual to $19.99 and add 7-day free trial; keep monthly at $4.99 with annual pre-selected on paywall",
+      "rationale": "RTT annual $29.99 is ~2.4× SmartWOD and matches INTVL ($39.99) without INTVL's trial; category winners cluster $12–20/yr with trial-first onboarding",
+      "expected_impact": "Higher view→attempt on loaded catalog; aligns with Health & Fitness D35 median 2.9% once billing telemetry is ok-dominant",
+      "citations": [
+        "https://apps.apple.com/us/app/smartwod-timer-wod-clock/id1248966041",
+        "https://apps.apple.com/us/app/intervals-pro-hiit-timer/id957586938",
+        "https://www.revenuecat.com/state-of-subscription-apps-2026-health-and-fitness/",
+        "https://adapty.io/blog/health-fitness-app-subscription-benchmarks/"
+      ]
+    },
+    {
+      "priority": 2,
+      "action": "ASO refresh: title 'Random Tactical Timer – Reaction Training', subtitle 'Random MMA & Boxing Round Timer', keywords add random,reaction,tactical,unpredictable; localize pt-BR/ja metadata only",
+      "rationale": "Long-tail combat-sports terms beat head 'interval timer'; niche ASO case studies show 2× downloads from PT localization; screenshots should show hidden/random mode not feature lists",
+      "expected_impact": "Organic WQTU lift without paid spend; targets users searching for unpredictable training (Burst competitor gap)",
+      "citations": [
+        "https://dev.to/lalo132/app-store-optimization-for-niche-fitness-apps-ng",
+        "https://www.apptweak.com/en/aso-blog/app-store-keyword-research-aso",
+        "https://play.google.com/store/apps/details?id=com.molven.burst"
+      ]
+    },
+    {
+      "priority": 3,
+      "action": "Fix voice_gate and repeat_gate purchase path (118+31 paywall views, 0 attempts): mirror range_gate CTA + ensure catalog ok before sheet; prompt SKStoreReviewController after 3rd timer_completed",
+      "rationale": "Only range_gate converts (3 attempts, 1 success); voice_gate is largest leaky gate; rating prompt after value moment is top ASO lever for niche apps",
+      "expected_impact": "Raises attempt denominator without ads; supports D30 retention via habit loop before paywall",
+      "citations": [
+        "posthog:execute-sql entry_point breakdown 2026-06-10",
+        "https://dev.to/lalo132/app-store-optimization-for-niche-fitness-apps-ng",
+        "https://www.rocketshiphq.com/paywall-optimization-fitness-apps/"
+      ]
+    }
+  ]
+}

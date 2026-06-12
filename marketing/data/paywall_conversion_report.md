@@ -1,82 +1,82 @@
 # Paywall Conversion Report
 
-Generated: 2026-05-28T13:19:06+00:00
+Generated: 2026-06-11T07:59:19+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **508**
-- Offer Selects: **61**
-- Purchase Attempts: **5**
-- Purchase Successes: **0**
-- View -> Offer Select: **12.0%**
-- Select -> Purchase Attempt: **8.2%**
-- Attempt -> Purchase Success: **0.0%**
+- Views: **675**
+- Offer Selects: **56**
+- Purchase Attempts: **6**
+- Purchase Successes: **1**
+- View -> Offer Select: **8.3%**
+- Select -> Purchase Attempt: **10.7%**
+- Attempt -> Purchase Success: **16.7%**
 
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| user_cancelled | 5 |
+| failed | 245 |
+| user_cancelled | 6 |
+| cancelled | 2 |
 | item_unavailable | 2 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
+| android | unknown | failed | 245 | 107 |
 | android | unknown | user_cancelled | 4 | 1 |
+| ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 1 |
 | android | unknown | item_unavailable | 2 | 1 |
-| ios | com.iganapolsky.randomtimer.pro | user_cancelled | 1 | 1 |
+| android | unknown | cancelled | 2 | 1 |
 
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
-| android | elite_tactical_monthly | 46 | 1 | 0 | 2.2% | 0.0% |
-| android | elite_tactical | 8 | 1 | 0 | 12.5% | 0.0% |
+| android | elite_tactical | 16 | 3 | 1 | 18.8% | 33.3% |
+| android | elite_tactical_monthly | 33 | 1 | 0 | 3.0% | 0.0% |
 | android | pro_base | 7 | 1 | 0 | 14.3% | 0.0% |
 | ios | com.iganapolsky.randomtimer.pro | 0 | 1 | 0 | 0.0% | 0.0% |
-| ios | com.iganapolsky.randomtimer.elite | 0 | 1 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 517 | 172 |
-| android | elite_tactical | 389 | 162 |
-| android | unknown | 268 | 136 |
-| android | pro_base | 231 | 138 |
-| ios | unknown | 15 | 5 |
+| android | elite_tactical_monthly | 425 | 165 |
+| android | elite_tactical | 374 | 180 |
+| android | pro_base | 264 | 173 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| range_gate | 231 | 1 | 0 | 0.4% | 0.0% |
-| voice_gate | 152 | 0 | 0 | 0.0% | 0.0% |
-| repeat_gate | 50 | 0 | 0 | 0.0% | 0.0% |
-| unknown | 38 | 0 | 0 | 0.0% | 0.0% |
-| sound_arsenal_gate | 18 | 2 | 0 | 11.1% | 0.0% |
+| range_gate | 307 | 3 | 1 | 1.0% | 33.3% |
+| voice_gate | 230 | 0 | 0 | 0.0% | 0.0% |
+| repeat_gate | 54 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 33 | 0 | 0 | 0.0% | 0.0% |
+| sound_arsenal_gate | 24 | 2 | 0 | 8.3% | 0.0% |
 | setup_upgrade_cta | 12 | 0 | 0 | 0.0% | 0.0% |
-| sound_gate | 5 | 2 | 0 | 40.0% | 0.0% |
-| qualified_training_gate | 2 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 11 | 0 | 0 | 0.0% | 0.0% |
+| sound_gate | 4 | 1 | 0 | 25.0% | 0.0% |
 
 ## Leaky Entry Points
-- `voice_gate` had **152** views and **0** purchase attempts.
-- `repeat_gate` had **50** views and **0** purchase attempts.
-- `unknown` had **38** views and **0** purchase attempts.
+- `voice_gate` had **230** views and **0** purchase attempts.
+- `repeat_gate` had **54** views and **0** purchase attempts.
+- `unknown` had **33** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| unknown | 3384 | 30 |
-| max_seconds | 2905 | 316 |
-| alarm_duration | 2524 | 291 |
-| min_seconds | 2178 | 295 |
-| volume | 1847 | 199 |
-| sound_type | 1766 | 253 |
-| repeat_enabled | 1236 | 286 |
-| voice_callouts_enabled | 769 | 179 |
-| vibration_enabled | 575 | 203 |
-| repeat_rounds | 396 | 116 |
-| voice_gender | 338 | 210 |
-| use_extended_range | 241 | 151 |
+| max_seconds | 3103 | 342 |
+| alarm_duration | 3060 | 321 |
+| volume | 2280 | 223 |
+| min_seconds | 2130 | 322 |
+| sound_type | 1498 | 261 |
+| repeat_enabled | 1357 | 312 |
+| voice_callouts_enabled | 822 | 195 |
+| vibration_enabled | 636 | 236 |
+| repeat_rounds | 427 | 126 |
+| voice_gender | 375 | 229 |
+| use_extended_range | 307 | 171 |
+| unknown | 88 | 5 |
 
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic
-- settings_changed is still dominated by unknown setting_name rows in live data
 - product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status
