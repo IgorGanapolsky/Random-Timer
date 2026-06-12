@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-06-11T19:12:18Z",
-  "source": "gsd_cycle_2_posthog_live_mcp_execute_sql",
-  "gsd_cycle": 2,
+  "generated_at": "2026-06-12T19:24:46Z",
+  "source": "gsd_cycle_3_posthog_live_mcp_execute_sql",
+  "gsd_cycle": 3,
   "window_days": 30,
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "research_doc": "marketing/data/june_2026_monetization_research.md",
@@ -9,7 +9,7 @@
   "north_star": {
     "wqtu_7d": 11,
     "wqtu_target_q2_2026": 25,
-    "wqtu_query": "distinct persons with >=3 timer_completed in trailing 7d (PostHog MCP execute-sql 2026-06-11T19:11:48Z)",
+    "wqtu_query": "distinct persons with >=3 timer_completed in trailing 7d (PostHog MCP execute-sql 2026-06-12T19:22:06Z)",
     "status": "below_target"
   },
   "revenue_goal": {
@@ -18,75 +18,92 @@
     "net_per_sale_usd_estimate": 17.84,
     "sales_per_day_needed": 6,
     "posthog_revenue_proxy_usd_per_day": 0.0,
-    "posthog_revenue_proxy_7d_sum": 29.99,
+    "posthog_revenue_proxy_30d_sum": 29.99,
     "gap_usd_per_day": 100.0,
     "metric_id": "paywall_purchase_success properties.revenue is telemetry proxy not ledger"
   },
   "paywall_funnel_30d": {
-    "paywall_viewed_users": 167,
-    "paywall_viewed_events": 381,
-    "paywall_offer_select_events": 61,
+    "paywall_viewed_users": 141,
+    "paywall_viewed_events": 316,
+    "paywall_offer_select_events": 25,
     "paywall_purchase_attempt_users": 4,
     "paywall_purchase_attempt_events": 6,
     "paywall_purchase_success_users": 1,
     "paywall_purchase_success_events": 1,
-    "paywall_purchase_success_7d": 1,
-    "view_to_attempt_pct": 2.4,
+    "view_to_attempt_pct": 2.8,
     "attempt_to_success_pct": 25.0,
-    "view_to_success_pct": 0.6,
-    "billing_product_not_found_android_30d": 1099,
-    "posthog_query_evidence": "execute-sql 2026-06-11T19:11:48Z project 299775"
+    "view_to_success_pct": 0.7,
+    "posthog_query_evidence": "execute-sql 2026-06-12T19:22:07Z project 299775"
   },
   "voice_gate_30d": {
-    "views": 118,
-    "offer_selects": 22,
-    "attempts": 0,
-    "successes": 0,
+    "paywall_viewed_events": 94,
+    "paywall_viewed_users": 78,
+    "paywall_offer_select_events": 5,
+    "paywall_offer_select_users": 4,
+    "paywall_purchase_attempt_events": 0,
+    "paywall_purchase_attempt_users": 0,
+    "feature_gate_hit_voice_callouts_events": 103,
+    "feature_gate_hit_voice_callouts_users": 84,
     "view_to_attempt_pct": 0.0,
-    "note": "Leak persists; billing refresh in 1.3.56 not yet measurable (n=0 PostHog events on 1.3.56 since publish)"
-  },
-  "entry_point_funnel_30d": {
-    "range_gate": { "views": 156, "offer_selects": 11, "attempts": 3, "successes": 1 },
-    "voice_gate": { "views": 118, "offer_selects": 22, "attempts": 0, "successes": 0 },
-    "repeat_gate": { "views": 31, "offer_selects": 20, "attempts": 0, "successes": 0 },
-    "sound_arsenal_gate": { "views": 14, "offer_selects": 8, "attempts": 2, "successes": 0 }
+    "note": "voice_gate_attempt event not in taxonomy; funnel uses paywall_* with entry_point=voice_gate"
   },
   "android_1_3_56_cohort": {
-    "publish_cutoff_utc": "2026-06-11T18:38:00Z",
-    "posthog_events_since_publish": 0,
-    "posthog_android_versions_since_publish": { "1.3.55": 37, "0.1.9": 42 },
+    "distinct_users_7d": 5,
+    "distinct_users_30d": 5,
+    "events_7d": 439,
+    "voice_gate_attempts_30d": 0,
+    "paywall_viewed_30d": 0,
+    "billing_product_catalog_status_events_30d": 5,
     "store_public_version": "1.3.56",
-    "store_verify_evidence": "verify_public_store_versions.py 2026-06-11T19:11:39Z PASS android",
     "n_threshold_for_code_pr": 10,
     "code_pr_gate": "hold_no_n_ge_10"
   },
+  "ios_1_3_55_cohort_30d": {
+    "paywall_viewed_events": 16,
+    "paywall_viewed_users": 3,
+    "paywall_purchase_attempt_events": 2,
+    "paywall_purchase_success_events": 1
+  },
   "store_parity": {
     "android_play_public_version": "1.3.56",
-    "ios_asc_submitted_version": "1.3.55",
-    "ios_asc_state": "WAITING_FOR_REVIEW",
-    "ios_asc_state_evidence": "native-release run 27362554124 ios-submit-review 2026-06-11T16:54:40Z",
-    "ios_public_version": "1.3.43",
-    "ios_public_evidence": "itunes lookup 2026-06-11T19:11:38Z",
-    "parity_gap": "iOS 1.3.55 in App Review; public listing still 1.3.43"
+    "ios_public_version": "1.3.55",
+    "ios_asc_submitted_version": "1.3.56",
+    "ios_asc_submit_evidence": "native-release run 27359764616 ios-submit-review success SHA 2ad32169 2026-06-11T16:06Z",
+    "parity_gap": "iOS 1.3.56 submitted; public listing still 1.3.55 (paywall fixes not on iOS public yet)"
+  },
+  "post_publish_revenue_gate": {
+    "exit_code": 1,
+    "store_public_pass": false,
+    "expected_android": "1.3.56",
+    "expected_ios": "1.3.56",
+    "observed_android": "1.3.56",
+    "observed_ios": "1.3.55",
+    "evidence": "python3 scripts/post_publish_revenue_gate.py 2026-06-12T19:22:00Z"
   },
   "ship_evidence": {
-    "android_pr": "https://github.com/IgorGanapolsky/Random-Timer/pull/1795",
-    "android_workflow_run_id": 27359764616,
-    "ios_release_run_id": 27362554124,
-    "ios_release_run_url": "https://github.com/IgorGanapolsky/Random-Timer/actions/runs/27362554124",
-    "post_publish_gate_pr": "https://github.com/IgorGanapolsky/Random-Timer/pull/1800"
+    "pr_1804_merged_at": "2026-06-12T18:54:36Z",
+    "pr_1804_merge_sha": "b39ea90",
+    "develop_tip_sha": "d188a68d",
+    "develop_ci_run": "https://github.com/IgorGanapolsky/Random-Timer/actions/runs/27436423385",
+    "develop_ci_conclusion": "success",
+    "ios_release_run_id": 27359764616,
+    "ios_internal_distribution_run_id": 27359705213,
+    "release_branch_tip_sha": "09303e0d"
   },
-  "decision": "gsd_cycle_2_hold_code_monitor_ios_review_android_1_3_56_public",
+  "decision": "gsd_cycle_3_hold_code_monitor_ios_1_3_56_review_android_cohort_n5",
   "priority_blocker": {
     "rank": 1,
-    "category": "ios_app_review",
-    "reason": "iOS 1.3.55 WAITING_FOR_REVIEW blocks store parity and cross-platform paywall cohort. Android 1.3.56 live but zero PostHog telemetry on new version yet.",
-    "next_code_cycle": "deferred_until_1_3_56_n_ge_10_or_ios_public_parity"
+    "category": "ios_store_public_parity",
+    "reason": "iOS 1.3.56 submitted via CI; public still 1.3.55. Android 1.3.56 live. voice_gate attempts 0 but cohort n=5<10 — defer code fix.",
+    "next_code_cycle": "voice_gate_attempt_fix_if_n_ge_10_and_still_zero"
   },
   "recommended_next_actions": [
-    "Monitor iOS 1.3.55 App Review (ASC state last verified WAITING_FOR_REVIEW 2026-06-11T16:54Z via run 27362554124)",
-    "On iOS approval: verify_public_store_versions ios + update post_publish_gate.json PR",
-    "Poll PostHog 1.3.56 Android cohort daily until n>=10 before any paywall code change",
-    "Hold paid ads ($20/mo cap); no real-charge device IAP tests"
-  ]
+    "Wait iOS App Store approval for 1.3.56 (ios-submit-review already succeeded run 27359764616)",
+    "Poll PostHog 1.3.56 Android cohort until n>=10; reopen voice_gate code fix only if attempts still 0",
+    "Hold paid ads ($20/mo cap); no real-charge IAP QA"
+  ],
+  "gsd_cycle_3_artifact": {
+    "type": "marketing_data_json_pr",
+    "branch": "feat/gsd-monetization-cycle2"
+  }
 }
