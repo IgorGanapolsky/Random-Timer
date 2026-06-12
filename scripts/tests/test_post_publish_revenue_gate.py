@@ -49,6 +49,60 @@ class PostPublishRevenueGateTests(unittest.TestCase):
         self.assertTrue(report["store_public_pass"])
         self.assertEqual(len(report["stores"]), 2)
 
+    def test_build_report_uses_per_platform_expected_from_gate_config(self):
+        results = [
+            store_verify.StoreVersionResult(
+                platform="ios",
+                passed=True,
+                status="PUBLIC",
+                url="https://example.com/ios",
+                expected_version="1.3.55",
+                observed_version="1.3.55",
+                details="ok",
+            ),
+            store_verify.StoreVersionResult(
+                platform="android",
+                passed=True,
+                status="PUBLIC",
+                url="https://example.com/android",
+                expected_version="1.3.56",
+                observed_version="1.3.56",
+                details="ok",
+            ),
+        ]
+
+        with patch.object(
+            store_verify,
+            "resolve_expected_versions",
+            return_value=("1.3.56", "1.3.56", "github_latest_release"),
+        ), patch.object(store_verify, "poll_until_public", return_value=results):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                gate_path = root / "marketing" / "data" / "post_publish_gate.json"
+                gate_path.parent.mkdir(parents=True)
+                gate_path.write_text(
+                    json.dumps(
+                        {
+                            "expected_ios": "1.3.55",
+                            "expected_android": "1.3.56",
+                            "ship_evidence": {"git_tag": "v1.3.56"},
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                report = gate.build_report(
+                    repo_root=root,
+                    platform="both",
+                    timeout=5,
+                    gate_config_path=gate_path,
+                )
+
+        self.assertTrue(report["store_public_pass"])
+        self.assertEqual(report["expected_source"], "post_publish_gate")
+        self.assertEqual(report["expected_ios"], "1.3.55")
+        self.assertEqual(report["expected_android"], "1.3.56")
+        self.assertEqual(report["ship_evidence"], {"git_tag": "v1.3.56"})
+
     def test_main_exits_zero_when_pass(self):
         with patch.object(
             gate,
