@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-12T18:54:54+00:00",
+  "generated_at": "2026-06-12T19:30:53+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -15,7 +15,7 @@
   "top_failure_reasons": [
     {
       "reason": "failed",
-      "count": 156
+      "count": 100
     },
     {
       "reason": "user_cancelled",
@@ -35,8 +35,8 @@
       "platform": "android",
       "product_id": "unknown",
       "reason": "failed",
-      "failures": 156,
-      "users": 69
+      "failures": 100,
+      "users": 55
     },
     {
       "platform": "android",
