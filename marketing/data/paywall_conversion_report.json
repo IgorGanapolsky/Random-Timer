@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-13T01:22:10+00:00",
+  "generated_at": "2026-06-13T07:33:19+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -134,15 +134,15 @@
     },
     {
       "platform": "android",
-      "product_id": "elite_tactical",
-      "failures": 150,
-      "users": 142
-    },
-    {
-      "platform": "android",
       "product_id": "pro_base",
       "failures": 150,
       "users": 143
+    },
+    {
+      "platform": "android",
+      "product_id": "elite_tactical",
+      "failures": 150,
+      "users": 142
     }
   ],
   "entry_points": [
@@ -232,13 +232,13 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 3003,
-      "users": 319
+      "changes": 3000,
+      "users": 318
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 2993,
-      "users": 301
+      "changes": 2990,
+      "users": 300
     },
     {
       "setting_name": "volume",
@@ -247,8 +247,8 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 2048,
-      "users": 302
+      "changes": 2045,
+      "users": 301
     },
     {
       "setting_name": "sound_type",
@@ -257,8 +257,8 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 1250,
-      "users": 291
+      "changes": 1247,
+      "users": 290
     },
     {
       "setting_name": "voice_callouts_enabled",
@@ -267,8 +267,8 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 574,
-      "users": 216
+      "changes": 571,
+      "users": 215
     },
     {
       "setting_name": "repeat_rounds",
