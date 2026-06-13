@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 58 | 605 | 663 |
-| Active Installs | — | 611 | — |
+| Distinct install users (30d) | 58 | 607 | 665 |
+| Active Installs | — | 613 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 4 |
+| DAU | 8 |
 | WAU | 126 |
-| MAU | 680 |
+| MAU | 681 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -23,9 +23,9 @@
 | Metric | Value |
 |--------|-------|
 | WQTU (7d) | 11 |
-| Timer Completed (7d) | 132 |
+| Timer Completed (7d) | 149 |
 | Completed Users (7d) | 27 |
-| Sessions/Completed User (7d) | 4.89 |
+| Sessions/Completed User (7d) | 5.52 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
@@ -38,11 +38,11 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-06-13T07:33:44+00:00
+**Generated:** 2026-06-13T12:51:11+00:00
 
 ## Onboarding Funnel
-- First Open: **665**
-- First Timer Configured: **336** (50.5% of opens)
+- First Open: **667**
+- First Timer Configured: **336** (50.4% of opens)
 - First Timer Completed: **80** (12.0% of opens)
 
 ## UTM Attribution (Top Sources)
@@ -61,15 +61,15 @@
 <!-- PAYWALL_START -->
 | Metric | Value |
 |--------|-------|
-| Paywall Views | 556 |
-| Offer Selects | 20 |
+| Paywall Views | 560 |
+| Offer Selects | 21 |
 | Purchase Attempts | 6 |
 | Purchase Successes | 1 |
 | Attempt → Success | 16.7% |
 
 **Top failure reasons:** failed (72), user_cancelled (6), cancelled (2), item_unavailable (2)
 
-**Catalog failures (Android):** elite_tactical_monthly (271), elite_tactical (228), pro_base (202)
+**Catalog failures (Android):** elite_tactical_monthly (270), elite_tactical (228), pro_base (202)
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -77,8 +77,8 @@
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 665 | — |
-| First Timer Configured | 336 | 50.5% of opens |
+| First Open | 667 | — |
+| First Timer Configured | 336 | 50.4% of opens |
 | First Timer Completed | 80 | 12.0% of opens |
 <!-- FUNNEL_END -->
 
@@ -155,16 +155,16 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-06-11" , "2026-06-11" , "2026-06-11" , "2026-06-11" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-13" , "2026-06-13"]
+    x-axis ["2026-06-11" , "2026-06-11" , "2026-06-11" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-13" , "2026-06-13" , "2026-06-13"]
     y-axis "Downloads"
-    line [60 , 61 , 61 , 61 , 61 , 61 , 61 , 59 , 59 , 59 , 59 , 59 , 58 , 58]
-    line [667 , 671 , 675 , 675 , 658 , 659 , 659 , 627 , 627 , 627 , 614 , 613 , 606 , 605]
+    line [61 , 61 , 61 , 61 , 61 , 61 , 59 , 59 , 59 , 59 , 59 , 58 , 58 , 58]
+    line [671 , 675 , 675 , 658 , 659 , 659 , 627 , 627 , 627 , 614 , 613 , 606 , 605 , 607]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-06-11" , "2026-06-11" , "2026-06-11" , "2026-06-11" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-13" , "2026-06-13"]
+    x-axis ["2026-06-11" , "2026-06-11" , "2026-06-11" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-12" , "2026-06-13" , "2026-06-13" , "2026-06-13"]
     y-axis "Users"
     line [11 , 11 , 11 , 11 , 11 , 11 , 11 , 11 , 11 , 11 , 11 , 11 , 11 , 11]
 ```
@@ -194,4 +194,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-06-13T07:33:46+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-06-13T12:51:12+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
