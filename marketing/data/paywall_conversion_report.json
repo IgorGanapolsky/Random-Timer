@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-06-15T14:23:56+00:00",
+  "generated_at": "2026-06-15T19:29:27+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 562,
+    "views": 559,
     "offer_selects": 18,
-    "purchase_attempts": 6,
+    "purchase_attempts": 5,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.032,
-    "select_to_attempt_rate": 0.3333,
-    "attempt_to_success_rate": 0.1667
+    "view_to_select_rate": 0.0322,
+    "select_to_attempt_rate": 0.2778,
+    "attempt_to_success_rate": 0.2
   },
   "top_failure_reasons": [
     {
@@ -19,7 +19,7 @@
     },
     {
       "reason": "user_cancelled",
-      "count": 6
+      "count": 4
     },
     {
       "reason": "cancelled",
@@ -43,13 +43,6 @@
       "product_id": "unknown",
       "reason": "user_cancelled",
       "failures": 4,
-      "users": 1
-    },
-    {
-      "platform": "ios",
-      "product_id": "com.iganapolsky.randomtimer.pro",
-      "reason": "user_cancelled",
-      "failures": 2,
       "users": 1
     },
     {
@@ -94,22 +87,13 @@
       "successes": 0,
       "select_to_attempt_rate": 1.0,
       "attempt_to_success_rate": 0.0
-    },
-    {
-      "platform": "ios",
-      "product_id": "com.iganapolsky.randomtimer.pro",
-      "offer_selects": 0,
-      "attempts": 1,
-      "successes": 0,
-      "select_to_attempt_rate": 0.0,
-      "attempt_to_success_rate": 0.0
     }
   ],
   "product_catalog_failures": [
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 256,
+      "failures": 255,
       "users": 138
     },
     {
@@ -141,17 +125,17 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 150,
+      "failures": 149,
       "users": 123
     }
   ],
   "entry_points": [
     {
       "entry_point": "range_gate",
-      "views": 277,
+      "views": 276,
       "attempts": 3,
       "successes": 1,
-      "view_to_attempt_rate": 0.0108,
+      "view_to_attempt_rate": 0.0109,
       "attempt_to_success_rate": 0.3333
     },
     {
@@ -164,7 +148,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 51,
+      "views": 50,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -204,10 +188,10 @@
     },
     {
       "entry_point": "sound_gate",
-      "views": 4,
-      "attempts": 1,
+      "views": 3,
+      "attempts": 0,
       "successes": 0,
-      "view_to_attempt_rate": 0.25,
+      "view_to_attempt_rate": 0.0,
       "attempt_to_success_rate": 0.0
     }
   ],
@@ -222,7 +206,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 51,
+      "views": 50,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -231,14 +215,14 @@
   ],
   "settings_hotspots": [
     {
-      "setting_name": "max_seconds",
-      "changes": 3097,
-      "users": 317
-    },
-    {
       "setting_name": "alarm_duration",
       "changes": 2991,
       "users": 300
+    },
+    {
+      "setting_name": "max_seconds",
+      "changes": 2950,
+      "users": 315
     },
     {
       "setting_name": "volume",
@@ -247,13 +231,13 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 2101,
-      "users": 300
+      "changes": 2038,
+      "users": 298
     },
     {
       "setting_name": "sound_type",
-      "changes": 1597,
-      "users": 256
+      "changes": 1596,
+      "users": 255
     },
     {
       "setting_name": "repeat_enabled",
@@ -287,8 +271,8 @@
     },
     {
       "setting_name": "unknown",
-      "changes": 70,
-      "users": 4
+      "changes": 55,
+      "users": 3
     }
   ],
   "data_quality_warnings": [
