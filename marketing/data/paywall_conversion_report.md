@@ -1,10 +1,10 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-14T18:42:12+00:00
+Generated: 2026-06-15T01:27:24+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **573**
+- Views: **563**
 - Offer Selects: **21**
 - Purchase Attempts: **6**
 - Purchase Successes: **1**
@@ -40,16 +40,16 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 264 | 140 |
+| android | elite_tactical_monthly | 260 | 139 |
 | android | elite_tactical | 228 | 156 |
 | android | pro_base | 203 | 158 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| range_gate | 279 | 3 | 1 | 1.1% | 33.3% |
+| range_gate | 277 | 3 | 1 | 1.1% | 33.3% |
 | voice_gate | 182 | 0 | 0 | 0.0% | 0.0% |
-| unknown | 58 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 50 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 16 | 2 | 0 | 12.5% | 0.0% |
 | qualified_training_gate | 14 | 0 | 0 | 0.0% | 0.0% |
 | setup_upgrade_cta | 12 | 0 | 0 | 0.0% | 0.0% |
@@ -58,22 +58,22 @@ Window (days): 30
 
 ## Leaky Entry Points
 - `voice_gate` had **182** views and **0** purchase attempts.
-- `unknown` had **58** views and **0** purchase attempts.
+- `unknown` had **50** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 3220 | 318 |
+| max_seconds | 3080 | 317 |
 | alarm_duration | 2991 | 301 |
 | volume | 2243 | 216 |
-| min_seconds | 2230 | 301 |
-| sound_type | 1598 | 257 |
-| repeat_enabled | 1243 | 288 |
-| voice_callouts_enabled | 830 | 190 |
+| min_seconds | 2098 | 300 |
+| sound_type | 1599 | 257 |
+| repeat_enabled | 1245 | 289 |
+| voice_callouts_enabled | 828 | 189 |
 | vibration_enabled | 570 | 214 |
 | repeat_rounds | 452 | 132 |
 | voice_gender | 359 | 221 |
-| use_extended_range | 306 | 164 |
+| use_extended_range | 305 | 163 |
 | unknown | 70 | 4 |
 
 ## Data Quality Warnings
