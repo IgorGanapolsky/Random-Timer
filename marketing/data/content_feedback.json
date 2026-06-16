@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-16T14:09:32+00:00",
+  "generated_at": "2026-06-16T19:23:44+00:00",
   "status": "degraded",
   "onboarding_funnel": {
     "first_open": 657,
@@ -14,8 +14,8 @@
   "data_quality": {
     "is_stale": true,
     "preserved_previous_metrics": true,
-    "last_attempt_generated_at": "2026-06-16T14:09:32+00:00",
-    "last_good_generated_at": "2026-06-16T08:16:21+00:00",
-    "reason": "request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=30)"
+    "last_attempt_generated_at": "2026-06-16T19:23:44+00:00",
+    "last_good_generated_at": "2026-06-16T14:09:32+00:00",
+    "reason": "http_503"
   }
 }

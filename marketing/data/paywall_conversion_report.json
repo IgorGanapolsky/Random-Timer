@@ -1,29 +1,21 @@
 {
-  "generated_at": "2026-06-16T14:08:36+00:00",
+  "generated_at": "2026-06-16T19:22:48+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 559,
-    "offer_selects": 18,
-    "purchase_attempts": 5,
+    "views": 551,
+    "offer_selects": 14,
+    "purchase_attempts": 3,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.0322,
-    "select_to_attempt_rate": 0.2778,
-    "attempt_to_success_rate": 0.2
+    "view_to_select_rate": 0.0254,
+    "select_to_attempt_rate": 0.2143,
+    "attempt_to_success_rate": 0.3333
   },
   "top_failure_reasons": [
     {
       "reason": "failed",
       "count": 68
-    },
-    {
-      "reason": "user_cancelled",
-      "count": 4
-    },
-    {
-      "reason": "cancelled",
-      "count": 2
     },
     {
       "reason": "item_unavailable",
@@ -41,21 +33,7 @@
     {
       "platform": "android",
       "product_id": "unknown",
-      "reason": "user_cancelled",
-      "failures": 4,
-      "users": 1
-    },
-    {
-      "platform": "android",
-      "product_id": "unknown",
       "reason": "item_unavailable",
-      "failures": 2,
-      "users": 1
-    },
-    {
-      "platform": "android",
-      "product_id": "unknown",
-      "reason": "cancelled",
       "failures": 2,
       "users": 1
     }
@@ -64,11 +42,11 @@
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "offer_selects": 12,
-      "attempts": 3,
+      "offer_selects": 9,
+      "attempts": 2,
       "successes": 1,
-      "select_to_attempt_rate": 0.25,
-      "attempt_to_success_rate": 0.3333
+      "select_to_attempt_rate": 0.2222,
+      "attempt_to_success_rate": 0.5
     },
     {
       "platform": "android",
@@ -78,29 +56,20 @@
       "successes": 0,
       "select_to_attempt_rate": 0.2,
       "attempt_to_success_rate": 0.0
-    },
-    {
-      "platform": "android",
-      "product_id": "pro_base",
-      "offer_selects": 1,
-      "attempts": 1,
-      "successes": 0,
-      "select_to_attempt_rate": 1.0,
-      "attempt_to_success_rate": 0.0
     }
   ],
   "product_catalog_failures": [
     {
       "platform": "android",
-      "product_id": "elite_tactical_monthly",
-      "failures": 255,
-      "users": 138
-    },
-    {
-      "platform": "android",
       "product_id": "elite_tactical",
       "failures": 228,
       "users": 156
+    },
+    {
+      "platform": "android",
+      "product_id": "elite_tactical_monthly",
+      "failures": 227,
+      "users": 137
     },
     {
       "platform": "android",
@@ -140,7 +109,7 @@
     },
     {
       "entry_point": "voice_gate",
-      "views": 182,
+      "views": 180,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -163,14 +132,6 @@
       "attempt_to_success_rate": 0.0
     },
     {
-      "entry_point": "sound_arsenal_gate",
-      "views": 14,
-      "attempts": 2,
-      "successes": 0,
-      "view_to_attempt_rate": 0.1429,
-      "attempt_to_success_rate": 0.0
-    },
-    {
       "entry_point": "setup_upgrade_cta",
       "views": 12,
       "attempts": 0,
@@ -180,6 +141,14 @@
     },
     {
       "entry_point": "repeat_gate",
+      "views": 8,
+      "attempts": 0,
+      "successes": 0,
+      "view_to_attempt_rate": 0.0,
+      "attempt_to_success_rate": 0.0
+    },
+    {
+      "entry_point": "sound_arsenal_gate",
       "views": 8,
       "attempts": 0,
       "successes": 0,
@@ -198,7 +167,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "voice_gate",
-      "views": 182,
+      "views": 180,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,

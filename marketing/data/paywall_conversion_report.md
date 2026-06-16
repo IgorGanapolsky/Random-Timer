@@ -1,61 +1,56 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-16T14:08:36+00:00
+Generated: 2026-06-16T19:22:48+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **559**
-- Offer Selects: **18**
-- Purchase Attempts: **5**
+- Views: **551**
+- Offer Selects: **14**
+- Purchase Attempts: **3**
 - Purchase Successes: **1**
-- View -> Offer Select: **3.2%**
-- Select -> Purchase Attempt: **27.8%**
-- Attempt -> Purchase Success: **20.0%**
+- View -> Offer Select: **2.5%**
+- Select -> Purchase Attempt: **21.4%**
+- Attempt -> Purchase Success: **33.3%**
 
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
 | failed | 68 |
-| user_cancelled | 4 |
-| cancelled | 2 |
 | item_unavailable | 2 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
 | android | unknown | failed | 68 | 45 |
-| android | unknown | user_cancelled | 4 | 1 |
 | android | unknown | item_unavailable | 2 | 1 |
-| android | unknown | cancelled | 2 | 1 |
 
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
-| android | elite_tactical | 12 | 3 | 1 | 25.0% | 33.3% |
+| android | elite_tactical | 9 | 2 | 1 | 22.2% | 50.0% |
 | android | elite_tactical_monthly | 5 | 1 | 0 | 20.0% | 0.0% |
-| android | pro_base | 1 | 1 | 0 | 100.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 255 | 138 |
 | android | elite_tactical | 228 | 156 |
+| android | elite_tactical_monthly | 227 | 137 |
 | android | pro_base | 203 | 158 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | range_gate | 276 | 3 | 1 | 1.1% | 33.3% |
-| voice_gate | 182 | 0 | 0 | 0.0% | 0.0% |
+| voice_gate | 180 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 50 | 0 | 0 | 0.0% | 0.0% |
 | qualified_training_gate | 14 | 0 | 0 | 0.0% | 0.0% |
-| sound_arsenal_gate | 14 | 2 | 0 | 14.3% | 0.0% |
 | setup_upgrade_cta | 12 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 8 | 0 | 0 | 0.0% | 0.0% |
+| sound_arsenal_gate | 8 | 0 | 0 | 0.0% | 0.0% |
 | sound_gate | 3 | 0 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
-- `voice_gate` had **182** views and **0** purchase attempts.
+- `voice_gate` had **180** views and **0** purchase attempts.
 - `unknown` had **50** views and **0** purchase attempts.
 
 ## Settings Hotspots

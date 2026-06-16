@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 56 | 598 | 654 |
-| Active Installs | — | 603 | — |
+| Distinct install users (30d) | 56 | 597 | 653 |
+| Active Installs | — | 602 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
 | DAU | 1 |
-| WAU | 91 |
-| MAU | 668 |
+| WAU | 64 |
+| MAU | 666 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -22,10 +22,10 @@
 <!-- NORTH_STAR_START -->
 | Metric | Value |
 |--------|-------|
-| WQTU (7d) | 7 |
-| Timer Completed (7d) | 94 |
-| Completed Users (7d) | 19 |
-| Sessions/Completed User (7d) | 4.95 |
+| WQTU (7d) | 6 |
+| Timer Completed (7d) | 86 |
+| Completed Users (7d) | 17 |
+| Sessions/Completed User (7d) | 5.06 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
@@ -61,15 +61,15 @@
 <!-- PAYWALL_START -->
 | Metric | Value |
 |--------|-------|
-| Paywall Views | 559 |
-| Offer Selects | 18 |
-| Purchase Attempts | 5 |
+| Paywall Views | 551 |
+| Offer Selects | 14 |
+| Purchase Attempts | 3 |
 | Purchase Successes | 1 |
-| Attempt → Success | 20.0% |
+| Attempt → Success | 33.3% |
 
-**Top failure reasons:** failed (68), user_cancelled (4), cancelled (2), item_unavailable (2)
+**Top failure reasons:** failed (68), item_unavailable (2)
 
-**Catalog failures (Android):** elite_tactical_monthly (255), elite_tactical (228), pro_base (203)
+**Catalog failures (Android):** elite_tactical (228), elite_tactical_monthly (227), pro_base (203)
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -81,7 +81,7 @@
 | First Timer Configured | 332 | 50.5% of opens |
 | First Timer Completed | 78 | 11.9% of opens |
 
-_Data quality: stale; showing last good metrics from `2026-06-16T08:16:21+00:00`; latest read issue: `request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=30)`._
+_Data quality: stale; showing last good metrics from `2026-06-16T14:09:32+00:00`; latest read issue: `http_503`._
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -157,18 +157,18 @@ _Data quality: stale; showing last good metrics from `2026-06-16T08:16:21+00:00`
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-06-13" , "2026-06-13" , "2026-06-13" , "2026-06-14" , "2026-06-14" , "2026-06-14" , "2026-06-14" , "2026-06-15" , "2026-06-15" , "2026-06-15" , "2026-06-15" , "2026-06-16" , "2026-06-16" , "2026-06-16"]
+    x-axis ["2026-06-13" , "2026-06-13" , "2026-06-14" , "2026-06-14" , "2026-06-14" , "2026-06-14" , "2026-06-15" , "2026-06-15" , "2026-06-15" , "2026-06-15" , "2026-06-16" , "2026-06-16" , "2026-06-16" , "2026-06-16"]
     y-axis "Downloads"
-    line [58 , 58 , 60 , 60 , 60 , 60 , 59 , 60 , 60 , 60 , 57 , 57 , 57 , 56]
-    line [605 , 607 , 604 , 599 , 599 , 599 , 599 , 599 , 598 , 598 , 598 , 598 , 598 , 598]
+    line [58 , 60 , 60 , 60 , 60 , 59 , 60 , 60 , 60 , 57 , 57 , 57 , 56 , 56]
+    line [607 , 604 , 599 , 599 , 599 , 599 , 599 , 598 , 598 , 598 , 598 , 598 , 598 , 597]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-06-13" , "2026-06-13" , "2026-06-13" , "2026-06-14" , "2026-06-14" , "2026-06-14" , "2026-06-14" , "2026-06-15" , "2026-06-15" , "2026-06-15" , "2026-06-15" , "2026-06-16" , "2026-06-16" , "2026-06-16"]
+    x-axis ["2026-06-13" , "2026-06-13" , "2026-06-14" , "2026-06-14" , "2026-06-14" , "2026-06-14" , "2026-06-15" , "2026-06-15" , "2026-06-15" , "2026-06-15" , "2026-06-16" , "2026-06-16" , "2026-06-16" , "2026-06-16"]
     y-axis "Users"
-    line [11 , 11 , 11 , 10 , 10 , 10 , 8 , 8 , 9 , 8 , 8 , 8 , 8 , 7]
+    line [11 , 11 , 10 , 10 , 10 , 8 , 8 , 9 , 8 , 8 , 8 , 8 , 7 , 6]
 ```
 
 ```mermaid
@@ -196,4 +196,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-06-16T14:09:33+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-06-16T19:23:45+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
