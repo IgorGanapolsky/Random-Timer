@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 57 | 598 | 655 |
+| Distinct install users (30d) | 56 | 598 | 654 |
 | Active Installs | — | 603 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 2 |
-| WAU | 109 |
-| MAU | 669 |
+| DAU | 1 |
+| WAU | 91 |
+| MAU | 668 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -22,10 +22,10 @@
 <!-- NORTH_STAR_START -->
 | Metric | Value |
 |--------|-------|
-| WQTU (7d) | 8 |
-| Timer Completed (7d) | 101 |
-| Completed Users (7d) | 23 |
-| Sessions/Completed User (7d) | 4.39 |
+| WQTU (7d) | 7 |
+| Timer Completed (7d) | 94 |
+| Completed Users (7d) | 19 |
+| Sessions/Completed User (7d) | 4.95 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
@@ -80,6 +80,8 @@
 | First Open | 657 | — |
 | First Timer Configured | 332 | 50.5% of opens |
 | First Timer Completed | 78 | 11.9% of opens |
+
+_Data quality: stale; showing last good metrics from `2026-06-16T08:16:21+00:00`; latest read issue: `request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=30)`._
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -155,18 +157,18 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-06-13" , "2026-06-13" , "2026-06-13" , "2026-06-13" , "2026-06-14" , "2026-06-14" , "2026-06-14" , "2026-06-14" , "2026-06-15" , "2026-06-15" , "2026-06-15" , "2026-06-15" , "2026-06-16" , "2026-06-16"]
+    x-axis ["2026-06-13" , "2026-06-13" , "2026-06-13" , "2026-06-14" , "2026-06-14" , "2026-06-14" , "2026-06-14" , "2026-06-15" , "2026-06-15" , "2026-06-15" , "2026-06-15" , "2026-06-16" , "2026-06-16" , "2026-06-16"]
     y-axis "Downloads"
-    line [58 , 58 , 58 , 60 , 60 , 60 , 60 , 59 , 60 , 60 , 60 , 57 , 57 , 57]
-    line [606 , 605 , 607 , 604 , 599 , 599 , 599 , 599 , 599 , 598 , 598 , 598 , 598 , 598]
+    line [58 , 58 , 60 , 60 , 60 , 60 , 59 , 60 , 60 , 60 , 57 , 57 , 57 , 56]
+    line [605 , 607 , 604 , 599 , 599 , 599 , 599 , 599 , 598 , 598 , 598 , 598 , 598 , 598]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-06-13" , "2026-06-13" , "2026-06-13" , "2026-06-13" , "2026-06-14" , "2026-06-14" , "2026-06-14" , "2026-06-14" , "2026-06-15" , "2026-06-15" , "2026-06-15" , "2026-06-15" , "2026-06-16" , "2026-06-16"]
+    x-axis ["2026-06-13" , "2026-06-13" , "2026-06-13" , "2026-06-14" , "2026-06-14" , "2026-06-14" , "2026-06-14" , "2026-06-15" , "2026-06-15" , "2026-06-15" , "2026-06-15" , "2026-06-16" , "2026-06-16" , "2026-06-16"]
     y-axis "Users"
-    line [11 , 11 , 11 , 11 , 10 , 10 , 10 , 8 , 8 , 9 , 8 , 8 , 8 , 8]
+    line [11 , 11 , 11 , 10 , 10 , 10 , 8 , 8 , 9 , 8 , 8 , 8 , 8 , 7]
 ```
 
 ```mermaid
@@ -194,4 +196,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-06-16T08:16:22+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-06-16T14:09:33+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
