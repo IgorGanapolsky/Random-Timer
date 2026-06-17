@@ -1,72 +1,72 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-17T13:29:42+00:00
+Generated: 2026-06-17T19:04:07+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **552**
-- Offer Selects: **14**
+- Views: **544**
+- Offer Selects: **10**
 - Purchase Attempts: **3**
 - Purchase Successes: **1**
-- View -> Offer Select: **2.5%**
-- Select -> Purchase Attempt: **21.4%**
+- View -> Offer Select: **1.8%**
+- Select -> Purchase Attempt: **30.0%**
 - Attempt -> Purchase Success: **33.3%**
 
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| failed | 68 |
+| failed | 64 |
 | item_unavailable | 2 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
-| android | unknown | failed | 68 | 45 |
+| android | unknown | failed | 64 | 43 |
 | android | unknown | item_unavailable | 2 | 1 |
 
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
 | android | elite_tactical | 9 | 2 | 1 | 22.2% | 50.0% |
-| android | elite_tactical_monthly | 5 | 1 | 0 | 20.0% | 0.0% |
+| android | elite_tactical_monthly | 1 | 1 | 0 | 100.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical | 229 | 157 |
-| android | elite_tactical_monthly | 226 | 137 |
-| android | pro_base | 204 | 159 |
+| android | elite_tactical | 216 | 155 |
+| android | elite_tactical_monthly | 211 | 135 |
+| android | pro_base | 195 | 157 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | range_gate | 276 | 3 | 1 | 1.1% | 33.3% |
-| voice_gate | 180 | 0 | 0 | 0.0% | 0.0% |
+| voice_gate | 176 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 50 | 0 | 0 | 0.0% | 0.0% |
 | qualified_training_gate | 15 | 0 | 0 | 0.0% | 0.0% |
 | setup_upgrade_cta | 12 | 0 | 0 | 0.0% | 0.0% |
-| repeat_gate | 8 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 8 | 0 | 0 | 0.0% | 0.0% |
+| repeat_gate | 4 | 0 | 0 | 0.0% | 0.0% |
 | sound_gate | 3 | 0 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
-- `voice_gate` had **180** views and **0** purchase attempts.
+- `voice_gate` had **176** views and **0** purchase attempts.
 - `unknown` had **50** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| alarm_duration | 2990 | 299 |
-| max_seconds | 2827 | 314 |
-| volume | 2176 | 214 |
-| min_seconds | 1843 | 296 |
-| sound_type | 1598 | 256 |
-| repeat_enabled | 1244 | 286 |
-| voice_callouts_enabled | 828 | 189 |
-| vibration_enabled | 565 | 211 |
-| repeat_rounds | 452 | 132 |
-| voice_gender | 359 | 221 |
-| use_extended_range | 305 | 163 |
+| alarm_duration | 2954 | 297 |
+| max_seconds | 2824 | 313 |
+| volume | 2172 | 212 |
+| min_seconds | 1834 | 295 |
+| sound_type | 1592 | 254 |
+| repeat_enabled | 1231 | 283 |
+| voice_callouts_enabled | 822 | 187 |
+| vibration_enabled | 558 | 209 |
+| repeat_rounds | 451 | 131 |
+| voice_gender | 355 | 219 |
+| use_extended_range | 301 | 161 |
 | unknown | 55 | 3 |
 
 ## Data Quality Warnings
