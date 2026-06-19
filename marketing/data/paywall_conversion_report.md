@@ -1,10 +1,10 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-18T19:01:40+00:00
+Generated: 2026-06-19T01:29:20+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **536**
+- Views: **518**
 - Offer Selects: **10**
 - Purchase Attempts: **3**
 - Purchase Successes: **1**
@@ -33,16 +33,16 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical | 180 | 127 |
-| android | elite_tactical_monthly | 172 | 106 |
-| android | pro_base | 162 | 129 |
+| android | elite_tactical | 146 | 112 |
+| android | elite_tactical_monthly | 138 | 91 |
+| android | pro_base | 135 | 114 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| range_gate | 270 | 3 | 1 | 1.1% | 33.3% |
+| range_gate | 258 | 3 | 1 | 1.2% | 33.3% |
 | voice_gate | 176 | 0 | 0 | 0.0% | 0.0% |
-| unknown | 49 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 43 | 0 | 0 | 0.0% | 0.0% |
 | qualified_training_gate | 16 | 0 | 0 | 0.0% | 0.0% |
 | setup_upgrade_cta | 12 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 8 | 0 | 0 | 0.0% | 0.0% |
@@ -51,22 +51,22 @@ Window (days): 30
 
 ## Leaky Entry Points
 - `voice_gate` had **176** views and **0** purchase attempts.
-- `unknown` had **49** views and **0** purchase attempts.
+- `unknown` had **43** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| alarm_duration | 2789 | 258 |
-| max_seconds | 2665 | 278 |
-| volume | 1922 | 182 |
-| min_seconds | 1759 | 261 |
-| sound_type | 1402 | 216 |
-| repeat_enabled | 1030 | 246 |
-| voice_callouts_enabled | 671 | 157 |
-| vibration_enabled | 405 | 179 |
-| repeat_rounds | 323 | 102 |
-| voice_gender | 297 | 182 |
-| use_extended_range | 269 | 133 |
+| alarm_duration | 2717 | 237 |
+| max_seconds | 2432 | 256 |
+| volume | 1741 | 168 |
+| min_seconds | 1566 | 239 |
+| sound_type | 1325 | 197 |
+| repeat_enabled | 933 | 225 |
+| voice_callouts_enabled | 622 | 145 |
+| vibration_enabled | 353 | 163 |
+| repeat_rounds | 288 | 90 |
+| voice_gender | 275 | 165 |
+| use_extended_range | 257 | 121 |
 | unknown | 34 | 2 |
 
 ## Data Quality Warnings
