@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-06-20T07:35:19+00:00",
+  "generated_at": "2026-06-20T12:51:03+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 504,
+    "views": 518,
     "offer_selects": 10,
     "purchase_attempts": 3,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.0198,
+    "view_to_select_rate": 0.0193,
     "select_to_attempt_rate": 0.3,
     "attempt_to_success_rate": 0.3333
   },
@@ -117,7 +117,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 42,
+      "views": 56,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -167,7 +167,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 42,
+      "views": 56,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -177,13 +177,13 @@
   "settings_hotspots": [
     {
       "setting_name": "alarm_duration",
-      "changes": 2720,
-      "users": 236
+      "changes": 2725,
+      "users": 237
     },
     {
       "setting_name": "max_seconds",
-      "changes": 2414,
-      "users": 252
+      "changes": 2519,
+      "users": 253
     },
     {
       "setting_name": "volume",
@@ -192,18 +192,18 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1472,
-      "users": 235
+      "changes": 1570,
+      "users": 236
     },
     {
       "setting_name": "sound_type",
-      "changes": 1330,
-      "users": 197
+      "changes": 1334,
+      "users": 198
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 928,
-      "users": 224
+      "changes": 931,
+      "users": 225
     },
     {
       "setting_name": "voice_callouts_enabled",
@@ -212,8 +212,8 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 353,
-      "users": 163
+      "changes": 354,
+      "users": 164
     },
     {
       "setting_name": "repeat_rounds",
@@ -222,8 +222,8 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 277,
-      "users": 166
+      "changes": 278,
+      "users": 167
     },
     {
       "setting_name": "use_extended_range",
