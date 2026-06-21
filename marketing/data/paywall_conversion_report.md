@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-21T01:27:18+00:00
+Generated: 2026-06-21T07:54:25+00:00
 Window (days): 30
 
 ## Funnel
@@ -35,7 +35,7 @@ Window (days): 30
 |----------|------------|----------|-------|
 | android | elite_tactical | 112 | 100 |
 | android | pro_base | 110 | 102 |
-| android | elite_tactical_monthly | 104 | 79 |
+| android | elite_tactical_monthly | 105 | 80 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
@@ -55,11 +55,11 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| alarm_duration | 2671 | 224 |
-| max_seconds | 2453 | 240 |
-| volume | 1656 | 156 |
-| min_seconds | 1542 | 223 |
-| sound_type | 1272 | 185 |
+| alarm_duration | 2672 | 225 |
+| max_seconds | 2467 | 241 |
+| volume | 1758 | 157 |
+| min_seconds | 1545 | 224 |
+| sound_type | 1274 | 186 |
 | repeat_enabled | 869 | 213 |
 | voice_callouts_enabled | 580 | 136 |
 | vibration_enabled | 307 | 153 |
