@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-22T19:17:14+00:00",
+  "generated_at": "2026-06-23T01:12:02+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -182,7 +182,7 @@
     },
     {
       "setting_name": "max_seconds",
-      "changes": 2454,
+      "changes": 2552,
       "users": 219
     },
     {
@@ -202,7 +202,7 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 744,
+      "changes": 746,
       "users": 196
     },
     {
