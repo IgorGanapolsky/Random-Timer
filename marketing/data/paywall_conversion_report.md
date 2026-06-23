@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-23T07:31:19+00:00
+Generated: 2026-06-23T13:15:07+00:00
 Window (days): 30
 
 ## Funnel
@@ -55,17 +55,17 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| alarm_duration | 2598 | 205 |
-| max_seconds | 2552 | 219 |
-| volume | 1657 | 144 |
-| min_seconds | 1519 | 204 |
-| sound_type | 1193 | 169 |
-| repeat_enabled | 746 | 196 |
-| voice_callouts_enabled | 522 | 124 |
+| max_seconds | 2643 | 219 |
+| alarm_duration | 2599 | 205 |
+| volume | 1655 | 143 |
+| min_seconds | 1539 | 204 |
+| sound_type | 1196 | 169 |
+| repeat_enabled | 745 | 195 |
+| voice_callouts_enabled | 520 | 123 |
 | vibration_enabled | 242 | 140 |
-| use_extended_range | 237 | 101 |
-| voice_gender | 233 | 136 |
-| repeat_rounds | 200 | 69 |
+| voice_gender | 236 | 136 |
+| use_extended_range | 236 | 100 |
+| repeat_rounds | 199 | 68 |
 | unknown | 18 | 1 |
 
 ## Data Quality Warnings

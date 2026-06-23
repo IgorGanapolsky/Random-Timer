@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 53 | 479 | 532 |
+| Distinct install users (30d) | 54 | 479 | 533 |
 | Active Installs | — | 484 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 3 |
-| WAU | 18 |
-| MAU | 545 |
+| DAU | 4 |
+| WAU | 19 |
+| MAU | 546 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -38,11 +38,11 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-06-23T07:31:47+00:00
+**Generated:** 2026-06-23T13:15:38+00:00
 
 ## Onboarding Funnel
-- First Open: **534**
-- First Timer Configured: **238** (44.6% of opens)
+- First Open: **535**
+- First Timer Configured: **237** (44.3% of opens)
 - First Timer Completed: **61** (11.4% of opens)
 
 ## UTM Attribution (Top Sources)
@@ -77,8 +77,8 @@
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 534 | — |
-| First Timer Configured | 238 | 44.6% of opens |
+| First Open | 535 | — |
+| First Timer Configured | 237 | 44.3% of opens |
 | First Timer Completed | 61 | 11.4% of opens |
 <!-- FUNNEL_END -->
 
@@ -155,18 +155,18 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-06-20" , "2026-06-20" , "2026-06-20" , "2026-06-20" , "2026-06-21" , "2026-06-21" , "2026-06-21" , "2026-06-21" , "2026-06-22" , "2026-06-22" , "2026-06-22" , "2026-06-22" , "2026-06-23" , "2026-06-23"]
+    x-axis ["2026-06-20" , "2026-06-20" , "2026-06-20" , "2026-06-21" , "2026-06-21" , "2026-06-21" , "2026-06-21" , "2026-06-22" , "2026-06-22" , "2026-06-22" , "2026-06-22" , "2026-06-23" , "2026-06-23" , "2026-06-23"]
     y-axis "Downloads"
-    line [54 , 54 , 55 , 54 , 54 , 55 , 55 , 54 , 53 , 55 , 54 , 53 , 53 , 53]
-    line [529 , 529 , 529 , 526 , 510 , 510 , 510 , 496 , 491 , 491 , 491 , 479 , 479 , 479]
+    line [54 , 55 , 54 , 54 , 55 , 55 , 54 , 53 , 55 , 54 , 53 , 53 , 53 , 54]
+    line [529 , 529 , 526 , 510 , 510 , 510 , 496 , 491 , 491 , 491 , 479 , 479 , 479 , 479]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-06-20" , "2026-06-20" , "2026-06-20" , "2026-06-20" , "2026-06-21" , "2026-06-21" , "2026-06-21" , "2026-06-21" , "2026-06-22" , "2026-06-22" , "2026-06-22" , "2026-06-22" , "2026-06-23" , "2026-06-23"]
+    x-axis ["2026-06-20" , "2026-06-20" , "2026-06-20" , "2026-06-21" , "2026-06-21" , "2026-06-21" , "2026-06-21" , "2026-06-22" , "2026-06-22" , "2026-06-22" , "2026-06-22" , "2026-06-23" , "2026-06-23" , "2026-06-23"]
     y-axis "Users"
-    line [6 , 6 , 5 , 4 , 4 , 4 , 5 , 6 , 6 , 5 , 5 , 5 , 5 , 5]
+    line [6 , 5 , 4 , 4 , 4 , 5 , 6 , 6 , 5 , 5 , 5 , 5 , 5 , 5]
 ```
 
 ```mermaid
@@ -194,4 +194,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-06-23T07:31:48+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-06-23T13:15:40+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
