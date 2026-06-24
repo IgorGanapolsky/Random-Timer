@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 52 | 477 | 529 |
-| Active Installs | — | 482 | — |
+| Distinct install users (30d) | 52 | 476 | 528 |
+| Active Installs | — | 481 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
 | DAU | 4 |
-| WAU | 19 |
-| MAU | 543 |
+| WAU | 17 |
+| MAU | 542 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -23,9 +23,9 @@
 | Metric | Value |
 |--------|-------|
 | WQTU (7d) | 6 |
-| Timer Completed (7d) | 47 |
-| Completed Users (7d) | 12 |
-| Sessions/Completed User (7d) | 3.92 |
+| Timer Completed (7d) | 58 |
+| Completed Users (7d) | 11 |
+| Sessions/Completed User (7d) | 5.27 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
@@ -38,12 +38,12 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-06-24T07:27:24+00:00
+**Generated:** 2026-06-24T13:02:26+00:00
 
 ## Onboarding Funnel
-- First Open: **531**
-- First Timer Configured: **236** (44.4% of opens)
-- First Timer Completed: **62** (11.7% of opens)
+- First Open: **530**
+- First Timer Configured: **234** (44.1% of opens)
+- First Timer Completed: **61** (11.5% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -69,7 +69,7 @@
 
 **Top failure reasons:** failed (57), item_unavailable (2)
 
-**Catalog failures (Android):** pro_base (91), elite_tactical (89), elite_tactical_monthly (82)
+**Catalog failures (Android):** pro_base (90), elite_tactical (88), elite_tactical_monthly (81)
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -77,9 +77,9 @@
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 531 | — |
-| First Timer Configured | 236 | 44.4% of opens |
-| First Timer Completed | 62 | 11.7% of opens |
+| First Open | 530 | — |
+| First Timer Configured | 234 | 44.1% of opens |
+| First Timer Completed | 61 | 11.5% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -155,18 +155,18 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-06-21" , "2026-06-21" , "2026-06-21" , "2026-06-21" , "2026-06-22" , "2026-06-22" , "2026-06-22" , "2026-06-22" , "2026-06-23" , "2026-06-23" , "2026-06-23" , "2026-06-23" , "2026-06-24" , "2026-06-24"]
+    x-axis ["2026-06-21" , "2026-06-21" , "2026-06-21" , "2026-06-22" , "2026-06-22" , "2026-06-22" , "2026-06-22" , "2026-06-23" , "2026-06-23" , "2026-06-23" , "2026-06-23" , "2026-06-24" , "2026-06-24" , "2026-06-24"]
     y-axis "Downloads"
-    line [54 , 55 , 55 , 54 , 53 , 55 , 54 , 53 , 53 , 53 , 54 , 54 , 53 , 52]
-    line [510 , 510 , 510 , 496 , 491 , 491 , 491 , 479 , 479 , 479 , 479 , 477 , 477 , 477]
+    line [55 , 55 , 54 , 53 , 55 , 54 , 53 , 53 , 53 , 54 , 54 , 53 , 52 , 52]
+    line [510 , 510 , 496 , 491 , 491 , 491 , 479 , 479 , 479 , 479 , 477 , 477 , 477 , 476]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-06-21" , "2026-06-21" , "2026-06-21" , "2026-06-21" , "2026-06-22" , "2026-06-22" , "2026-06-22" , "2026-06-22" , "2026-06-23" , "2026-06-23" , "2026-06-23" , "2026-06-23" , "2026-06-24" , "2026-06-24"]
+    x-axis ["2026-06-21" , "2026-06-21" , "2026-06-21" , "2026-06-22" , "2026-06-22" , "2026-06-22" , "2026-06-22" , "2026-06-23" , "2026-06-23" , "2026-06-23" , "2026-06-23" , "2026-06-24" , "2026-06-24" , "2026-06-24"]
     y-axis "Users"
-    line [4 , 4 , 5 , 6 , 6 , 5 , 5 , 5 , 5 , 5 , 5 , 6 , 6 , 6]
+    line [4 , 5 , 6 , 6 , 5 , 5 , 5 , 5 , 5 , 5 , 6 , 6 , 6 , 6]
 ```
 
 ```mermaid
@@ -194,4 +194,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-06-24T07:27:26+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-06-24T13:02:28+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
