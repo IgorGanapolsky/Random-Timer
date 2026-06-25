@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-25T13:02:05+00:00
+Generated: 2026-06-25T18:55:53+00:00
 Window (days): 30
 
 ## Funnel
@@ -15,12 +15,12 @@ Window (days): 30
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| (none) | 0 |
+| failed | 45 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
-| android | unknown | failed | 46 | 30 |
+| android | unknown | failed | 45 | 29 |
 
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
@@ -68,7 +68,3 @@ Window (days): 30
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic
 - product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status
-
-## Query Diagnostics
-- Query errors: **1**
-- Last error: `request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=90.0)`
