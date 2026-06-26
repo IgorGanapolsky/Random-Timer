@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-26T07:34:13+00:00",
+  "generated_at": "2026-06-26T12:58:01+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -42,40 +42,40 @@
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 62,
-      "users": 61
+      "failures": 61,
+      "users": 60
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 60,
-      "users": 59
+      "failures": 59,
+      "users": 58
     },
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 53,
-      "users": 39
+      "failures": 52,
+      "users": 38
     }
   ],
   "product_catalog_failures_play_store": [
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 62,
-      "users": 61
+      "failures": 61,
+      "users": 60
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 60,
-      "users": 59
+      "failures": 59,
+      "users": 58
     },
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 53,
-      "users": 39
+      "failures": 52,
+      "users": 38
     }
   ],
   "entry_points": [
@@ -157,58 +157,58 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2432,
-      "users": 180
+      "changes": 2427,
+      "users": 179
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 2189,
-      "users": 170
-    },
-    {
-      "setting_name": "volume",
-      "changes": 1551,
-      "users": 119
-    },
-    {
-      "setting_name": "min_seconds",
-      "changes": 1393,
+      "changes": 2185,
       "users": 169
     },
     {
-      "setting_name": "sound_type",
-      "changes": 1083,
-      "users": 140
-    },
-    {
-      "setting_name": "repeat_enabled",
-      "changes": 611,
-      "users": 156
-    },
-    {
-      "setting_name": "voice_callouts_enabled",
-      "changes": 444,
-      "users": 100
-    },
-    {
-      "setting_name": "use_extended_range",
-      "changes": 216,
-      "users": 87
-    },
-    {
-      "setting_name": "voice_gender",
-      "changes": 207,
-      "users": 115
-    },
-    {
-      "setting_name": "vibration_enabled",
-      "changes": 189,
+      "setting_name": "volume",
+      "changes": 1542,
       "users": 118
     },
     {
+      "setting_name": "min_seconds",
+      "changes": 1391,
+      "users": 168
+    },
+    {
+      "setting_name": "sound_type",
+      "changes": 1077,
+      "users": 139
+    },
+    {
+      "setting_name": "repeat_enabled",
+      "changes": 604,
+      "users": 155
+    },
+    {
+      "setting_name": "voice_callouts_enabled",
+      "changes": 439,
+      "users": 99
+    },
+    {
+      "setting_name": "use_extended_range",
+      "changes": 215,
+      "users": 86
+    },
+    {
+      "setting_name": "voice_gender",
+      "changes": 205,
+      "users": 114
+    },
+    {
+      "setting_name": "vibration_enabled",
+      "changes": 183,
+      "users": 117
+    },
+    {
       "setting_name": "repeat_rounds",
-      "changes": 178,
-      "users": 59
+      "changes": 173,
+      "users": 58
     },
     {
       "setting_name": "unknown",

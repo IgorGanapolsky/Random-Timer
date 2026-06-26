@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-26T07:34:13+00:00
+Generated: 2026-06-26T12:58:01+00:00
 Window (days): 30
 
 ## Funnel
@@ -30,9 +30,9 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | pro_base | 62 | 61 |
-| android | elite_tactical | 60 | 59 |
-| android | elite_tactical_monthly | 53 | 39 |
+| android | pro_base | 61 | 60 |
+| android | elite_tactical | 59 | 58 |
+| android | elite_tactical_monthly | 52 | 38 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
@@ -52,17 +52,17 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2432 | 180 |
-| alarm_duration | 2189 | 170 |
-| volume | 1551 | 119 |
-| min_seconds | 1393 | 169 |
-| sound_type | 1083 | 140 |
-| repeat_enabled | 611 | 156 |
-| voice_callouts_enabled | 444 | 100 |
-| use_extended_range | 216 | 87 |
-| voice_gender | 207 | 115 |
-| vibration_enabled | 189 | 118 |
-| repeat_rounds | 178 | 59 |
+| max_seconds | 2427 | 179 |
+| alarm_duration | 2185 | 169 |
+| volume | 1542 | 118 |
+| min_seconds | 1391 | 168 |
+| sound_type | 1077 | 139 |
+| repeat_enabled | 604 | 155 |
+| voice_callouts_enabled | 439 | 99 |
+| use_extended_range | 215 | 86 |
+| voice_gender | 205 | 114 |
+| vibration_enabled | 183 | 117 |
+| repeat_rounds | 173 | 58 |
 | unknown | 18 | 1 |
 
 ## Data Quality Warnings
