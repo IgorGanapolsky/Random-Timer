@@ -1,10 +1,10 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-25T18:55:53+00:00
+Generated: 2026-06-26T01:17:23+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **412**
+- Views: **408**
 - Offer Selects: **9**
 - Purchase Attempts: **2**
 - Purchase Successes: **1**
@@ -15,12 +15,12 @@ Window (days): 30
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| failed | 45 |
+| failed | 29 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
-| android | unknown | failed | 45 | 29 |
+| android | unknown | failed | 29 | 20 |
 
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
@@ -38,7 +38,7 @@ Window (days): 30
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | range_gate | 174 | 2 | 1 | 1.1% | 50.0% |
-| voice_gate | 136 | 0 | 0 | 0.0% | 0.0% |
+| voice_gate | 132 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 64 | 0 | 0 | 0.0% | 0.0% |
 | qualified_training_gate | 16 | 0 | 0 | 0.0% | 0.0% |
 | setup_upgrade_cta | 12 | 0 | 0 | 0.0% | 0.0% |
@@ -46,22 +46,22 @@ Window (days): 30
 | repeat_gate | 4 | 0 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
-- `voice_gate` had **136** views and **0** purchase attempts.
+- `voice_gate` had **132** views and **0** purchase attempts.
 - `unknown` had **64** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2481 | 185 |
-| alarm_duration | 2198 | 172 |
-| volume | 1561 | 120 |
-| min_seconds | 1422 | 172 |
+| max_seconds | 2432 | 180 |
+| alarm_duration | 2189 | 170 |
+| volume | 1551 | 119 |
+| min_seconds | 1393 | 169 |
 | sound_type | 1083 | 140 |
-| repeat_enabled | 618 | 158 |
+| repeat_enabled | 611 | 156 |
 | voice_callouts_enabled | 444 | 100 |
 | use_extended_range | 216 | 87 |
 | voice_gender | 207 | 115 |
-| vibration_enabled | 196 | 120 |
+| vibration_enabled | 189 | 118 |
 | repeat_rounds | 178 | 59 |
 | unknown | 18 | 1 |
 
