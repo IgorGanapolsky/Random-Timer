@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-27T12:42:02+00:00
+Generated: 2026-06-27T18:36:08+00:00
 Window (days): 30
 
 ## Funnel
@@ -15,12 +15,12 @@ Window (days): 30
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| failed | 8 |
+| failed | 4 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
-| android | unknown | failed | 8 | 6 |
+| android | unknown | failed | 4 | 4 |
 
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
@@ -52,14 +52,14 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2256 | 157 |
+| max_seconds | 2257 | 158 |
 | alarm_duration | 1861 | 147 |
 | volume | 1543 | 101 |
 | min_seconds | 1278 | 146 |
-| sound_type | 1026 | 124 |
+| sound_type | 1028 | 125 |
 | repeat_enabled | 498 | 132 |
 | voice_callouts_enabled | 396 | 82 |
-| voice_gender | 197 | 108 |
+| voice_gender | 199 | 109 |
 | use_extended_range | 194 | 75 |
 | repeat_rounds | 173 | 58 |
 | vibration_enabled | 157 | 101 |
