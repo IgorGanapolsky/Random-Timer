@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 47 | 372 | 419 |
-| Active Installs | — | 377 | — |
+| Distinct install users (30d) | 45 | 341 | 386 |
+| Active Installs | — | 346 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 2 |
-| WAU | 16 |
-| MAU | 433 |
+| DAU | 1 |
+| WAU | 15 |
+| MAU | 401 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -31,6 +31,8 @@
 | Paid Attributed Users (30d) | 0 |
 | Active Campaign Count | 0 |
 | Guardrail Violated | NO |
+
+_Data quality: stale; showing last good metrics from `2026-06-26T18:48:19+00:00`; latest read issue: `request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Max retries exceeded with url: /api/projects/299775/query/ (Caused by NewConnectionError("HTTPSConnection(host='us.posthog.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable"))`._
 <!-- NORTH_STAR_END -->
 
 ## Attribution Summary
@@ -38,12 +40,12 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-06-26T18:49:22+00:00
+**Generated:** 2026-06-27T02:19:25+00:00
 
 ## Onboarding Funnel
-- First Open: **421**
-- First Timer Configured: **184** (43.7% of opens)
-- First Timer Completed: **55** (13.1% of opens)
+- First Open: **388**
+- First Timer Configured: **166** (42.8% of opens)
+- First Timer Completed: **53** (13.7% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -61,15 +63,15 @@
 <!-- PAYWALL_START -->
 | Metric | Value |
 |--------|-------|
-| Paywall Views | 371 |
+| Paywall Views | 305 |
 | Offer Selects | 9 |
 | Purchase Attempts | 2 |
 | Purchase Successes | 1 |
 | Attempt → Success | 50.0% |
 
-**Top failure reasons:** failed (25)
+**Top failure reasons:** failed (15)
 
-**Catalog failures (Android):** pro_base (59), elite_tactical (57), elite_tactical_monthly (52)
+**Catalog failures (Android):** pro_base (46), elite_tactical (44), elite_tactical_monthly (42)
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -77,9 +79,9 @@
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 421 | — |
-| First Timer Configured | 184 | 43.7% of opens |
-| First Timer Completed | 55 | 13.1% of opens |
+| First Open | 388 | — |
+| First Timer Configured | 166 | 42.8% of opens |
+| First Timer Completed | 53 | 13.7% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -155,10 +157,10 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-06-23" , "2026-06-23" , "2026-06-24" , "2026-06-24" , "2026-06-24" , "2026-06-24" , "2026-06-25" , "2026-06-25" , "2026-06-25" , "2026-06-25" , "2026-06-26" , "2026-06-26" , "2026-06-26" , "2026-06-26"]
+    x-axis ["2026-06-23" , "2026-06-24" , "2026-06-24" , "2026-06-24" , "2026-06-24" , "2026-06-25" , "2026-06-25" , "2026-06-25" , "2026-06-25" , "2026-06-26" , "2026-06-26" , "2026-06-26" , "2026-06-26" , "2026-06-27"]
     y-axis "Downloads"
-    line [54 , 54 , 53 , 52 , 52 , 49 , 48 , 48 , 48 , 48 , 48 , 48 , 48 , 47]
-    line [479 , 477 , 477 , 477 , 476 , 476 , 429 , 429 , 429 , 421 , 395 , 394 , 391 , 372]
+    line [54 , 53 , 52 , 52 , 49 , 48 , 48 , 48 , 48 , 48 , 48 , 48 , 47 , 45]
+    line [477 , 477 , 477 , 476 , 476 , 429 , 429 , 429 , 421 , 395 , 394 , 391 , 372 , 341]
 ```
 
 ```mermaid
@@ -194,4 +196,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-06-26T18:49:23+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-06-27T02:19:26+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._

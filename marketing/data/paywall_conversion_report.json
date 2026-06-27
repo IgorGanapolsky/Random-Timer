@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-06-26T18:48:38+00:00",
+  "generated_at": "2026-06-27T02:18:21+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 371,
+    "views": 305,
     "offer_selects": 9,
     "purchase_attempts": 2,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.0243,
+    "view_to_select_rate": 0.0295,
     "select_to_attempt_rate": 0.2222,
     "attempt_to_success_rate": 0.5
   },
   "top_failure_reasons": [
     {
       "reason": "failed",
-      "count": 25
+      "count": 15
     }
   ],
   "failure_breakdown": [
@@ -23,8 +23,8 @@
       "platform": "android",
       "product_id": "unknown",
       "reason": "failed",
-      "failures": 25,
-      "users": 17
+      "failures": 15,
+      "users": 10
     }
   ],
   "product_funnel": [
@@ -42,54 +42,54 @@
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 59,
-      "users": 58
+      "failures": 46,
+      "users": 45
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 57,
-      "users": 56
+      "failures": 44,
+      "users": 43
     },
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 52,
-      "users": 38
+      "failures": 42,
+      "users": 28
     }
   ],
   "product_catalog_failures_play_store": [
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 59,
-      "users": 58
+      "failures": 46,
+      "users": 45
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 57,
-      "users": 56
+      "failures": 44,
+      "users": 43
     },
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 52,
-      "users": 38
+      "failures": 42,
+      "users": 28
     }
   ],
   "entry_points": [
     {
       "entry_point": "range_gate",
-      "views": 156,
+      "views": 118,
       "attempts": 2,
       "successes": 1,
-      "view_to_attempt_rate": 0.0128,
+      "view_to_attempt_rate": 0.0169,
       "attempt_to_success_rate": 0.5
     },
     {
       "entry_point": "voice_gate",
-      "views": 112,
+      "views": 84,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -139,7 +139,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "voice_gate",
-      "views": 112,
+      "views": 84,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -157,58 +157,58 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2395,
-      "users": 172
+      "changes": 2256,
+      "users": 157
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 2110,
-      "users": 162
+      "changes": 1861,
+      "users": 147
     },
     {
       "setting_name": "volume",
-      "changes": 1681,
-      "users": 114
+      "changes": 1543,
+      "users": 101
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1367,
-      "users": 161
+      "changes": 1278,
+      "users": 146
     },
     {
       "setting_name": "sound_type",
-      "changes": 1068,
-      "users": 136
+      "changes": 1026,
+      "users": 124
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 584,
-      "users": 148
+      "changes": 498,
+      "users": 132
     },
     {
       "setting_name": "voice_callouts_enabled",
-      "changes": 431,
-      "users": 94
-    },
-    {
-      "setting_name": "use_extended_range",
-      "changes": 210,
-      "users": 83
+      "changes": 396,
+      "users": 82
     },
     {
       "setting_name": "voice_gender",
-      "changes": 203,
-      "users": 113
+      "changes": 197,
+      "users": 108
     },
     {
-      "setting_name": "vibration_enabled",
-      "changes": 179,
-      "users": 114
+      "setting_name": "use_extended_range",
+      "changes": 194,
+      "users": 75
     },
     {
       "setting_name": "repeat_rounds",
       "changes": 173,
       "users": 58
+    },
+    {
+      "setting_name": "vibration_enabled",
+      "changes": 157,
+      "users": 101
     },
     {
       "setting_name": "unknown",

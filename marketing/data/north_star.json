@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-06-26T18:48:19+00:00",
+  "generated_at": "2026-06-27T01:12:55+00:00",
   "source": "posthog",
-  "status": "ok",
+  "status": "degraded",
   "status_reason": "",
   "lookback_days": 30,
   "wqtu_window_days": 7,
@@ -46,14 +46,16 @@
     }
   },
   "data_quality": {
-    "is_stale": false,
-    "preserved_previous_metrics": false,
-    "last_attempt_generated_at": "2026-06-26T18:48:19+00:00",
-    "last_good_generated_at": "",
-    "reason": ""
+    "is_stale": true,
+    "preserved_previous_metrics": true,
+    "last_attempt_generated_at": "2026-06-27T01:12:55+00:00",
+    "last_good_generated_at": "2026-06-26T18:48:19+00:00",
+    "reason": "request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Max retries exceeded with url: /api/projects/299775/query/ (Caused by NewConnectionError(\"HTTPSConnection(host='us.posthog.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))"
   },
   "query_diagnostics": {
-    "errors": []
+    "errors": [
+      "request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Max retries exceeded with url: /api/projects/299775/query/ (Caused by NewConnectionError(\"HTTPSConnection(host='us.posthog.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))"
+    ]
   },
   "snapshots": [
     {
