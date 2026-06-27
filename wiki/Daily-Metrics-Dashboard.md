@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 45 | 341 | 386 |
-| Active Installs | — | 346 | — |
+| Distinct install users (30d) | 45 | 329 | 374 |
+| Active Installs | — | 334 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
 | DAU | 1 |
 | WAU | 15 |
-| MAU | 401 |
+| MAU | 389 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -23,16 +23,14 @@
 | Metric | Value |
 |--------|-------|
 | WQTU (7d) | 6 |
-| Timer Completed (7d) | 78 |
-| Completed Users (7d) | 9 |
-| Sessions/Completed User (7d) | 8.67 |
+| Timer Completed (7d) | 77 |
+| Completed Users (7d) | 8 |
+| Sessions/Completed User (7d) | 9.62 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
 | Active Campaign Count | 0 |
 | Guardrail Violated | NO |
-
-_Data quality: stale; showing last good metrics from `2026-06-26T18:48:19+00:00`; latest read issue: `request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Max retries exceeded with url: /api/projects/299775/query/ (Caused by NewConnectionError("HTTPSConnection(host='us.posthog.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable"))`._
 <!-- NORTH_STAR_END -->
 
 ## Attribution Summary
@@ -40,12 +38,12 @@ _Data quality: stale; showing last good metrics from `2026-06-26T18:48:19+00:00`
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-06-27T02:19:25+00:00
+**Generated:** 2026-06-27T07:19:46+00:00
 
 ## Onboarding Funnel
-- First Open: **388**
-- First Timer Configured: **166** (42.8% of opens)
-- First Timer Completed: **53** (13.7% of opens)
+- First Open: **376**
+- First Timer Configured: **166** (44.1% of opens)
+- First Timer Completed: **53** (14.1% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -69,7 +67,7 @@ _Data quality: stale; showing last good metrics from `2026-06-26T18:48:19+00:00`
 | Purchase Successes | 1 |
 | Attempt → Success | 50.0% |
 
-**Top failure reasons:** failed (15)
+**Top failure reasons:** failed (8)
 
 **Catalog failures (Android):** pro_base (46), elite_tactical (44), elite_tactical_monthly (42)
 <!-- PAYWALL_END -->
@@ -79,9 +77,9 @@ _Data quality: stale; showing last good metrics from `2026-06-26T18:48:19+00:00`
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 388 | — |
-| First Timer Configured | 166 | 42.8% of opens |
-| First Timer Completed | 53 | 13.7% of opens |
+| First Open | 376 | — |
+| First Timer Configured | 166 | 44.1% of opens |
+| First Timer Completed | 53 | 14.1% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -157,18 +155,18 @@ _Data quality: stale; showing last good metrics from `2026-06-26T18:48:19+00:00`
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-06-23" , "2026-06-24" , "2026-06-24" , "2026-06-24" , "2026-06-24" , "2026-06-25" , "2026-06-25" , "2026-06-25" , "2026-06-25" , "2026-06-26" , "2026-06-26" , "2026-06-26" , "2026-06-26" , "2026-06-27"]
+    x-axis ["2026-06-24" , "2026-06-24" , "2026-06-24" , "2026-06-24" , "2026-06-25" , "2026-06-25" , "2026-06-25" , "2026-06-25" , "2026-06-26" , "2026-06-26" , "2026-06-26" , "2026-06-26" , "2026-06-27" , "2026-06-27"]
     y-axis "Downloads"
-    line [54 , 53 , 52 , 52 , 49 , 48 , 48 , 48 , 48 , 48 , 48 , 48 , 47 , 45]
-    line [477 , 477 , 477 , 476 , 476 , 429 , 429 , 429 , 421 , 395 , 394 , 391 , 372 , 341]
+    line [53 , 52 , 52 , 49 , 48 , 48 , 48 , 48 , 48 , 48 , 48 , 47 , 45 , 45]
+    line [477 , 477 , 476 , 476 , 429 , 429 , 429 , 421 , 395 , 394 , 391 , 372 , 341 , 329]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-06-23" , "2026-06-23" , "2026-06-24" , "2026-06-24" , "2026-06-24" , "2026-06-24" , "2026-06-25" , "2026-06-25" , "2026-06-25" , "2026-06-25" , "2026-06-26" , "2026-06-26" , "2026-06-26" , "2026-06-26"]
+    x-axis ["2026-06-23" , "2026-06-24" , "2026-06-24" , "2026-06-24" , "2026-06-24" , "2026-06-25" , "2026-06-25" , "2026-06-25" , "2026-06-25" , "2026-06-26" , "2026-06-26" , "2026-06-26" , "2026-06-26" , "2026-06-27"]
     y-axis "Users"
-    line [5 , 6 , 6 , 6 , 6 , 6 , 6 , 5 , 5 , 4 , 5 , 5 , 5 , 6]
+    line [6 , 6 , 6 , 6 , 6 , 6 , 5 , 5 , 4 , 5 , 5 , 5 , 6 , 6]
 ```
 
 ```mermaid
@@ -196,4 +194,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-06-27T02:19:26+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-06-27T07:19:47+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
