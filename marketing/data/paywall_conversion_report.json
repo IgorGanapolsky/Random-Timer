@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-06-28T01:19:18+00:00",
+  "generated_at": "2026-06-28T07:35:57+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 303,
+    "views": 302,
     "offer_selects": 9,
     "purchase_attempts": 2,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.0297,
+    "view_to_select_rate": 0.0298,
     "select_to_attempt_rate": 0.2222,
     "attempt_to_success_rate": 0.5
   },
@@ -105,7 +105,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 17,
+      "views": 16,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -162,13 +162,13 @@
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 1860,
-      "users": 146
+      "changes": 1859,
+      "users": 145
     },
     {
       "setting_name": "volume",
-      "changes": 1507,
-      "users": 100
+      "changes": 1288,
+      "users": 99
     },
     {
       "setting_name": "min_seconds",
@@ -182,8 +182,8 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 494,
-      "users": 131
+      "changes": 493,
+      "users": 130
     },
     {
       "setting_name": "voice_callouts_enabled",
