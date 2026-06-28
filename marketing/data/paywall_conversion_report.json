@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-06-27T18:36:08+00:00",
+  "generated_at": "2026-06-28T01:19:18+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 305,
+    "views": 303,
     "offer_selects": 9,
     "purchase_attempts": 2,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.0295,
+    "view_to_select_rate": 0.0297,
     "select_to_attempt_rate": 0.2222,
     "attempt_to_success_rate": 0.5
   },
@@ -89,7 +89,7 @@
     },
     {
       "entry_point": "voice_gate",
-      "views": 84,
+      "views": 82,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -139,7 +139,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "voice_gate",
-      "views": 84,
+      "views": 82,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -157,23 +157,23 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2257,
-      "users": 158
+      "changes": 2210,
+      "users": 156
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 1861,
-      "users": 147
+      "changes": 1860,
+      "users": 146
     },
     {
       "setting_name": "volume",
-      "changes": 1543,
-      "users": 101
+      "changes": 1507,
+      "users": 100
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1278,
-      "users": 146
+      "changes": 1266,
+      "users": 145
     },
     {
       "setting_name": "sound_type",
@@ -182,13 +182,13 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 498,
-      "users": 132
+      "changes": 494,
+      "users": 131
     },
     {
       "setting_name": "voice_callouts_enabled",
-      "changes": 396,
-      "users": 82
+      "changes": 397,
+      "users": 83
     },
     {
       "setting_name": "voice_gender",
@@ -197,8 +197,8 @@
     },
     {
       "setting_name": "use_extended_range",
-      "changes": 194,
-      "users": 75
+      "changes": 196,
+      "users": 76
     },
     {
       "setting_name": "repeat_rounds",
@@ -207,8 +207,8 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 157,
-      "users": 101
+      "changes": 156,
+      "users": 100
     },
     {
       "setting_name": "unknown",
