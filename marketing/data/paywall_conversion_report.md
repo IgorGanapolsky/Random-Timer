@@ -1,10 +1,10 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-30T01:14:17+00:00
+Generated: 2026-06-30T07:34:42+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **292**
+- Views: **291**
 - Offer Selects: **9**
 - Purchase Attempts: **2**
 - Purchase Successes: **1**
@@ -40,7 +40,7 @@ Window (days): 30
 | range_gate | 112 | 2 | 1 | 1.8% | 50.0% |
 | voice_gate | 78 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 63 | 0 | 0 | 0.0% | 0.0% |
-| qualified_training_gate | 17 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 16 | 0 | 0 | 0.0% | 0.0% |
 | setup_upgrade_cta | 12 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 6 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 4 | 0 | 0 | 0.0% | 0.0% |
@@ -52,11 +52,11 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2115 | 152 |
-| alarm_duration | 1829 | 141 |
-| volume | 1301 | 97 |
-| min_seconds | 1215 | 140 |
-| sound_type | 1028 | 124 |
+| max_seconds | 2113 | 152 |
+| alarm_duration | 1827 | 141 |
+| volume | 1311 | 98 |
+| min_seconds | 1270 | 140 |
+| sound_type | 1030 | 125 |
 | repeat_enabled | 475 | 125 |
 | voice_callouts_enabled | 393 | 81 |
 | voice_gender | 198 | 108 |
