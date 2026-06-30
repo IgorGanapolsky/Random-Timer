@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-06-30T12:59:22+00:00
+Generated: 2026-06-30T18:49:36+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **291**
-- Offer Selects: **9**
+- Views: **293**
+- Offer Selects: **10**
 - Purchase Attempts: **2**
 - Purchase Successes: **1**
-- View -> Offer Select: **3.1%**
-- Select -> Purchase Attempt: **22.2%**
+- View -> Offer Select: **3.4%**
+- Select -> Purchase Attempt: **20.0%**
 - Attempt -> Purchase Success: **50.0%**
 
 ## Top Failure Reasons
@@ -25,7 +25,7 @@ Window (days): 30
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
-| android | elite_tactical | 9 | 2 | 1 | 22.2% | 50.0% |
+| android | elite_tactical | 10 | 2 | 1 | 20.0% | 50.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
@@ -40,7 +40,7 @@ Window (days): 30
 | range_gate | 112 | 2 | 1 | 1.8% | 50.0% |
 | voice_gate | 78 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 63 | 0 | 0 | 0.0% | 0.0% |
-| qualified_training_gate | 16 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 18 | 0 | 0 | 0.0% | 0.0% |
 | setup_upgrade_cta | 12 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 6 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 4 | 0 | 0 | 0.0% | 0.0% |
@@ -52,14 +52,14 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2113 | 152 |
-| alarm_duration | 1826 | 140 |
-| min_seconds | 1268 | 139 |
-| volume | 1138 | 97 |
-| sound_type | 1030 | 125 |
-| repeat_enabled | 473 | 124 |
+| max_seconds | 2386 | 153 |
+| alarm_duration | 1833 | 141 |
+| min_seconds | 1507 | 140 |
+| volume | 1170 | 98 |
+| sound_type | 1035 | 126 |
+| repeat_enabled | 474 | 125 |
 | voice_callouts_enabled | 393 | 81 |
-| voice_gender | 196 | 107 |
+| voice_gender | 197 | 108 |
 | use_extended_range | 192 | 74 |
 | repeat_rounds | 173 | 58 |
 | vibration_enabled | 152 | 98 |
