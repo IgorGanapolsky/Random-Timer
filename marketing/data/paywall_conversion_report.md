@@ -1,10 +1,10 @@
 # Paywall Conversion Report
 
-Generated: 2026-07-01T07:47:24+00:00
+Generated: 2026-07-01T13:10:45+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **278**
+- Views: **274**
 - Offer Selects: **11**
 - Purchase Attempts: **2**
 - Purchase Successes: **1**
@@ -30,15 +30,15 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | pro_base | 40 | 39 |
-| android | elite_tactical | 38 | 37 |
-| android | elite_tactical_monthly | 34 | 21 |
+| android | pro_base | 39 | 38 |
+| android | elite_tactical | 37 | 36 |
+| android | elite_tactical_monthly | 33 | 20 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| range_gate | 102 | 2 | 1 | 2.0% | 50.0% |
-| voice_gate | 70 | 0 | 0 | 0.0% | 0.0% |
+| range_gate | 100 | 2 | 1 | 2.0% | 50.0% |
+| voice_gate | 68 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 65 | 0 | 0 | 0.0% | 0.0% |
 | qualified_training_gate | 19 | 0 | 0 | 0.0% | 0.0% |
 | setup_upgrade_cta | 12 | 0 | 0 | 0.0% | 0.0% |
@@ -46,19 +46,19 @@ Window (days): 30
 | repeat_gate | 4 | 0 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
-- `voice_gate` had **70** views and **0** purchase attempts.
+- `voice_gate` had **68** views and **0** purchase attempts.
 - `unknown` had **65** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2392 | 151 |
-| alarm_duration | 1754 | 138 |
-| min_seconds | 1478 | 137 |
-| volume | 1295 | 97 |
-| sound_type | 1028 | 125 |
-| repeat_enabled | 449 | 123 |
-| voice_callouts_enabled | 383 | 78 |
+| max_seconds | 2414 | 150 |
+| alarm_duration | 1739 | 137 |
+| min_seconds | 1477 | 136 |
+| volume | 1294 | 96 |
+| sound_type | 1018 | 123 |
+| repeat_enabled | 444 | 121 |
+| voice_callouts_enabled | 380 | 77 |
 | voice_gender | 193 | 106 |
 | use_extended_range | 186 | 71 |
 | repeat_rounds | 173 | 58 |
