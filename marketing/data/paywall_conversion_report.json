@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-02T07:21:43+00:00",
+  "generated_at": "2026-07-02T12:50:26+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -157,13 +157,13 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2276,
-      "users": 139
+      "changes": 2275,
+      "users": 138
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 1578,
-      "users": 125
+      "changes": 1577,
+      "users": 124
     },
     {
       "setting_name": "min_seconds",
