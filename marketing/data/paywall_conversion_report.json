@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-03T00:58:30+00:00",
+  "generated_at": "2026-07-03T07:17:30+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -48,8 +48,8 @@
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 27,
-      "users": 26
+      "failures": 26,
+      "users": 25
     },
     {
       "platform": "android",
@@ -68,8 +68,8 @@
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 27,
-      "users": 26
+      "failures": 26,
+      "users": 25
     },
     {
       "platform": "android",
