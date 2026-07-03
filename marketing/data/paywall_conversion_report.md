@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-07-03T12:49:15+00:00
+Generated: 2026-07-03T18:37:08+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **128**
+- Views: **126**
 - Offer Selects: **10**
 - Purchase Attempts: **2**
 - Purchase Successes: **1**
-- View -> Offer Select: **7.8%**
+- View -> Offer Select: **7.9%**
 - Select -> Purchase Attempt: **20.0%**
 - Attempt -> Purchase Success: **50.0%**
 
@@ -31,14 +31,14 @@ Window (days): 30
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
 | android | elite_tactical_monthly | 31 | 19 |
-| android | pro_base | 26 | 25 |
-| android | elite_tactical | 25 | 24 |
+| android | pro_base | 25 | 24 |
+| android | elite_tactical | 24 | 23 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | unknown | 66 | 0 | 0 | 0.0% | 0.0% |
-| range_gate | 26 | 2 | 1 | 7.7% | 50.0% |
+| range_gate | 24 | 2 | 1 | 8.3% | 50.0% |
 | qualified_training_gate | 20 | 0 | 0 | 0.0% | 0.0% |
 | setup_upgrade_cta | 12 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 4 | 0 | 0 | 0.0% | 0.0% |
@@ -50,17 +50,17 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2115 | 118 |
-| volume | 1336 | 75 |
-| alarm_duration | 1325 | 104 |
-| min_seconds | 1243 | 105 |
-| sound_type | 929 | 101 |
-| repeat_enabled | 349 | 92 |
-| voice_callouts_enabled | 329 | 58 |
-| repeat_rounds | 168 | 55 |
-| voice_gender | 162 | 87 |
-| use_extended_range | 159 | 58 |
-| vibration_enabled | 109 | 73 |
+| max_seconds | 2098 | 111 |
+| volume | 1303 | 69 |
+| min_seconds | 1221 | 97 |
+| alarm_duration | 1193 | 96 |
+| sound_type | 843 | 93 |
+| repeat_enabled | 318 | 85 |
+| voice_callouts_enabled | 293 | 52 |
+| voice_gender | 148 | 79 |
+| repeat_rounds | 147 | 49 |
+| use_extended_range | 146 | 52 |
+| vibration_enabled | 101 | 67 |
 | unknown | 38 | 2 |
 
 ## Data Quality Warnings
