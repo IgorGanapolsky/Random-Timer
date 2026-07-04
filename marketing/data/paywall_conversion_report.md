@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-07-04T00:56:57+00:00
+Generated: 2026-07-04T07:10:56+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **126**
+- Views: **128**
 - Offer Selects: **10**
 - Purchase Attempts: **2**
 - Purchase Successes: **1**
-- View -> Offer Select: **7.9%**
+- View -> Offer Select: **7.8%**
 - Select -> Purchase Attempt: **20.0%**
 - Attempt -> Purchase Success: **50.0%**
 
@@ -30,21 +30,21 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 31 | 19 |
+| android | elite_tactical_monthly | 30 | 19 |
 | android | pro_base | 25 | 24 |
 | android | elite_tactical | 24 | 23 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| unknown | 66 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 68 | 0 | 0 | 0.0% | 0.0% |
 | range_gate | 24 | 2 | 1 | 8.3% | 50.0% |
 | qualified_training_gate | 20 | 0 | 0 | 0.0% | 0.0% |
 | setup_upgrade_cta | 12 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 4 | 0 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
-- `unknown` had **66** views and **0** purchase attempts.
+- `unknown` had **68** views and **0** purchase attempts.
 - `qualified_training_gate` had **20** views and **0** purchase attempts.
 
 ## Settings Hotspots
@@ -61,7 +61,7 @@ Window (days): 30
 | repeat_rounds | 147 | 49 |
 | use_extended_range | 146 | 52 |
 | vibration_enabled | 101 | 67 |
-| unknown | 38 | 2 |
+| unknown | 61 | 3 |
 
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic
