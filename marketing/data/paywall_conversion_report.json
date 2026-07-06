@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-06T13:26:58+00:00",
+  "generated_at": "2026-07-06T18:46:37+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -15,7 +15,7 @@
   "top_failure_reasons": [
     {
       "reason": "failed",
-      "count": 4
+      "count": 3
     }
   ],
   "failure_breakdown": [
@@ -23,8 +23,8 @@
       "platform": "android",
       "product_id": "unknown",
       "reason": "failed",
-      "failures": 4,
-      "users": 4
+      "failures": 3,
+      "users": 3
     }
   ],
   "product_funnel": [

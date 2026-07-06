@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-07-06T13:26:58+00:00
+Generated: 2026-07-06T18:46:37+00:00
 Window (days): 30
 
 ## Funnel
@@ -15,12 +15,12 @@ Window (days): 30
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| failed | 4 |
+| failed | 3 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
-| android | unknown | failed | 4 | 4 |
+| android | unknown | failed | 3 | 3 |
 
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
