@@ -1,10 +1,10 @@
 # Paywall Conversion Report
 
-Generated: 2026-07-06T01:03:05+00:00
+Generated: 2026-07-06T07:49:48+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **123**
+- Views: **124**
 - Offer Selects: **10**
 - Purchase Attempts: **2**
 - Purchase Successes: **1**
@@ -30,37 +30,37 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | elite_tactical_monthly | 29 | 19 |
+| android | elite_tactical_monthly | 28 | 19 |
 | android | pro_base | 21 | 20 |
 | android | elite_tactical | 19 | 18 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| unknown | 68 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 69 | 0 | 0 | 0.0% | 0.0% |
 | qualified_training_gate | 21 | 0 | 0 | 0.0% | 0.0% |
 | range_gate | 18 | 2 | 1 | 11.1% | 50.0% |
 | setup_upgrade_cta | 12 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 4 | 0 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
-- `unknown` had **68** views and **0** purchase attempts.
+- `unknown` had **69** views and **0** purchase attempts.
 - `qualified_training_gate` had **21** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2068 | 94 |
+| max_seconds | 2094 | 95 |
 | volume | 1383 | 58 |
-| min_seconds | 1151 | 81 |
-| alarm_duration | 930 | 82 |
+| min_seconds | 1183 | 82 |
+| alarm_duration | 931 | 83 |
 | sound_type | 665 | 78 |
-| repeat_enabled | 258 | 71 |
+| repeat_enabled | 259 | 72 |
 | voice_callouts_enabled | 224 | 40 |
 | voice_gender | 122 | 64 |
 | use_extended_range | 115 | 40 |
 | repeat_rounds | 111 | 37 |
-| vibration_enabled | 80 | 55 |
+| vibration_enabled | 81 | 56 |
 | unknown | 61 | 3 |
 
 ## Data Quality Warnings

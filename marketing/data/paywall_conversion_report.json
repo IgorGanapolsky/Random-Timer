@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-07-06T01:03:05+00:00",
+  "generated_at": "2026-07-06T07:49:48+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 123,
+    "views": 124,
     "offer_selects": 10,
     "purchase_attempts": 2,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.0813,
+    "view_to_select_rate": 0.0806,
     "select_to_attempt_rate": 0.2,
     "attempt_to_success_rate": 0.5
   },
@@ -42,7 +42,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 29,
+      "failures": 28,
       "users": 19
     },
     {
@@ -62,7 +62,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 29,
+      "failures": 28,
       "users": 19
     },
     {
@@ -81,7 +81,7 @@
   "entry_points": [
     {
       "entry_point": "unknown",
-      "views": 68,
+      "views": 69,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -123,7 +123,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "unknown",
-      "views": 68,
+      "views": 69,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -141,8 +141,8 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2068,
-      "users": 94
+      "changes": 2094,
+      "users": 95
     },
     {
       "setting_name": "volume",
@@ -151,13 +151,13 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1151,
-      "users": 81
+      "changes": 1183,
+      "users": 82
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 930,
-      "users": 82
+      "changes": 931,
+      "users": 83
     },
     {
       "setting_name": "sound_type",
@@ -166,8 +166,8 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 258,
-      "users": 71
+      "changes": 259,
+      "users": 72
     },
     {
       "setting_name": "voice_callouts_enabled",
@@ -191,8 +191,8 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 80,
-      "users": 55
+      "changes": 81,
+      "users": 56
     },
     {
       "setting_name": "unknown",
