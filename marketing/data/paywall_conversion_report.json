@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-07T01:01:21+00:00",
+  "generated_at": "2026-07-07T07:23:35+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -42,7 +42,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 25,
+      "failures": 24,
       "users": 18
     },
     {
@@ -62,7 +62,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 25,
+      "failures": 24,
       "users": 18
     },
     {
@@ -141,7 +141,7 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2059,
+      "changes": 2060,
       "users": 94
     },
     {
@@ -151,12 +151,12 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1163,
+      "changes": 1164,
       "users": 81
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 930,
+      "changes": 931,
       "users": 83
     },
     {
@@ -166,7 +166,7 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 259,
+      "changes": 261,
       "users": 72
     },
     {
@@ -191,7 +191,7 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 81,
+      "changes": 82,
       "users": 56
     },
     {
