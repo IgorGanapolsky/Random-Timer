@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-07-08T18:38:09+00:00
+Generated: 2026-07-09T00:57:05+00:00
 Window (days): 30
 
 ## Funnel
@@ -15,12 +15,12 @@ Window (days): 30
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| failed | 3 |
+| failed | 4 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
-| android | unknown | failed | 3 | 3 |
+| android | unknown | failed | 4 | 4 |
 
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
@@ -49,17 +49,17 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 1963 | 90 |
-| volume | 1300 | 55 |
-| min_seconds | 1139 | 76 |
-| alarm_duration | 925 | 79 |
-| sound_type | 653 | 75 |
-| repeat_enabled | 254 | 68 |
-| voice_callouts_enabled | 224 | 40 |
-| voice_gender | 118 | 62 |
-| use_extended_range | 115 | 40 |
-| repeat_rounds | 111 | 37 |
-| vibration_enabled | 77 | 53 |
+| max_seconds | 1940 | 85 |
+| volume | 1281 | 51 |
+| min_seconds | 1121 | 71 |
+| alarm_duration | 854 | 74 |
+| sound_type | 603 | 71 |
+| repeat_enabled | 235 | 63 |
+| voice_callouts_enabled | 206 | 37 |
+| voice_gender | 111 | 58 |
+| use_extended_range | 106 | 37 |
+| repeat_rounds | 102 | 34 |
+| vibration_enabled | 70 | 48 |
 | unknown | 43 | 2 |
 
 ## Data Quality Warnings
