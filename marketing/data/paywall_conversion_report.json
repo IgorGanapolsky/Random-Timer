@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-09T00:57:05+00:00",
+  "generated_at": "2026-07-09T07:25:29+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -42,7 +42,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 24,
+      "failures": 23,
       "users": 18
     },
     {
@@ -62,7 +62,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 24,
+      "failures": 23,
       "users": 18
     },
     {
@@ -133,13 +133,13 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 1940,
-      "users": 85
+      "changes": 1934,
+      "users": 84
     },
     {
       "setting_name": "volume",
-      "changes": 1281,
-      "users": 51
+      "changes": 1275,
+      "users": 50
     },
     {
       "setting_name": "min_seconds",
@@ -153,8 +153,8 @@
     },
     {
       "setting_name": "sound_type",
-      "changes": 603,
-      "users": 71
+      "changes": 599,
+      "users": 70
     },
     {
       "setting_name": "repeat_enabled",
@@ -168,8 +168,8 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 111,
-      "users": 58
+      "changes": 109,
+      "users": 57
     },
     {
       "setting_name": "use_extended_range",
@@ -183,8 +183,8 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 70,
-      "users": 48
+      "changes": 69,
+      "users": 47
     },
     {
       "setting_name": "unknown",
