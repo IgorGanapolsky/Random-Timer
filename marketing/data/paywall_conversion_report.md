@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-07-11T12:27:47+00:00
+Generated: 2026-07-11T18:25:14+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **85**
+- Views: **77**
 - Offer Selects: **3**
 - Purchase Attempts: **0**
 - Purchase Successes: **0**
-- View -> Offer Select: **3.5%**
+- View -> Offer Select: **3.9%**
 - Select -> Purchase Attempt: **0.0%**
 - Attempt -> Purchase Success: **0.0%**
 
@@ -30,35 +30,35 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| android | pro_base | 7 | 7 |
-| android | elite_tactical | 6 | 6 |
-| android | elite_tactical_monthly | 6 | 6 |
+| android | pro_base | 5 | 5 |
+| android | elite_tactical | 4 | 4 |
+| android | elite_tactical_monthly | 4 | 4 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| unknown | 67 | 0 | 0 | 0.0% | 0.0% |
-| qualified_training_gate | 16 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 60 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 15 | 0 | 0 | 0.0% | 0.0% |
 | range_gate | 2 | 0 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
-- `unknown` had **67** views and **0** purchase attempts.
+- `unknown` had **60** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 1939 | 57 |
-| volume | 1077 | 27 |
-| min_seconds | 1025 | 46 |
-| alarm_duration | 357 | 47 |
-| sound_type | 260 | 41 |
-| repeat_enabled | 116 | 36 |
-| voice_callouts_enabled | 74 | 14 |
-| voice_gender | 58 | 31 |
+| max_seconds | 1900 | 49 |
+| volume | 1016 | 19 |
+| min_seconds | 994 | 38 |
+| alarm_duration | 210 | 37 |
+| sound_type | 167 | 33 |
+| repeat_enabled | 79 | 27 |
 | unknown | 43 | 2 |
-| use_extended_range | 39 | 14 |
-| repeat_rounds | 36 | 12 |
-| vibration_enabled | 36 | 26 |
+| voice_gender | 41 | 22 |
+| voice_callouts_enabled | 38 | 8 |
+| vibration_enabled | 25 | 19 |
+| use_extended_range | 22 | 8 |
+| repeat_rounds | 18 | 6 |
 
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic
