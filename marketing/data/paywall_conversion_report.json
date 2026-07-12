@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-07-12T00:54:34+00:00",
+  "generated_at": "2026-07-12T07:03:28+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 77,
-    "offer_selects": 3,
-    "purchase_attempts": 0,
-    "purchase_successes": 0,
-    "view_to_select_rate": 0.039,
-    "select_to_attempt_rate": 0.0,
-    "attempt_to_success_rate": 0.0
+    "views": 81,
+    "offer_selects": 7,
+    "purchase_attempts": 1,
+    "purchase_successes": 1,
+    "view_to_select_rate": 0.0864,
+    "select_to_attempt_rate": 0.1429,
+    "attempt_to_success_rate": 1.0
   },
   "top_failure_reasons": [
     {
@@ -30,8 +30,17 @@
   "product_funnel": [
     {
       "platform": "android",
+      "product_id": "pro_base",
+      "offer_selects": 2,
+      "attempts": 1,
+      "successes": 1,
+      "select_to_attempt_rate": 0.5,
+      "attempt_to_success_rate": 1.0
+    },
+    {
+      "platform": "android",
       "product_id": "elite_tactical",
-      "offer_selects": 3,
+      "offer_selects": 5,
       "attempts": 0,
       "successes": 0,
       "select_to_attempt_rate": 0.0,
@@ -89,7 +98,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 15,
+      "views": 17,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -102,6 +111,14 @@
       "successes": 0,
       "view_to_attempt_rate": 0.0,
       "attempt_to_success_rate": 0.0
+    },
+    {
+      "entry_point": "repeat_gate",
+      "views": 2,
+      "attempts": 1,
+      "successes": 1,
+      "view_to_attempt_rate": 0.5,
+      "attempt_to_success_rate": 1.0
     }
   ],
   "leaky_entry_points": [
@@ -117,33 +134,38 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 1849,
-      "users": 41
-    },
-    {
-      "setting_name": "volume",
-      "changes": 981,
-      "users": 11
+      "changes": 2185,
+      "users": 42
     },
     {
       "setting_name": "min_seconds",
-      "changes": 948,
-      "users": 29
+      "changes": 1063,
+      "users": 30
+    },
+    {
+      "setting_name": "volume",
+      "changes": 1041,
+      "users": 12
+    },
+    {
+      "setting_name": "repeat_rounds",
+      "changes": 108,
+      "users": 1
     },
     {
       "setting_name": "sound_type",
-      "changes": 67,
-      "users": 23
+      "changes": 80,
+      "users": 24
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 65,
-      "users": 28
+      "changes": 67,
+      "users": 29
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 47,
-      "users": 19
+      "changes": 52,
+      "users": 20
     },
     {
       "setting_name": "unknown",
@@ -152,23 +174,23 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 26,
-      "users": 13
+      "changes": 30,
+      "users": 14
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 15,
-      "users": 13
+      "changes": 19,
+      "users": 14
     },
     {
       "setting_name": "use_extended_range",
-      "changes": 4,
-      "users": 2
+      "changes": 9,
+      "users": 3
     },
     {
       "setting_name": "voice_callouts_enabled",
-      "changes": 2,
-      "users": 2
+      "changes": 7,
+      "users": 3
     }
   ],
   "data_quality_warnings": [
