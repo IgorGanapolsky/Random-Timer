@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-07-13T07:22:37+00:00
+Generated: 2026-07-13T12:59:50+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **76**
-- Offer Selects: **7**
+- Views: **72**
+- Offer Selects: **6**
 - Purchase Attempts: **1**
 - Purchase Successes: **1**
-- View -> Offer Select: **9.2%**
-- Select -> Purchase Attempt: **14.3%**
+- View -> Offer Select: **8.3%**
+- Select -> Purchase Attempt: **16.7%**
 - Attempt -> Purchase Success: **100.0%**
 
 ## Top Failure Reasons
@@ -26,7 +26,7 @@ Window (days): 30
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
 | android | pro_base | 2 | 1 | 1 | 50.0% | 100.0% |
-| android | elite_tactical | 5 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical | 4 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
@@ -39,8 +39,7 @@ Window (days): 30
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | unknown | 55 | 0 | 0 | 0.0% | 0.0% |
-| qualified_training_gate | 17 | 0 | 0 | 0.0% | 0.0% |
-| range_gate | 2 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 15 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 2 | 1 | 1 | 50.0% | 100.0% |
 
 ## Leaky Entry Points
@@ -49,15 +48,15 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2147 | 40 |
-| volume | 1058 | 12 |
-| min_seconds | 1007 | 28 |
+| max_seconds | 2077 | 38 |
+| volume | 1137 | 12 |
+| min_seconds | 935 | 26 |
 | repeat_rounds | 108 | 1 |
-| sound_type | 77 | 22 |
-| alarm_duration | 60 | 27 |
+| sound_type | 71 | 21 |
+| alarm_duration | 59 | 26 |
 | unknown | 43 | 2 |
 | repeat_enabled | 40 | 19 |
-| voice_gender | 30 | 14 |
+| voice_gender | 29 | 13 |
 | vibration_enabled | 18 | 13 |
 | use_extended_range | 9 | 3 |
 | voice_callouts_enabled | 7 | 3 |
