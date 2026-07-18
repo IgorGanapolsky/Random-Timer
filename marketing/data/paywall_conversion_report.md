@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-07-18T00:47:11+00:00
+Generated: 2026-07-18T06:49:43+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **66**
+- Views: **65**
 - Offer Selects: **6**
 - Purchase Attempts: **1**
 - Purchase Successes: **1**
-- View -> Offer Select: **9.1%**
+- View -> Offer Select: **9.2%**
 - Select -> Purchase Attempt: **16.7%**
 - Attempt -> Purchase Success: **100.0%**
 
@@ -39,7 +39,7 @@ Window (days): 30
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | unknown | 47 | 0 | 0 | 0.0% | 0.0% |
-| qualified_training_gate | 17 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 16 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 2 | 1 | 1 | 50.0% | 100.0% |
 
 ## Leaky Entry Points
@@ -48,7 +48,7 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2037 | 35 |
+| max_seconds | 2033 | 34 |
 | volume | 1398 | 14 |
 | min_seconds | 994 | 24 |
 | repeat_rounds | 108 | 1 |
