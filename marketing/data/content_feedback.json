@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-07-17T18:30:26+00:00",
+  "generated_at": "2026-07-18T00:47:50+00:00",
   "status": "ok",
   "onboarding_funnel": {
     "first_open": 46,
-    "first_timer_configured": 32,
+    "first_timer_configured": 31,
     "first_timer_completed": 29,
-    "open_to_configured_rate": 0.6957,
-    "configured_to_completed_rate": 0.9062,
+    "open_to_configured_rate": 0.6739,
+    "configured_to_completed_rate": 0.9355,
     "open_to_completed_rate": 0.6304,
     "window_days": 30
   },
@@ -14,7 +14,7 @@
   "data_quality": {
     "is_stale": false,
     "preserved_previous_metrics": false,
-    "last_attempt_generated_at": "2026-07-17T18:30:26+00:00",
+    "last_attempt_generated_at": "2026-07-18T00:47:50+00:00",
     "last_good_generated_at": "",
     "reason": ""
   }
