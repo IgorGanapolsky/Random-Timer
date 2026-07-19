@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-19T12:27:26+00:00",
+  "generated_at": "2026-07-19T18:27:11+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -146,7 +146,7 @@
     },
     {
       "setting_name": "sound_type",
-      "changes": 85,
+      "changes": 86,
       "users": 24
     },
     {
