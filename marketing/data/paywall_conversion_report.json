@@ -1,24 +1,35 @@
 {
-  "generated_at": "2026-07-22T00:49:26+00:00",
+  "generated_at": "2026-07-22T07:05:17+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 53,
+    "views": 42,
     "offer_selects": 6,
-    "purchase_attempts": 1,
+    "purchase_attempts": 2,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.1132,
-    "select_to_attempt_rate": 0.1667,
-    "attempt_to_success_rate": 1.0
+    "view_to_select_rate": 0.1429,
+    "select_to_attempt_rate": 0.3333,
+    "attempt_to_success_rate": 0.5
   },
   "top_failure_reasons": [
     {
       "reason": "failed",
       "count": 1
+    },
+    {
+      "reason": "user_cancelled",
+      "count": 1
     }
   ],
   "failure_breakdown": [
+    {
+      "platform": "ios",
+      "product_id": "com.iganapolsky.randomtimer.elite",
+      "reason": "user_cancelled",
+      "failures": 1,
+      "users": 1
+    },
     {
       "platform": "android",
       "product_id": "unknown",
@@ -36,6 +47,15 @@
       "successes": 1,
       "select_to_attempt_rate": 0.5,
       "attempt_to_success_rate": 1.0
+    },
+    {
+      "platform": "ios",
+      "product_id": "com.iganapolsky.randomtimer.elite",
+      "offer_selects": 0,
+      "attempts": 1,
+      "successes": 0,
+      "select_to_attempt_rate": 0.0,
+      "attempt_to_success_rate": 0.0
     },
     {
       "platform": "android",
@@ -66,7 +86,7 @@
   "entry_points": [
     {
       "entry_point": "unknown",
-      "views": 34,
+      "views": 22,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -87,12 +107,20 @@
       "successes": 1,
       "view_to_attempt_rate": 0.5,
       "attempt_to_success_rate": 1.0
+    },
+    {
+      "entry_point": "sound_gate",
+      "views": 1,
+      "attempts": 1,
+      "successes": 0,
+      "view_to_attempt_rate": 1.0,
+      "attempt_to_success_rate": 0.0
     }
   ],
   "leaky_entry_points": [
     {
       "entry_point": "unknown",
-      "views": 34,
+      "views": 22,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -102,8 +130,8 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2596,
-      "users": 40
+      "changes": 2558,
+      "users": 39
     },
     {
       "setting_name": "volume",
@@ -112,8 +140,8 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1084,
-      "users": 27
+      "changes": 1041,
+      "users": 26
     },
     {
       "setting_name": "repeat_rounds",
@@ -126,19 +154,19 @@
       "users": 26
     },
     {
+      "setting_name": "unknown",
+      "changes": 84,
+      "users": 4
+    },
+    {
       "setting_name": "alarm_duration",
-      "changes": 74,
-      "users": 33
+      "changes": 73,
+      "users": 32
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 67,
-      "users": 24
-    },
-    {
-      "setting_name": "unknown",
-      "changes": 61,
-      "users": 3
+      "changes": 66,
+      "users": 23
     },
     {
       "setting_name": "voice_gender",
@@ -147,8 +175,8 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 22,
-      "users": 17
+      "changes": 21,
+      "users": 16
     },
     {
       "setting_name": "use_extended_range",
