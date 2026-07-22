@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-07-22T07:05:17+00:00",
+  "generated_at": "2026-07-22T12:42:19+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 42,
+    "views": 35,
     "offer_selects": 6,
     "purchase_attempts": 2,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.1429,
+    "view_to_select_rate": 0.1714,
     "select_to_attempt_rate": 0.3333,
     "attempt_to_success_rate": 0.5
   },
@@ -85,16 +85,16 @@
   ],
   "entry_points": [
     {
-      "entry_point": "unknown",
-      "views": 22,
+      "entry_point": "qualified_training_gate",
+      "views": 17,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
       "attempt_to_success_rate": 0.0
     },
     {
-      "entry_point": "qualified_training_gate",
-      "views": 17,
+      "entry_point": "unknown",
+      "views": 15,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -117,16 +117,7 @@
       "attempt_to_success_rate": 0.0
     }
   ],
-  "leaky_entry_points": [
-    {
-      "entry_point": "unknown",
-      "views": 22,
-      "attempts": 0,
-      "successes": 0,
-      "view_to_attempt_rate": 0.0,
-      "attempt_to_success_rate": 0.0
-    }
-  ],
+  "leaky_entry_points": [],
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
@@ -190,7 +181,6 @@
     }
   ],
   "data_quality_warnings": [
-    "unknown paywall entry_point is still receiving meaningful traffic",
     "product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status"
   ],
   "query_errors": []

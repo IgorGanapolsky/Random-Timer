@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-07-22T07:05:17+00:00
+Generated: 2026-07-22T12:42:19+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **42**
+- Views: **35**
 - Offer Selects: **6**
 - Purchase Attempts: **2**
 - Purchase Successes: **1**
-- View -> Offer Select: **14.3%**
+- View -> Offer Select: **17.1%**
 - Select -> Purchase Attempt: **33.3%**
 - Attempt -> Purchase Success: **50.0%**
 
@@ -39,13 +39,13 @@ Window (days): 30
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| unknown | 22 | 0 | 0 | 0.0% | 0.0% |
 | qualified_training_gate | 17 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 15 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 2 | 1 | 1 | 50.0% | 100.0% |
 | sound_gate | 1 | 1 | 0 | 100.0% | 0.0% |
 
 ## Leaky Entry Points
-- `unknown` had **22** views and **0** purchase attempts.
+- None
 
 ## Settings Hotspots
 | Setting | Changes | Users |
@@ -64,5 +64,4 @@ Window (days): 30
 | voice_callouts_enabled | 9 | 2 |
 
 ## Data Quality Warnings
-- unknown paywall entry_point is still receiving meaningful traffic
 - product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status
