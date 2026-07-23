@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-07-23T00:52:11+00:00
+Generated: 2026-07-23T07:02:38+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **36**
+- Views: **37**
 - Offer Selects: **6**
 - Purchase Attempts: **2**
 - Purchase Successes: **1**
-- View -> Offer Select: **16.7%**
+- View -> Offer Select: **16.2%**
 - Select -> Purchase Attempt: **33.3%**
 - Attempt -> Purchase Success: **50.0%**
 
@@ -39,7 +39,7 @@ Window (days): 30
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| qualified_training_gate | 18 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 19 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 15 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 2 | 1 | 1 | 50.0% | 100.0% |
 | sound_gate | 1 | 1 | 0 | 100.0% | 0.0% |
@@ -50,15 +50,15 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2531 | 39 |
-| volume | 1582 | 19 |
-| min_seconds | 1053 | 27 |
+| max_seconds | 2581 | 40 |
+| volume | 1592 | 20 |
+| min_seconds | 1057 | 28 |
 | repeat_rounds | 108 | 1 |
-| sound_type | 95 | 27 |
+| sound_type | 100 | 28 |
 | unknown | 84 | 4 |
-| alarm_duration | 74 | 33 |
-| repeat_enabled | 66 | 24 |
-| voice_gender | 57 | 21 |
+| alarm_duration | 75 | 34 |
+| repeat_enabled | 68 | 25 |
+| voice_gender | 60 | 22 |
 | vibration_enabled | 21 | 16 |
 | use_extended_range | 12 | 2 |
 | voice_callouts_enabled | 9 | 2 |
