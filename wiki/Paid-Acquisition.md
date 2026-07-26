@@ -9,17 +9,17 @@ Campaign configurations and live paid performance for Apple Search Ads and Googl
 <!-- LIVE_PAID_START -->
 | Metric | Value |
 |--------|-------|
-| Snapshot (UTC) | `2026-07-26T12:33:58+00:00` |
+| Snapshot (UTC) | `2026-07-26T18:29:35+00:00` |
 | Paid Attributed Users (30d) | 0 |
 | Paid Events (30d) | 0 |
 | Active Campaign Count (tracked) | 0 |
 | Daily Budget Configured | $30.00 |
 | Blended CPI Target | $3.00 |
-| Open -> Completed Rate (30d) | 62.9% |
+| Open -> Completed Rate (30d) | 62.3% |
 | WQTU (7d) | 11 |
 | WQTU Checkpoint Target (2026-03-31) | 8 |
 | WQTU Quarter Target (2026-06-30) | 25 |
-| Distinct install users (30d) | 59 |
+| Distinct install users (30d) | 58 |
 | Apple Ads Campaigns (API) | 1 |
 | Apple Ads Active Campaigns (API) | 0 |
 | Apple Ads Impressions (30d) | 0 |
@@ -58,7 +58,7 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Apple Ads Taps (30d snapshot trend)"
-    x-axis ["07-23T00:52" , "07-23T07:03" , "07-23T12:42" , "07-23T18:36" , "07-24T00:49" , "07-24T07:03" , "07-24T12:41" , "07-24T18:39" , "07-25T00:52" , "07-25T06:57" , "07-25T18:26" , "07-26T00:55" , "07-26T07:06" , "07-26T12:33"]
+    x-axis ["07-23T07:03" , "07-23T12:42" , "07-23T18:36" , "07-24T00:49" , "07-24T07:03" , "07-24T12:41" , "07-24T18:39" , "07-25T00:52" , "07-25T06:57" , "07-25T18:26" , "07-26T00:55" , "07-26T07:06" , "07-26T12:33" , "07-26T18:29"]
     y-axis "Taps" 0 --> 1
     line [0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0]
 ```
@@ -66,7 +66,7 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Apple Ads Spend USD (30d snapshot trend)"
-    x-axis ["07-23T00:52" , "07-23T07:03" , "07-23T12:42" , "07-23T18:36" , "07-24T00:49" , "07-24T07:03" , "07-24T12:41" , "07-24T18:39" , "07-25T00:52" , "07-25T06:57" , "07-25T18:26" , "07-26T00:55" , "07-26T07:06" , "07-26T12:33"]
+    x-axis ["07-23T07:03" , "07-23T12:42" , "07-23T18:36" , "07-24T00:49" , "07-24T07:03" , "07-24T12:41" , "07-24T18:39" , "07-25T00:52" , "07-25T06:57" , "07-25T18:26" , "07-26T00:55" , "07-26T07:06" , "07-26T12:33" , "07-26T18:29"]
     y-axis "USD" 0 --> 1
     line [0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
 ```
