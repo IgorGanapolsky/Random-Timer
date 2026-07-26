@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-07-26T07:05:40+00:00",
+  "generated_at": "2026-07-26T12:33:27+00:00",
   "status": "ok",
   "nsm": {
-    "wqtu": 10,
+    "wqtu": 11,
     "definition": "Users with >= 3 timer_completed in trailing 7 days",
     "alert_threshold": 1,
     "alert_fired": false
@@ -13,14 +13,14 @@
   },
   "abandon_rate": {
     "started_30d": 689,
-    "completed_30d": 611,
-    "abandon_rate_pct": 11.3
+    "completed_30d": 612,
+    "abandon_rate_pct": 11.2
   },
   "monetization_funnel": {
-    "paywall_viewed_users": 26,
+    "paywall_viewed_users": 27,
     "purchase_attempted_users": 2,
     "purchase_succeeded_users": 1,
-    "conversion_pct": 3.8
+    "conversion_pct": 3.7
   },
   "wqtu_trend": [
     {
@@ -37,7 +37,7 @@
     },
     {
       "week_start": "2026-07-19",
-      "wqtu": 10
+      "wqtu": 11
     },
     {
       "week_start": "2026-07-26",
@@ -46,11 +46,6 @@
   ],
   "query_errors": [],
   "history": [
-    {
-      "timestamp": "2026-07-03T18:37:31+00:00",
-      "wqtu": 6,
-      "dau": 4
-    },
     {
       "timestamp": "2026-07-04T00:57:07+00:00",
       "wqtu": 6,
@@ -494,6 +489,11 @@
     {
       "timestamp": "2026-07-26T07:05:40+00:00",
       "wqtu": 10,
+      "dau": 4
+    },
+    {
+      "timestamp": "2026-07-26T12:33:27+00:00",
+      "wqtu": 11,
       "dau": 4
     }
   ]
