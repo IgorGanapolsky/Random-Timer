@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-07-27T18:40:19+00:00
+Generated: 2026-07-28T00:48:43+00:00
 Window (days): 30
 
 ## Funnel
@@ -50,9 +50,9 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2947 | 43 |
-| min_seconds | 1351 | 34 |
+| max_seconds | 2892 | 43 |
 | volume | 1326 | 21 |
+| min_seconds | 1295 | 34 |
 | repeat_rounds | 108 | 1 |
 | sound_type | 107 | 30 |
 | unknown | 84 | 4 |
@@ -60,8 +60,8 @@ Window (days): 30
 | repeat_enabled | 73 | 30 |
 | voice_gender | 65 | 22 |
 | vibration_enabled | 24 | 19 |
-| use_extended_range | 12 | 2 |
-| voice_callouts_enabled | 9 | 2 |
+| use_extended_range | 10 | 2 |
+| voice_callouts_enabled | 8 | 2 |
 
 ## Data Quality Warnings
 - product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status

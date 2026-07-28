@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-27T18:40:19+00:00",
+  "generated_at": "2026-07-28T00:48:43+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -130,18 +130,18 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2947,
+      "changes": 2892,
       "users": 43
-    },
-    {
-      "setting_name": "min_seconds",
-      "changes": 1351,
-      "users": 34
     },
     {
       "setting_name": "volume",
       "changes": 1326,
       "users": 21
+    },
+    {
+      "setting_name": "min_seconds",
+      "changes": 1295,
+      "users": 34
     },
     {
       "setting_name": "repeat_rounds",
@@ -180,12 +180,12 @@
     },
     {
       "setting_name": "use_extended_range",
-      "changes": 12,
+      "changes": 10,
       "users": 2
     },
     {
       "setting_name": "voice_callouts_enabled",
-      "changes": 9,
+      "changes": 8,
       "users": 2
     }
   ],
