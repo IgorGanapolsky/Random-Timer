@@ -1,6 +1,6 @@
 # CRO Optimization Report
 
-**Date:** 2026-05-19T12:01:32.970762+00:00
+**Date:** 2026-07-28T11:40:11.265788+00:00
 
 ## Localization Status (Top 5 Markets)
 | Locale | Language | Android | iOS |
@@ -13,9 +13,9 @@
 
 ## Experiments
 - New experiments proposed: 3
-- Total experiments: 9
+- Total experiments: 12
 - Active: 0
-- Proposed: 9
+- Proposed: 12
 
 ## Next Steps
 1. Review proposed experiments in `marketing/data/cro_experiments.json`
