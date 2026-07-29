@@ -8,9 +8,12 @@ Base URL: https://igorganapolsky.github.io/Random-Timer/marketing/site
 Key resources:
 - https://igorganapolsky.github.io/Random-Timer/marketing/site/index.html
 - https://igorganapolsky.github.io/Random-Timer/marketing/site/agents.md
-- https://igorganapolsky.github.io/Random-Timer/marketing/site/amp.json
 - https://igorganapolsky.github.io/Random-Timer/marketing/site/sitemap.xml
 
+- https://igorganapolsky.github.io/Random-Timer/privacy-policy/
 Posts:
+- Free Reaction Training: what we learned building Random Tactical Timer: https://igorganapolsky.github.io/Random-Timer/marketing/site/md/2026-07-29-free-reaction-training-what-we-learned-building-random-tactical-timer.md
+- $499 Workflow/Voice Agent Reliability Diagnostic: https://igorganapolsky.github.io/Random-Timer/marketing/site/md/2026-05-11-workflow-voice-agent-reliability-diagnostic.md
+- $499 Workflow/Voice Agent Reliability Diagnostic: https://igorganapolsky.github.io/Random-Timer/marketing/site/md/2026-05-07-workflow-diagnostic-offer.md
 - How we implemented Agentic Merchant Protocol (AMP) for AI discovery: https://igorganapolsky.github.io/Random-Timer/marketing/site/md/2026-03-11-how-we-implemented-agentic-merchant-protocol-amp-for-ai-discovery.md
 - The inspiration behind Random Tactical Timer: https://igorganapolsky.github.io/Random-Timer/marketing/site/md/2026-02-19-the-inspiration-behind-random-tactical-timer.md
