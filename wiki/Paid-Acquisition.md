@@ -9,13 +9,13 @@ Campaign configurations and live paid performance for Apple Search Ads and Googl
 <!-- LIVE_PAID_START -->
 | Metric | Value |
 |--------|-------|
-| Snapshot (UTC) | `2026-07-30T00:47:23+00:00` |
+| Snapshot (UTC) | `2026-07-30T07:05:44+00:00` |
 | Paid Attributed Users (30d) | 0 |
 | Paid Events (30d) | 0 |
 | Active Campaign Count (tracked) | 0 |
 | Daily Budget Configured | $30.00 |
 | Blended CPI Target | $3.00 |
-| Open -> Completed Rate (30d) | 61.3% |
+| Open -> Completed Rate (30d) | 59.7% |
 | WQTU (7d) | 8 |
 | WQTU Checkpoint Target (2026-03-31) | 8 |
 | WQTU Quarter Target (2026-06-30) | 25 |
@@ -58,7 +58,7 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Apple Ads Taps (30d snapshot trend)"
-    x-axis ["07-26T18:29" , "07-27T00:57" , "07-27T07:24" , "07-27T13:14" , "07-27T18:41" , "07-28T00:49" , "07-28T07:04" , "07-28T12:48" , "07-28T18:38" , "07-29T00:49" , "07-29T07:07" , "07-29T12:51" , "07-29T18:29" , "07-30T00:47"]
+    x-axis ["07-27T00:57" , "07-27T07:24" , "07-27T13:14" , "07-27T18:41" , "07-28T00:49" , "07-28T07:04" , "07-28T12:48" , "07-28T18:38" , "07-29T00:49" , "07-29T07:07" , "07-29T12:51" , "07-29T18:29" , "07-30T00:47" , "07-30T07:05"]
     y-axis "Taps" 0 --> 1
     line [0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0]
 ```
@@ -66,7 +66,7 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Apple Ads Spend USD (30d snapshot trend)"
-    x-axis ["07-26T18:29" , "07-27T00:57" , "07-27T07:24" , "07-27T13:14" , "07-27T18:41" , "07-28T00:49" , "07-28T07:04" , "07-28T12:48" , "07-28T18:38" , "07-29T00:49" , "07-29T07:07" , "07-29T12:51" , "07-29T18:29" , "07-30T00:47"]
+    x-axis ["07-27T00:57" , "07-27T07:24" , "07-27T13:14" , "07-27T18:41" , "07-28T00:49" , "07-28T07:04" , "07-28T12:48" , "07-28T18:38" , "07-29T00:49" , "07-29T07:07" , "07-29T12:51" , "07-29T18:29" , "07-30T00:47" , "07-30T07:05"]
     y-axis "USD" 0 --> 1
     line [0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
 ```
