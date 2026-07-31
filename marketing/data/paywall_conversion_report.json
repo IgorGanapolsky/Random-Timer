@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-07-31T00:53:13+00:00",
+  "generated_at": "2026-07-31T07:11:32+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 45,
-    "offer_selects": 5,
+    "views": 41,
+    "offer_selects": 4,
     "purchase_attempts": 2,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.1111,
-    "select_to_attempt_rate": 0.4,
+    "view_to_select_rate": 0.0976,
+    "select_to_attempt_rate": 0.5,
     "attempt_to_success_rate": 0.5
   },
   "top_failure_reasons": [
@@ -60,7 +60,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "offer_selects": 3,
+      "offer_selects": 2,
       "attempts": 0,
       "successes": 0,
       "select_to_attempt_rate": 0.0,
@@ -86,7 +86,7 @@
   "entry_points": [
     {
       "entry_point": "qualified_training_gate",
-      "views": 22,
+      "views": 20,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -94,7 +94,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 20,
+      "views": 18,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -120,14 +120,6 @@
   "leaky_entry_points": [
     {
       "entry_point": "qualified_training_gate",
-      "views": 22,
-      "attempts": 0,
-      "successes": 0,
-      "view_to_attempt_rate": 0.0,
-      "attempt_to_success_rate": 0.0
-    },
-    {
-      "entry_point": "unknown",
       "views": 20,
       "attempts": 0,
       "successes": 0,
@@ -138,18 +130,18 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2581,
-      "users": 43
+      "changes": 2555,
+      "users": 42
     },
     {
       "setting_name": "volume",
-      "changes": 1307,
-      "users": 19
+      "changes": 1164,
+      "users": 17
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1005,
-      "users": 34
+      "changes": 1004,
+      "users": 33
     },
     {
       "setting_name": "repeat_rounds",
@@ -158,8 +150,8 @@
     },
     {
       "setting_name": "sound_type",
-      "changes": 100,
-      "users": 30
+      "changes": 99,
+      "users": 29
     },
     {
       "setting_name": "unknown",
@@ -168,13 +160,13 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 72,
-      "users": 30
+      "changes": 70,
+      "users": 28
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 69,
-      "users": 38
+      "changes": 68,
+      "users": 37
     },
     {
       "setting_name": "voice_gender",
@@ -183,8 +175,8 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 23,
-      "users": 18
+      "changes": 22,
+      "users": 17
     },
     {
       "setting_name": "use_extended_range",
@@ -198,7 +190,6 @@
     }
   ],
   "data_quality_warnings": [
-    "unknown paywall entry_point is still receiving meaningful traffic",
     "product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status"
   ],
   "query_errors": []
