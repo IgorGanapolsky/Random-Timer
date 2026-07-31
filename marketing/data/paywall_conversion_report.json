@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-31T07:11:32+00:00",
+  "generated_at": "2026-07-31T12:48:10+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -130,18 +130,18 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2555,
+      "changes": 2534,
       "users": 42
     },
     {
       "setting_name": "volume",
-      "changes": 1164,
-      "users": 17
+      "changes": 1220,
+      "users": 18
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1004,
-      "users": 33
+      "changes": 1014,
+      "users": 34
     },
     {
       "setting_name": "repeat_rounds",
@@ -165,8 +165,8 @@
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 68,
-      "users": 37
+      "changes": 69,
+      "users": 38
     },
     {
       "setting_name": "voice_gender",
