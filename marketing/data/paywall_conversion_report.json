@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-03T00:53:57+00:00",
+  "generated_at": "2026-08-03T07:22:40+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 47,
+    "views": 45,
     "offer_selects": 4,
     "purchase_attempts": 2,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.0851,
+    "view_to_select_rate": 0.0889,
     "select_to_attempt_rate": 0.5,
     "attempt_to_success_rate": 0.5
   },
@@ -94,7 +94,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 19,
+      "views": 17,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -170,8 +170,8 @@
     },
     {
       "setting_name": "unknown",
-      "changes": 64,
-      "users": 3
+      "changes": 41,
+      "users": 2
     },
     {
       "setting_name": "vibration_enabled",
