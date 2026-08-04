@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-08-04T00:51:58+00:00",
+  "generated_at": "2026-08-04T07:04:01+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 45,
-    "offer_selects": 4,
-    "purchase_attempts": 2,
-    "purchase_successes": 1,
-    "view_to_select_rate": 0.0889,
-    "select_to_attempt_rate": 0.5,
-    "attempt_to_success_rate": 0.5
+    "views": 47,
+    "offer_selects": 7,
+    "purchase_attempts": 3,
+    "purchase_successes": 2,
+    "view_to_select_rate": 0.1489,
+    "select_to_attempt_rate": 0.4286,
+    "attempt_to_success_rate": 0.6667
   },
   "top_failure_reasons": [
     {
@@ -42,9 +42,9 @@
     {
       "platform": "android",
       "product_id": "pro_base",
-      "offer_selects": 2,
-      "attempts": 1,
-      "successes": 1,
+      "offer_selects": 4,
+      "attempts": 2,
+      "successes": 2,
       "select_to_attempt_rate": 0.5,
       "attempt_to_success_rate": 1.0
     },
@@ -60,7 +60,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "offer_selects": 2,
+      "offer_selects": 3,
       "attempts": 0,
       "successes": 0,
       "select_to_attempt_rate": 0.0,
@@ -71,16 +71,16 @@
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 2,
-      "users": 2
+      "failures": 1,
+      "users": 1
     }
   ],
   "product_catalog_failures_play_store": [
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 2,
-      "users": 2
+      "failures": 1,
+      "users": 1
     }
   ],
   "entry_points": [
@@ -109,6 +109,14 @@
       "attempt_to_success_rate": 1.0
     },
     {
+      "entry_point": "sound_arsenal_gate",
+      "views": 2,
+      "attempts": 1,
+      "successes": 1,
+      "view_to_attempt_rate": 0.5,
+      "attempt_to_success_rate": 1.0
+    },
+    {
       "entry_point": "sound_gate",
       "views": 1,
       "attempts": 1,
@@ -130,18 +138,23 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2782,
-      "users": 46
+      "changes": 2906,
+      "users": 47
     },
     {
       "setting_name": "volume",
-      "changes": 1431,
-      "users": 20
+      "changes": 1624,
+      "users": 21
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1090,
-      "users": 37
+      "changes": 1243,
+      "users": 38
+    },
+    {
+      "setting_name": "sound_type",
+      "changes": 119,
+      "users": 32
     },
     {
       "setting_name": "repeat_rounds",
@@ -149,19 +162,14 @@
       "users": 1
     },
     {
-      "setting_name": "sound_type",
-      "changes": 108,
-      "users": 31
-    },
-    {
       "setting_name": "repeat_enabled",
-      "changes": 85,
-      "users": 34
+      "changes": 88,
+      "users": 35
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 78,
-      "users": 42
+      "changes": 79,
+      "users": 43
     },
     {
       "setting_name": "voice_gender",
@@ -180,8 +188,8 @@
     },
     {
       "setting_name": "use_extended_range",
-      "changes": 10,
-      "users": 2
+      "changes": 12,
+      "users": 3
     },
     {
       "setting_name": "voice_callouts_enabled",
