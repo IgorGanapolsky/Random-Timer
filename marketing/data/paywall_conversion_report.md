@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-08-04T18:40:13+00:00
+Generated: 2026-08-05T03:24:38+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **47**
+- Views: **51**
 - Offer Selects: **7**
 - Purchase Attempts: **3**
 - Purchase Successes: **2**
-- View -> Offer Select: **14.9%**
+- View -> Offer Select: **13.7%**
 - Select -> Purchase Attempt: **42.9%**
 - Attempt -> Purchase Success: **66.7%**
 
@@ -39,30 +39,32 @@ Window (days): 30
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| qualified_training_gate | 25 | 0 | 0 | 0.0% | 0.0% |
-| unknown | 17 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 26 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 20 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 2 | 1 | 1 | 50.0% | 100.0% |
 | sound_arsenal_gate | 2 | 1 | 1 | 50.0% | 100.0% |
 | sound_gate | 1 | 1 | 0 | 100.0% | 0.0% |
 
 ## Leaky Entry Points
-- `qualified_training_gate` had **25** views and **0** purchase attempts.
+- `qualified_training_gate` had **26** views and **0** purchase attempts.
+- `unknown` had **20** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2886 | 47 |
+| max_seconds | 2901 | 48 |
 | volume | 1706 | 22 |
-| min_seconds | 1247 | 38 |
-| sound_type | 125 | 33 |
+| min_seconds | 1252 | 39 |
+| sound_type | 122 | 33 |
 | repeat_rounds | 108 | 1 |
-| repeat_enabled | 102 | 37 |
-| alarm_duration | 87 | 43 |
-| voice_gender | 66 | 22 |
+| repeat_enabled | 100 | 38 |
+| alarm_duration | 92 | 44 |
+| voice_gender | 66 | 23 |
 | unknown | 41 | 2 |
-| vibration_enabled | 25 | 20 |
+| vibration_enabled | 26 | 21 |
 | use_extended_range | 12 | 3 |
 | voice_callouts_enabled | 8 | 2 |
 
 ## Data Quality Warnings
+- unknown paywall entry_point is still receiving meaningful traffic
 - product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status
