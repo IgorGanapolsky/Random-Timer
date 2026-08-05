@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-05T03:24:38+00:00",
+  "generated_at": "2026-08-05T08:48:31+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 51,
+    "views": 50,
     "offer_selects": 7,
     "purchase_attempts": 3,
     "purchase_successes": 2,
-    "view_to_select_rate": 0.1373,
+    "view_to_select_rate": 0.14,
     "select_to_attempt_rate": 0.4286,
     "attempt_to_success_rate": 0.6667
   },
@@ -94,7 +94,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 20,
+      "views": 19,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -133,21 +133,13 @@
       "successes": 0,
       "view_to_attempt_rate": 0.0,
       "attempt_to_success_rate": 0.0
-    },
-    {
-      "entry_point": "unknown",
-      "views": 20,
-      "attempts": 0,
-      "successes": 0,
-      "view_to_attempt_rate": 0.0,
-      "attempt_to_success_rate": 0.0
     }
   ],
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2901,
-      "users": 48
+      "changes": 2874,
+      "users": 47
     },
     {
       "setting_name": "volume",
@@ -156,8 +148,8 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1252,
-      "users": 39
+      "changes": 1219,
+      "users": 38
     },
     {
       "setting_name": "sound_type",
@@ -171,13 +163,13 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 100,
-      "users": 38
+      "changes": 98,
+      "users": 37
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 92,
-      "users": 44
+      "changes": 90,
+      "users": 43
     },
     {
       "setting_name": "voice_gender",
@@ -191,8 +183,8 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 26,
-      "users": 21
+      "changes": 24,
+      "users": 20
     },
     {
       "setting_name": "use_extended_range",
@@ -206,7 +198,6 @@
     }
   ],
   "data_quality_warnings": [
-    "unknown paywall entry_point is still receiving meaningful traffic",
     "product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status"
   ],
   "query_errors": []
