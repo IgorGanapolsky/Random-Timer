@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-06T07:05:10+00:00",
+  "generated_at": "2026-08-06T12:46:53+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 50,
+    "views": 52,
     "offer_selects": 7,
     "purchase_attempts": 3,
     "purchase_successes": 2,
-    "view_to_select_rate": 0.14,
+    "view_to_select_rate": 0.1346,
     "select_to_attempt_rate": 0.4286,
     "attempt_to_success_rate": 0.6667
   },
@@ -94,7 +94,7 @@
     },
     {
       "entry_point": "unknown",
-      "views": 19,
+      "views": 21,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -133,13 +133,21 @@
       "successes": 0,
       "view_to_attempt_rate": 0.0,
       "attempt_to_success_rate": 0.0
+    },
+    {
+      "entry_point": "unknown",
+      "views": 21,
+      "attempts": 0,
+      "successes": 0,
+      "view_to_attempt_rate": 0.0,
+      "attempt_to_success_rate": 0.0
     }
   ],
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2874,
-      "users": 47
+      "changes": 2875,
+      "users": 48
     },
     {
       "setting_name": "volume",
@@ -148,13 +156,13 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1219,
-      "users": 38
+      "changes": 1231,
+      "users": 39
     },
     {
       "setting_name": "sound_type",
-      "changes": 122,
-      "users": 33
+      "changes": 126,
+      "users": 34
     },
     {
       "setting_name": "repeat_rounds",
@@ -163,13 +171,13 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 97,
-      "users": 36
+      "changes": 98,
+      "users": 37
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 90,
-      "users": 43
+      "changes": 91,
+      "users": 44
     },
     {
       "setting_name": "voice_gender",
@@ -183,8 +191,8 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 24,
-      "users": 20
+      "changes": 25,
+      "users": 21
     },
     {
       "setting_name": "use_extended_range",
@@ -198,6 +206,7 @@
     }
   ],
   "data_quality_warnings": [
+    "unknown paywall entry_point is still receiving meaningful traffic",
     "product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status"
   ],
   "query_errors": []

@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-08-06T07:05:10+00:00
+Generated: 2026-08-06T12:46:53+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **50**
+- Views: **52**
 - Offer Selects: **7**
 - Purchase Attempts: **3**
 - Purchase Successes: **2**
-- View -> Offer Select: **14.0%**
+- View -> Offer Select: **13.5%**
 - Select -> Purchase Attempt: **42.9%**
 - Attempt -> Purchase Success: **66.7%**
 
@@ -40,29 +40,31 @@ Window (days): 30
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | qualified_training_gate | 26 | 0 | 0 | 0.0% | 0.0% |
-| unknown | 19 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 21 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 2 | 1 | 1 | 50.0% | 100.0% |
 | sound_arsenal_gate | 2 | 1 | 1 | 50.0% | 100.0% |
 | sound_gate | 1 | 1 | 0 | 100.0% | 0.0% |
 
 ## Leaky Entry Points
 - `qualified_training_gate` had **26** views and **0** purchase attempts.
+- `unknown` had **21** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2874 | 47 |
+| max_seconds | 2875 | 48 |
 | volume | 1706 | 22 |
-| min_seconds | 1219 | 38 |
-| sound_type | 122 | 33 |
+| min_seconds | 1231 | 39 |
+| sound_type | 126 | 34 |
 | repeat_rounds | 108 | 1 |
-| repeat_enabled | 97 | 36 |
-| alarm_duration | 90 | 43 |
+| repeat_enabled | 98 | 37 |
+| alarm_duration | 91 | 44 |
 | voice_gender | 66 | 23 |
 | unknown | 41 | 2 |
-| vibration_enabled | 24 | 20 |
+| vibration_enabled | 25 | 21 |
 | use_extended_range | 12 | 3 |
 | voice_callouts_enabled | 8 | 2 |
 
 ## Data Quality Warnings
+- unknown paywall entry_point is still receiving meaningful traffic
 - product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status
