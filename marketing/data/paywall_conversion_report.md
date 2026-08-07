@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-08-07T12:24:18+00:00
+Generated: 2026-08-07T18:41:44+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **52**
-- Offer Selects: **7**
+- Views: **55**
+- Offer Selects: **8**
 - Purchase Attempts: **3**
 - Purchase Successes: **2**
-- View -> Offer Select: **13.5%**
-- Select -> Purchase Attempt: **42.9%**
+- View -> Offer Select: **14.5%**
+- Select -> Purchase Attempt: **37.5%**
 - Attempt -> Purchase Success: **66.7%**
 
 ## Top Failure Reasons
@@ -29,7 +29,7 @@ Window (days): 30
 |----------|------------|---------|----------|-----------|-----------------|------------------|
 | android | pro_base | 4 | 2 | 2 | 50.0% | 100.0% |
 | ios | com.iganapolsky.randomtimer.elite | 0 | 1 | 0 | 0.0% | 0.0% |
-| android | elite_tactical | 3 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical | 4 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
@@ -40,28 +40,29 @@ Window (days): 30
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | qualified_training_gate | 26 | 0 | 0 | 0.0% | 0.0% |
-| unknown | 21 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 22 | 0 | 0 | 0.0% | 0.0% |
+| voice_gate | 2 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 2 | 1 | 1 | 50.0% | 100.0% |
 | sound_arsenal_gate | 2 | 1 | 1 | 50.0% | 100.0% |
 | sound_gate | 1 | 1 | 0 | 100.0% | 0.0% |
 
 ## Leaky Entry Points
 - `qualified_training_gate` had **26** views and **0** purchase attempts.
-- `unknown` had **21** views and **0** purchase attempts.
+- `unknown` had **22** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2863 | 47 |
+| max_seconds | 2910 | 48 |
 | volume | 1706 | 22 |
 | min_seconds | 1233 | 40 |
-| sound_type | 126 | 34 |
+| sound_type | 138 | 35 |
 | repeat_rounds | 108 | 1 |
-| repeat_enabled | 100 | 38 |
-| alarm_duration | 90 | 43 |
-| voice_gender | 66 | 23 |
+| repeat_enabled | 103 | 39 |
+| alarm_duration | 91 | 44 |
+| voice_gender | 70 | 25 |
 | unknown | 41 | 2 |
-| vibration_enabled | 25 | 21 |
+| vibration_enabled | 26 | 22 |
 | use_extended_range | 12 | 3 |
 | voice_callouts_enabled | 8 | 2 |
 
