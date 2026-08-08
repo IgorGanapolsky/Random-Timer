@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-08-08T06:22:09+00:00",
+  "generated_at": "2026-08-08T12:14:53+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
     "views": 61,
-    "offer_selects": 14,
+    "offer_selects": 16,
     "purchase_attempts": 3,
     "purchase_successes": 2,
-    "view_to_select_rate": 0.2295,
-    "select_to_attempt_rate": 0.2143,
+    "view_to_select_rate": 0.2623,
+    "select_to_attempt_rate": 0.1875,
     "attempt_to_success_rate": 0.6667
   },
   "top_failure_reasons": [
@@ -31,10 +31,10 @@
     {
       "platform": "android",
       "product_id": "pro_base",
-      "offer_selects": 6,
+      "offer_selects": 7,
       "attempts": 2,
       "successes": 2,
-      "select_to_attempt_rate": 0.3333,
+      "select_to_attempt_rate": 0.2857,
       "attempt_to_success_rate": 1.0
     },
     {
@@ -49,7 +49,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "offer_selects": 7,
+      "offer_selects": 8,
       "attempts": 0,
       "successes": 0,
       "select_to_attempt_rate": 0.0,

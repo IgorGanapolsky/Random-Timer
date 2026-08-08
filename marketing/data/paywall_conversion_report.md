@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-08-08T06:22:09+00:00
+Generated: 2026-08-08T12:14:53+00:00
 Window (days): 30
 
 ## Funnel
 - Views: **61**
-- Offer Selects: **14**
+- Offer Selects: **16**
 - Purchase Attempts: **3**
 - Purchase Successes: **2**
-- View -> Offer Select: **22.9%**
-- Select -> Purchase Attempt: **21.4%**
+- View -> Offer Select: **26.2%**
+- Select -> Purchase Attempt: **18.8%**
 - Attempt -> Purchase Success: **66.7%**
 
 ## Top Failure Reasons
@@ -25,9 +25,9 @@ Window (days): 30
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
-| android | pro_base | 6 | 2 | 2 | 33.3% | 100.0% |
+| android | pro_base | 7 | 2 | 2 | 28.6% | 100.0% |
 | ios | com.iganapolsky.randomtimer.elite | 0 | 1 | 0 | 0.0% | 0.0% |
-| android | elite_tactical | 7 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical | 8 | 0 | 0 | 0.0% | 0.0% |
 | android | elite_tactical_monthly | 1 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
