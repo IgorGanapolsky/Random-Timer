@@ -1,35 +1,34 @@
 # Paywall Conversion Report
 
-Generated: 2026-08-07T18:41:44+00:00
+Generated: 2026-08-08T00:28:32+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **55**
-- Offer Selects: **8**
+- Views: **61**
+- Offer Selects: **14**
 - Purchase Attempts: **3**
 - Purchase Successes: **2**
-- View -> Offer Select: **14.5%**
-- Select -> Purchase Attempt: **37.5%**
+- View -> Offer Select: **22.9%**
+- Select -> Purchase Attempt: **21.4%**
 - Attempt -> Purchase Success: **66.7%**
 
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| failed | 1 |
 | user_cancelled | 1 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
 | ios | com.iganapolsky.randomtimer.elite | user_cancelled | 1 | 1 |
-| android | unknown | failed | 1 | 1 |
 
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
-| android | pro_base | 4 | 2 | 2 | 50.0% | 100.0% |
+| android | pro_base | 6 | 2 | 2 | 33.3% | 100.0% |
 | ios | com.iganapolsky.randomtimer.elite | 0 | 1 | 0 | 0.0% | 0.0% |
-| android | elite_tactical | 4 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical | 7 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical_monthly | 1 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
@@ -41,8 +40,9 @@ Window (days): 30
 |-------------|-------|----------|-----------|---------------|------------------|
 | qualified_training_gate | 26 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 22 | 0 | 0 | 0.0% | 0.0% |
-| voice_gate | 2 | 0 | 0 | 0.0% | 0.0% |
-| repeat_gate | 2 | 1 | 1 | 50.0% | 100.0% |
+| voice_gate | 4 | 0 | 0 | 0.0% | 0.0% |
+| repeat_gate | 4 | 1 | 1 | 25.0% | 100.0% |
+| range_gate | 2 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 2 | 1 | 1 | 50.0% | 100.0% |
 | sound_gate | 1 | 1 | 0 | 100.0% | 0.0% |
 
@@ -53,12 +53,12 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2910 | 48 |
-| volume | 1706 | 22 |
-| min_seconds | 1233 | 40 |
-| sound_type | 138 | 35 |
+| max_seconds | 2958 | 49 |
+| volume | 1709 | 23 |
+| min_seconds | 1327 | 41 |
+| sound_type | 139 | 36 |
 | repeat_rounds | 108 | 1 |
-| repeat_enabled | 103 | 39 |
+| repeat_enabled | 104 | 40 |
 | alarm_duration | 91 | 44 |
 | voice_gender | 70 | 25 |
 | unknown | 41 | 2 |
@@ -68,4 +68,5 @@ Window (days): 30
 
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic
+- purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage
 - product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status
