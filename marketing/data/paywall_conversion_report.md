@@ -1,31 +1,33 @@
 # Paywall Conversion Report
 
-Generated: 2026-08-11T12:24:24+00:00
+Generated: 2026-08-11T18:24:35+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **66**
+- Views: **69**
 - Offer Selects: **13**
-- Purchase Attempts: **2**
+- Purchase Attempts: **3**
 - Purchase Successes: **1**
-- View -> Offer Select: **19.7%**
-- Select -> Purchase Attempt: **15.4%**
-- Attempt -> Purchase Success: **50.0%**
+- View -> Offer Select: **18.8%**
+- Select -> Purchase Attempt: **23.1%**
+- Attempt -> Purchase Success: **33.3%**
 
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| user_cancelled | 1 |
+| user_cancelled | 3 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
+| ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 1 |
 | ios | com.iganapolsky.randomtimer.elite | user_cancelled | 1 | 1 |
 
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
 | android | pro_base | 5 | 1 | 1 | 20.0% | 100.0% |
+| ios | com.iganapolsky.randomtimer.pro | 0 | 1 | 0 | 0.0% | 0.0% |
 | ios | com.iganapolsky.randomtimer.elite | 0 | 1 | 0 | 0.0% | 0.0% |
 | android | elite_tactical | 7 | 0 | 0 | 0.0% | 0.0% |
 | android | elite_tactical_monthly | 1 | 0 | 0 | 0.0% | 0.0% |
@@ -38,30 +40,30 @@ Window (days): 30
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| unknown | 28 | 0 | 0 | 0.0% | 0.0% |
-| qualified_training_gate | 27 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 30 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 28 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 4 | 0 | 0 | 0.0% | 0.0% |
 | range_gate | 2 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 2 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 2 | 1 | 1 | 50.0% | 100.0% |
-| sound_gate | 1 | 1 | 0 | 100.0% | 0.0% |
+| sound_gate | 1 | 2 | 0 | 200.0% | 0.0% |
 
 ## Leaky Entry Points
-- `unknown` had **28** views and **0** purchase attempts.
-- `qualified_training_gate` had **27** views and **0** purchase attempts.
+- `unknown` had **30** views and **0** purchase attempts.
+- `qualified_training_gate` had **28** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2774 | 55 |
-| volume | 1767 | 27 |
-| min_seconds | 1307 | 42 |
+| max_seconds | 2875 | 56 |
+| volume | 1789 | 28 |
+| min_seconds | 1324 | 43 |
 | sound_type | 146 | 41 |
 | repeat_enabled | 117 | 44 |
 | alarm_duration | 96 | 48 |
 | voice_gender | 73 | 27 |
-| unknown | 41 | 2 |
-| vibration_enabled | 26 | 24 |
+| unknown | 57 | 3 |
+| vibration_enabled | 27 | 25 |
 | use_extended_range | 7 | 2 |
 | voice_callouts_enabled | 3 | 1 |
 
