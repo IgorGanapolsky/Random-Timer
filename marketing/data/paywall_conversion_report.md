@@ -1,16 +1,16 @@
 # Paywall Conversion Report
 
-Generated: 2026-08-11T00:30:45+00:00
+Generated: 2026-08-11T06:27:05+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **66**
-- Offer Selects: **16**
-- Purchase Attempts: **3**
-- Purchase Successes: **2**
-- View -> Offer Select: **24.2%**
-- Select -> Purchase Attempt: **18.8%**
-- Attempt -> Purchase Success: **66.7%**
+- Views: **64**
+- Offer Selects: **13**
+- Purchase Attempts: **2**
+- Purchase Successes: **1**
+- View -> Offer Select: **20.3%**
+- Select -> Purchase Attempt: **15.4%**
+- Attempt -> Purchase Success: **50.0%**
 
 ## Top Failure Reasons
 | Reason | Count |
@@ -25,9 +25,9 @@ Window (days): 30
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
-| android | pro_base | 7 | 2 | 2 | 28.6% | 100.0% |
+| android | pro_base | 5 | 1 | 1 | 20.0% | 100.0% |
 | ios | com.iganapolsky.randomtimer.elite | 0 | 1 | 0 | 0.0% | 0.0% |
-| android | elite_tactical | 8 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical | 7 | 0 | 0 | 0.0% | 0.0% |
 | android | elite_tactical_monthly | 1 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
@@ -41,8 +41,8 @@ Window (days): 30
 | qualified_training_gate | 27 | 0 | 0 | 0.0% | 0.0% |
 | unknown | 26 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 4 | 0 | 0 | 0.0% | 0.0% |
-| repeat_gate | 4 | 1 | 1 | 25.0% | 100.0% |
 | range_gate | 2 | 0 | 0 | 0.0% | 0.0% |
+| repeat_gate | 2 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 2 | 1 | 1 | 50.0% | 100.0% |
 | sound_gate | 1 | 1 | 0 | 100.0% | 0.0% |
 
@@ -53,18 +53,17 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2948 | 55 |
-| volume | 1825 | 27 |
-| min_seconds | 1314 | 42 |
-| sound_type | 159 | 42 |
-| repeat_enabled | 122 | 45 |
-| repeat_rounds | 108 | 1 |
-| alarm_duration | 97 | 48 |
-| voice_gender | 77 | 28 |
+| max_seconds | 2672 | 54 |
+| volume | 1767 | 27 |
+| min_seconds | 1234 | 41 |
+| sound_type | 146 | 41 |
+| repeat_enabled | 117 | 44 |
+| alarm_duration | 95 | 47 |
+| voice_gender | 73 | 27 |
 | unknown | 41 | 2 |
-| vibration_enabled | 30 | 25 |
-| use_extended_range | 12 | 3 |
-| voice_callouts_enabled | 8 | 2 |
+| vibration_enabled | 26 | 24 |
+| use_extended_range | 7 | 2 |
+| voice_callouts_enabled | 3 | 1 |
 
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic
