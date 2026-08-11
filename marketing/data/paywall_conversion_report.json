@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-11T06:27:05+00:00",
+  "generated_at": "2026-08-11T12:24:24+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 64,
+    "views": 66,
     "offer_selects": 13,
     "purchase_attempts": 2,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.2031,
+    "view_to_select_rate": 0.197,
     "select_to_attempt_rate": 0.1538,
     "attempt_to_success_rate": 0.5
   },
@@ -83,16 +83,16 @@
   ],
   "entry_points": [
     {
-      "entry_point": "qualified_training_gate",
-      "views": 27,
+      "entry_point": "unknown",
+      "views": 28,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
       "attempt_to_success_rate": 0.0
     },
     {
-      "entry_point": "unknown",
-      "views": 26,
+      "entry_point": "qualified_training_gate",
+      "views": 27,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -141,16 +141,16 @@
   ],
   "leaky_entry_points": [
     {
-      "entry_point": "qualified_training_gate",
-      "views": 27,
+      "entry_point": "unknown",
+      "views": 28,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
       "attempt_to_success_rate": 0.0
     },
     {
-      "entry_point": "unknown",
-      "views": 26,
+      "entry_point": "qualified_training_gate",
+      "views": 27,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -160,8 +160,8 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2672,
-      "users": 54
+      "changes": 2774,
+      "users": 55
     },
     {
       "setting_name": "volume",
@@ -170,8 +170,8 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1234,
-      "users": 41
+      "changes": 1307,
+      "users": 42
     },
     {
       "setting_name": "sound_type",
@@ -185,8 +185,8 @@
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 95,
-      "users": 47
+      "changes": 96,
+      "users": 48
     },
     {
       "setting_name": "voice_gender",
