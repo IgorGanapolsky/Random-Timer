@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-12T06:37:56+00:00",
+  "generated_at": "2026-08-12T12:24:50+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -181,8 +181,8 @@
     },
     {
       "setting_name": "volume",
-      "changes": 1772,
-      "users": 27
+      "changes": 1621,
+      "users": 26
     },
     {
       "setting_name": "min_seconds",
@@ -216,8 +216,8 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 28,
-      "users": 26
+      "changes": 27,
+      "users": 25
     },
     {
       "setting_name": "use_extended_range",
