@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-13T00:37:03+00:00",
+  "generated_at": "2026-08-13T06:39:32+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -176,7 +176,7 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2875,
+      "changes": 2876,
       "users": 56
     },
     {
@@ -191,17 +191,17 @@
     },
     {
       "setting_name": "sound_type",
-      "changes": 146,
+      "changes": 147,
       "users": 41
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 118,
+      "changes": 121,
       "users": 44
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 98,
+      "changes": 99,
       "users": 49
     },
     {
@@ -216,7 +216,7 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 26,
+      "changes": 27,
       "users": 24
     },
     {
