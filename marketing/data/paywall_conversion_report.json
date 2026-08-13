@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-13T12:25:19+00:00",
+  "generated_at": "2026-08-13T18:25:04+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 70,
+    "views": 68,
     "offer_selects": 13,
     "purchase_attempts": 3,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.1857,
+    "view_to_select_rate": 0.1912,
     "select_to_attempt_rate": 0.2308,
     "attempt_to_success_rate": 0.3333
   },
@@ -100,7 +100,7 @@
   "entry_points": [
     {
       "entry_point": "unknown",
-      "views": 33,
+      "views": 31,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -158,7 +158,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "unknown",
-      "views": 33,
+      "views": 31,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -176,38 +176,38 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2771,
+      "changes": 2733,
       "users": 54
     },
     {
       "setting_name": "volume",
-      "changes": 1530,
-      "users": 25
+      "changes": 1360,
+      "users": 24
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1306,
+      "changes": 1253,
       "users": 42
     },
     {
       "setting_name": "sound_type",
-      "changes": 144,
-      "users": 40
+      "changes": 139,
+      "users": 39
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 121,
-      "users": 44
+      "changes": 122,
+      "users": 45
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 97,
+      "changes": 96,
       "users": 48
     },
     {
       "setting_name": "voice_gender",
-      "changes": 73,
-      "users": 27
+      "changes": 72,
+      "users": 26
     },
     {
       "setting_name": "unknown",
@@ -216,8 +216,8 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 27,
-      "users": 24
+      "changes": 28,
+      "users": 25
     },
     {
       "setting_name": "use_extended_range",
