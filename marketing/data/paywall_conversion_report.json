@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-12T18:25:06+00:00",
+  "generated_at": "2026-08-13T00:37:03+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -176,8 +176,8 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2876,
-      "users": 57
+      "changes": 2875,
+      "users": 56
     },
     {
       "setting_name": "volume",
@@ -186,7 +186,7 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1329,
+      "changes": 1315,
       "users": 44
     },
     {
@@ -196,18 +196,18 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 119,
-      "users": 45
+      "changes": 118,
+      "users": 44
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 97,
+      "changes": 98,
       "users": 49
     },
     {
       "setting_name": "voice_gender",
-      "changes": 73,
-      "users": 27
+      "changes": 75,
+      "users": 28
     },
     {
       "setting_name": "unknown",
@@ -216,8 +216,8 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 27,
-      "users": 25
+      "changes": 26,
+      "users": 24
     },
     {
       "setting_name": "use_extended_range",
