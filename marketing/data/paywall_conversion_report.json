@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-13T18:25:04+00:00",
+  "generated_at": "2026-08-14T00:37:34+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -176,7 +176,7 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2733,
+      "changes": 2737,
       "users": 54
     },
     {
@@ -216,7 +216,7 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 28,
+      "changes": 29,
       "users": 25
     },
     {
