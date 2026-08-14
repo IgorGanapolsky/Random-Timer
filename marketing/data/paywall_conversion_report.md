@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-08-14T06:38:11+00:00
+Generated: 2026-08-14T12:23:55+00:00
 Window (days): 30
 
 ## Funnel
