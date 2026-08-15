@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-15T00:22:58+00:00",
+  "generated_at": "2026-08-15T06:13:53+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 68,
+    "views": 67,
     "offer_selects": 13,
     "purchase_attempts": 3,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.1912,
+    "view_to_select_rate": 0.194,
     "select_to_attempt_rate": 0.2308,
     "attempt_to_success_rate": 0.3333
   },
@@ -81,22 +81,8 @@
       "attempt_to_success_rate": 0.0
     }
   ],
-  "product_catalog_failures": [
-    {
-      "platform": "android",
-      "product_id": "pro_base",
-      "failures": 1,
-      "users": 1
-    }
-  ],
-  "product_catalog_failures_play_store": [
-    {
-      "platform": "android",
-      "product_id": "pro_base",
-      "failures": 1,
-      "users": 1
-    }
-  ],
+  "product_catalog_failures": [],
+  "product_catalog_failures_play_store": [],
   "entry_points": [
     {
       "entry_point": "unknown",
@@ -108,7 +94,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 26,
+      "views": 25,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -166,7 +152,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 26,
+      "views": 25,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -176,8 +162,8 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2949,
-      "users": 55
+      "changes": 2918,
+      "users": 54
     },
     {
       "setting_name": "volume",
@@ -186,23 +172,23 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1194,
-      "users": 43
+      "changes": 1184,
+      "users": 42
     },
     {
       "setting_name": "sound_type",
-      "changes": 136,
-      "users": 38
+      "changes": 129,
+      "users": 37
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 122,
-      "users": 45
+      "changes": 117,
+      "users": 44
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 97,
-      "users": 49
+      "changes": 96,
+      "users": 48
     },
     {
       "setting_name": "unknown",
@@ -211,13 +197,13 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 71,
-      "users": 25
+      "changes": 69,
+      "users": 24
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 29,
-      "users": 25
+      "changes": 28,
+      "users": 24
     },
     {
       "setting_name": "use_extended_range",
@@ -232,8 +218,7 @@
   ],
   "data_quality_warnings": [
     "unknown paywall entry_point is still receiving meaningful traffic",
-    "purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage",
-    "product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status"
+    "purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage"
   ],
   "query_errors": []
 }
