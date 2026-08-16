@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-08-15T18:11:40+00:00
+Generated: 2026-08-16T00:24:01+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **79**
-- Offer Selects: **13**
+- Views: **81**
+- Offer Selects: **14**
 - Purchase Attempts: **3**
 - Purchase Successes: **1**
-- View -> Offer Select: **16.5%**
-- Select -> Purchase Attempt: **23.1%**
+- View -> Offer Select: **17.3%**
+- Select -> Purchase Attempt: **21.4%**
 - Attempt -> Purchase Success: **33.3%**
 
 ## Top Failure Reasons
@@ -29,7 +29,7 @@ Window (days): 30
 | android | pro_base | 5 | 1 | 1 | 20.0% | 100.0% |
 | ios | com.iganapolsky.randomtimer.pro | 0 | 1 | 0 | 0.0% | 0.0% |
 | ios | com.iganapolsky.randomtimer.elite | 0 | 1 | 0 | 0.0% | 0.0% |
-| android | elite_tactical | 7 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical | 8 | 0 | 0 | 0.0% | 0.0% |
 | android | elite_tactical_monthly | 1 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
@@ -41,7 +41,7 @@ Window (days): 30
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | unknown | 42 | 0 | 0 | 0.0% | 0.0% |
-| qualified_training_gate | 26 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 28 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 4 | 0 | 0 | 0.0% | 0.0% |
 | range_gate | 2 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 2 | 0 | 0 | 0.0% | 0.0% |
@@ -50,16 +50,16 @@ Window (days): 30
 
 ## Leaky Entry Points
 - `unknown` had **42** views and **0** purchase attempts.
-- `qualified_training_gate` had **26** views and **0** purchase attempts.
+- `qualified_training_gate` had **28** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2987 | 55 |
+| max_seconds | 3023 | 56 |
 | volume | 1553 | 26 |
-| min_seconds | 1141 | 43 |
-| sound_type | 129 | 37 |
-| repeat_enabled | 120 | 45 |
+| min_seconds | 1189 | 44 |
+| sound_type | 132 | 38 |
+| repeat_enabled | 124 | 46 |
 | alarm_duration | 102 | 48 |
 | unknown | 77 | 4 |
 | voice_gender | 67 | 24 |
