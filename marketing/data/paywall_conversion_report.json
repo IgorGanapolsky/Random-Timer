@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-17T12:13:13+00:00",
+  "generated_at": "2026-08-17T18:14:37+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -86,7 +86,7 @@
   "entry_points": [
     {
       "entry_point": "unknown",
-      "views": 42,
+      "views": 43,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -94,7 +94,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 28,
+      "views": 27,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -144,7 +144,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "unknown",
-      "views": 42,
+      "views": 43,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -152,7 +152,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 28,
+      "views": 27,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -162,33 +162,33 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 3091,
-      "users": 60
+      "changes": 3074,
+      "users": 61
     },
     {
       "setting_name": "volume",
-      "changes": 1673,
+      "changes": 1681,
       "users": 27
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1260,
-      "users": 48
+      "changes": 1256,
+      "users": 49
     },
     {
       "setting_name": "sound_type",
-      "changes": 137,
+      "changes": 136,
       "users": 39
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 127,
-      "users": 48
+      "changes": 128,
+      "users": 47
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 106,
-      "users": 51
+      "changes": 103,
+      "users": 50
     },
     {
       "setting_name": "unknown",
@@ -197,8 +197,8 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 68,
-      "users": 25
+      "changes": 70,
+      "users": 26
     },
     {
       "setting_name": "vibration_enabled",
