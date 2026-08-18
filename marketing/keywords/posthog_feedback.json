@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-08-18T06:18:20+00:00",
+  "generated_at": "2026-08-18T12:14:47+00:00",
   "status": "ok",
   "keyword_installs": {},
   "data_quality": {
     "is_stale": false,
     "preserved_previous_metrics": false,
-    "last_attempt_generated_at": "2026-08-18T06:18:20+00:00",
+    "last_attempt_generated_at": "2026-08-18T12:14:47+00:00",
     "last_good_generated_at": "",
     "reason": ""
   }
