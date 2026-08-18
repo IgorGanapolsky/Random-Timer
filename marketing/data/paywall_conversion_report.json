@@ -1,24 +1,35 @@
 {
-  "generated_at": "2026-08-17T18:14:37+00:00",
+  "generated_at": "2026-08-18T00:22:30+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 81,
+    "views": 82,
     "offer_selects": 14,
     "purchase_attempts": 3,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.1728,
+    "view_to_select_rate": 0.1707,
     "select_to_attempt_rate": 0.2143,
     "attempt_to_success_rate": 0.3333
   },
   "top_failure_reasons": [
+    {
+      "reason": "failed",
+      "count": 15
+    },
     {
       "reason": "user_cancelled",
       "count": 3
     }
   ],
   "failure_breakdown": [
+    {
+      "platform": "android",
+      "product_id": "unknown",
+      "reason": "failed",
+      "failures": 15,
+      "users": 3
+    },
     {
       "platform": "ios",
       "product_id": "com.iganapolsky.randomtimer.pro",
@@ -86,7 +97,7 @@
   "entry_points": [
     {
       "entry_point": "unknown",
-      "views": 43,
+      "views": 44,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -144,7 +155,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "unknown",
-      "views": 43,
+      "views": 44,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -162,18 +173,18 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 3074,
-      "users": 61
+      "changes": 3018,
+      "users": 60
     },
     {
       "setting_name": "volume",
-      "changes": 1681,
-      "users": 27
+      "changes": 1802,
+      "users": 28
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1256,
-      "users": 49
+      "changes": 1254,
+      "users": 48
     },
     {
       "setting_name": "sound_type",
@@ -182,8 +193,8 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 128,
-      "users": 47
+      "changes": 129,
+      "users": 48
     },
     {
       "setting_name": "alarm_duration",
@@ -197,8 +208,8 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 70,
-      "users": 26
+      "changes": 72,
+      "users": 27
     },
     {
       "setting_name": "vibration_enabled",
@@ -217,8 +228,7 @@
     }
   ],
   "data_quality_warnings": [
-    "unknown paywall entry_point is still receiving meaningful traffic",
-    "purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage"
+    "unknown paywall entry_point is still receiving meaningful traffic"
   ],
   "query_errors": []
 }
