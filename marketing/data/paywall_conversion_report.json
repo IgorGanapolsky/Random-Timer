@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-18T12:14:27+00:00",
+  "generated_at": "2026-08-18T18:14:47+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -15,7 +15,7 @@
   "top_failure_reasons": [
     {
       "reason": "failed",
-      "count": 15
+      "count": 26
     },
     {
       "reason": "user_cancelled",
@@ -27,8 +27,8 @@
       "platform": "android",
       "product_id": "unknown",
       "reason": "failed",
-      "failures": 15,
-      "users": 3
+      "failures": 26,
+      "users": 5
     },
     {
       "platform": "ios",
@@ -173,8 +173,8 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 3261,
-      "users": 62
+      "changes": 3431,
+      "users": 64
     },
     {
       "setting_name": "volume",
@@ -183,23 +183,28 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1306,
-      "users": 50
+      "changes": 1328,
+      "users": 52
     },
     {
       "setting_name": "sound_type",
-      "changes": 147,
-      "users": 41
+      "changes": 150,
+      "users": 42
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 131,
-      "users": 49
+      "changes": 134,
+      "users": 51
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 103,
-      "users": 50
+      "changes": 107,
+      "users": 52
+    },
+    {
+      "setting_name": "voice_gender",
+      "changes": 78,
+      "users": 29
     },
     {
       "setting_name": "unknown",
@@ -207,14 +212,9 @@
       "users": 4
     },
     {
-      "setting_name": "voice_gender",
-      "changes": 74,
-      "users": 28
-    },
-    {
       "setting_name": "vibration_enabled",
-      "changes": 33,
-      "users": 27
+      "changes": 35,
+      "users": 29
     },
     {
       "setting_name": "use_extended_range",

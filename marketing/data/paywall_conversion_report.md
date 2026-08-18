@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-08-18T12:14:27+00:00
+Generated: 2026-08-18T18:14:47+00:00
 Window (days): 30
 
 ## Funnel
@@ -15,13 +15,13 @@ Window (days): 30
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| failed | 15 |
+| failed | 26 |
 | user_cancelled | 3 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
-| android | unknown | failed | 15 | 3 |
+| android | unknown | failed | 26 | 5 |
 | ios | com.iganapolsky.randomtimer.pro | user_cancelled | 2 | 1 |
 | ios | com.iganapolsky.randomtimer.elite | user_cancelled | 1 | 1 |
 
@@ -57,15 +57,15 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 3261 | 62 |
+| max_seconds | 3431 | 64 |
 | volume | 1945 | 29 |
-| min_seconds | 1306 | 50 |
-| sound_type | 147 | 41 |
-| repeat_enabled | 131 | 49 |
-| alarm_duration | 103 | 50 |
+| min_seconds | 1328 | 52 |
+| sound_type | 150 | 42 |
+| repeat_enabled | 134 | 51 |
+| alarm_duration | 107 | 52 |
+| voice_gender | 78 | 29 |
 | unknown | 77 | 4 |
-| voice_gender | 74 | 28 |
-| vibration_enabled | 33 | 27 |
+| vibration_enabled | 35 | 29 |
 | use_extended_range | 5 | 2 |
 | voice_callouts_enabled | 1 | 1 |
 
