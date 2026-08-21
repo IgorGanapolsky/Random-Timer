@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-20T18:14:43+00:00",
+  "generated_at": "2026-08-21T00:24:02+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 83,
+    "views": 80,
     "offer_selects": 14,
     "purchase_attempts": 3,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.1687,
+    "view_to_select_rate": 0.175,
     "select_to_attempt_rate": 0.2143,
     "attempt_to_success_rate": 0.3333
   },
@@ -97,7 +97,7 @@
   "entry_points": [
     {
       "entry_point": "unknown",
-      "views": 44,
+      "views": 43,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -105,7 +105,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 28,
+      "views": 26,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -155,7 +155,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "unknown",
-      "views": 44,
+      "views": 43,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -163,7 +163,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 28,
+      "views": 26,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -173,38 +173,38 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2814,
+      "changes": 2679,
       "users": 60
     },
     {
       "setting_name": "volume",
-      "changes": 1794,
-      "users": 26
+      "changes": 1738,
+      "users": 24
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1173,
-      "users": 49
-    },
-    {
-      "setting_name": "sound_type",
-      "changes": 138,
-      "users": 39
-    },
-    {
-      "setting_name": "repeat_enabled",
-      "changes": 112,
+      "changes": 1113,
       "users": 48
     },
     {
+      "setting_name": "sound_type",
+      "changes": 130,
+      "users": 37
+    },
+    {
+      "setting_name": "repeat_enabled",
+      "changes": 109,
+      "users": 46
+    },
+    {
       "setting_name": "alarm_duration",
-      "changes": 94,
-      "users": 47
+      "changes": 93,
+      "users": 46
     },
     {
       "setting_name": "voice_gender",
-      "changes": 67,
-      "users": 26
+      "changes": 62,
+      "users": 25
     },
     {
       "setting_name": "unknown",
