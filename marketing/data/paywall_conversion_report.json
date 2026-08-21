@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-08-21T00:24:02+00:00",
+  "generated_at": "2026-08-21T06:18:45+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 80,
+    "views": 78,
     "offer_selects": 14,
-    "purchase_attempts": 3,
+    "purchase_attempts": 2,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.175,
-    "select_to_attempt_rate": 0.2143,
-    "attempt_to_success_rate": 0.3333
+    "view_to_select_rate": 0.1795,
+    "select_to_attempt_rate": 0.1429,
+    "attempt_to_success_rate": 0.5
   },
   "top_failure_reasons": [
     {
@@ -19,7 +19,7 @@
     },
     {
       "reason": "user_cancelled",
-      "count": 3
+      "count": 2
     }
   ],
   "failure_breakdown": [
@@ -36,13 +36,6 @@
       "reason": "user_cancelled",
       "failures": 2,
       "users": 1
-    },
-    {
-      "platform": "ios",
-      "product_id": "com.iganapolsky.randomtimer.elite",
-      "reason": "user_cancelled",
-      "failures": 1,
-      "users": 1
     }
   ],
   "product_funnel": [
@@ -58,15 +51,6 @@
     {
       "platform": "ios",
       "product_id": "com.iganapolsky.randomtimer.pro",
-      "offer_selects": 0,
-      "attempts": 1,
-      "successes": 0,
-      "select_to_attempt_rate": 0.0,
-      "attempt_to_success_rate": 0.0
-    },
-    {
-      "platform": "ios",
-      "product_id": "com.iganapolsky.randomtimer.elite",
       "offer_selects": 0,
       "attempts": 1,
       "successes": 0,
@@ -97,7 +81,7 @@
   "entry_points": [
     {
       "entry_point": "unknown",
-      "views": 43,
+      "views": 42,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -145,17 +129,17 @@
     },
     {
       "entry_point": "sound_gate",
-      "views": 1,
-      "attempts": 2,
+      "views": 0,
+      "attempts": 1,
       "successes": 0,
-      "view_to_attempt_rate": 2.0,
+      "view_to_attempt_rate": 0.0,
       "attempt_to_success_rate": 0.0
     }
   ],
   "leaky_entry_points": [
     {
       "entry_point": "unknown",
-      "views": 43,
+      "views": 42,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -208,8 +192,8 @@
     },
     {
       "setting_name": "unknown",
-      "changes": 59,
-      "users": 3
+      "changes": 36,
+      "users": 2
     },
     {
       "setting_name": "vibration_enabled",

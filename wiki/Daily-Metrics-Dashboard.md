@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 63 | 23 | 86 |
+| Distinct install users (30d) | 62 | 23 | 85 |
 | Active Installs | — | 26 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
 | DAU | 4 |
-| WAU | 43 |
-| MAU | 105 |
+| WAU | 42 |
+| MAU | 104 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -23,9 +23,9 @@
 | Metric | Value |
 |--------|-------|
 | WQTU (7d) | 6 |
-| Timer Completed (7d) | 221 |
+| Timer Completed (7d) | 222 |
 | Completed Users (7d) | 14 |
-| Sessions/Completed User (7d) | 15.79 |
+| Sessions/Completed User (7d) | 15.86 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
@@ -38,12 +38,12 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-08-21T00:24:54+00:00
+**Generated:** 2026-08-21T06:22:23+00:00
 
 ## Onboarding Funnel
-- First Open: **90**
-- First Timer Configured: **65** (72.2% of opens)
-- First Timer Completed: **46** (51.1% of opens)
+- First Open: **89**
+- First Timer Configured: **64** (71.9% of opens)
+- First Timer Completed: **46** (51.7% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -61,13 +61,13 @@
 <!-- PAYWALL_START -->
 | Metric | Value |
 |--------|-------|
-| Paywall Views | 80 |
+| Paywall Views | 78 |
 | Offer Selects | 14 |
-| Purchase Attempts | 3 |
+| Purchase Attempts | 2 |
 | Purchase Successes | 1 |
-| Attempt → Success | 33.3% |
+| Attempt → Success | 50.0% |
 
-**Top failure reasons:** failed (26), user_cancelled (3)
+**Top failure reasons:** failed (26), user_cancelled (2)
 
 **Catalog failures (Android):** none
 <!-- PAYWALL_END -->
@@ -77,9 +77,9 @@
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 90 | — |
-| First Timer Configured | 65 | 72.2% of opens |
-| First Timer Completed | 46 | 51.1% of opens |
+| First Open | 89 | — |
+| First Timer Configured | 64 | 71.9% of opens |
+| First Timer Completed | 46 | 51.7% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -155,18 +155,18 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-08-17" , "2026-08-18" , "2026-08-18" , "2026-08-18" , "2026-08-18" , "2026-08-19" , "2026-08-19" , "2026-08-19" , "2026-08-19" , "2026-08-20" , "2026-08-20" , "2026-08-20" , "2026-08-20" , "2026-08-21"]
+    x-axis ["2026-08-18" , "2026-08-18" , "2026-08-18" , "2026-08-18" , "2026-08-19" , "2026-08-19" , "2026-08-19" , "2026-08-19" , "2026-08-20" , "2026-08-20" , "2026-08-20" , "2026-08-20" , "2026-08-21" , "2026-08-21"]
     y-axis "Downloads"
-    line [64 , 64 , 66 , 66 , 67 , 67 , 65 , 65 , 66 , 66 , 66 , 65 , 64 , 63]
-    line [7 , 15 , 15 , 15 , 23 , 23 , 23 , 23 , 23 , 23 , 23 , 23 , 23 , 23]
+    line [64 , 66 , 66 , 67 , 67 , 65 , 65 , 66 , 66 , 66 , 65 , 64 , 63 , 62]
+    line [15 , 15 , 15 , 23 , 23 , 23 , 23 , 23 , 23 , 23 , 23 , 23 , 23 , 23]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-08-17" , "2026-08-18" , "2026-08-18" , "2026-08-18" , "2026-08-18" , "2026-08-19" , "2026-08-19" , "2026-08-19" , "2026-08-19" , "2026-08-20" , "2026-08-20" , "2026-08-20" , "2026-08-20" , "2026-08-21"]
+    x-axis ["2026-08-18" , "2026-08-18" , "2026-08-18" , "2026-08-18" , "2026-08-19" , "2026-08-19" , "2026-08-19" , "2026-08-19" , "2026-08-20" , "2026-08-20" , "2026-08-20" , "2026-08-20" , "2026-08-21" , "2026-08-21"]
     y-axis "Users"
-    line [6 , 6 , 7 , 7 , 7 , 6 , 6 , 6 , 6 , 6 , 6 , 6 , 7 , 6]
+    line [6 , 7 , 7 , 7 , 6 , 6 , 6 , 6 , 6 , 6 , 6 , 7 , 6 , 6]
 ```
 
 ```mermaid
@@ -194,4 +194,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-08-21T00:24:55+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-08-21T06:22:24+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
