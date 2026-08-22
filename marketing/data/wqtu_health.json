@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-22T06:13:56+00:00",
+  "generated_at": "2026-08-22T12:12:28+00:00",
   "status": "ok",
   "nsm": {
     "wqtu": 6,
@@ -8,11 +8,11 @@
     "alert_fired": false
   },
   "engagement": {
-    "dau": 3,
+    "dau": 2,
     "wau": 43
   },
   "abandon_rate": {
-    "started_30d": 957,
+    "started_30d": 956,
     "completed_30d": 793,
     "abandon_rate_pct": 17.1
   },
@@ -25,7 +25,7 @@
   "wqtu_trend": [
     {
       "week_start": "2026-07-19",
-      "wqtu": 2
+      "wqtu": 1
     },
     {
       "week_start": "2026-07-26",
@@ -46,11 +46,6 @@
   ],
   "query_errors": [],
   "history": [
-    {
-      "timestamp": "2026-07-31T00:53:22+00:00",
-      "wqtu": 10,
-      "dau": 7
-    },
     {
       "timestamp": "2026-07-31T07:11:46+00:00",
       "wqtu": 10,
@@ -495,6 +490,11 @@
       "timestamp": "2026-08-22T06:13:56+00:00",
       "wqtu": 6,
       "dau": 3
+    },
+    {
+      "timestamp": "2026-08-22T12:12:28+00:00",
+      "wqtu": 6,
+      "dau": 2
     }
   ]
 }
