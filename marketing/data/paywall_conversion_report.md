@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-08-23T00:24:35+00:00
+Generated: 2026-08-23T06:15:03+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **75**
-- Offer Selects: **14**
+- Views: **79**
+- Offer Selects: **15**
 - Purchase Attempts: **2**
 - Purchase Successes: **1**
-- View -> Offer Select: **18.7%**
-- Select -> Purchase Attempt: **14.3%**
+- View -> Offer Select: **19.0%**
+- Select -> Purchase Attempt: **13.3%**
 - Attempt -> Purchase Success: **50.0%**
 
 ## Top Failure Reasons
@@ -29,7 +29,7 @@ Window (days): 30
 |----------|------------|---------|----------|-----------|-----------------|------------------|
 | android | pro_base | 5 | 1 | 1 | 20.0% | 100.0% |
 | ios | com.iganapolsky.randomtimer.pro | 0 | 1 | 0 | 0.0% | 0.0% |
-| android | elite_tactical | 8 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical | 9 | 0 | 0 | 0.0% | 0.0% |
 | android | elite_tactical_monthly | 1 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
@@ -40,8 +40,8 @@ Window (days): 30
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| unknown | 42 | 0 | 0 | 0.0% | 0.0% |
-| qualified_training_gate | 23 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 43 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 26 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 4 | 0 | 0 | 0.0% | 0.0% |
 | range_gate | 2 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 2 | 0 | 0 | 0.0% | 0.0% |
@@ -49,21 +49,21 @@ Window (days): 30
 | sound_gate | 0 | 1 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
-- `unknown` had **42** views and **0** purchase attempts.
-- `qualified_training_gate` had **23** views and **0** purchase attempts.
+- `unknown` had **43** views and **0** purchase attempts.
+- `qualified_training_gate` had **26** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2833 | 61 |
-| volume | 1728 | 23 |
-| min_seconds | 1105 | 48 |
-| sound_type | 136 | 38 |
-| repeat_enabled | 110 | 46 |
-| alarm_duration | 94 | 46 |
+| max_seconds | 2969 | 65 |
+| volume | 1715 | 24 |
+| min_seconds | 1183 | 50 |
+| sound_type | 143 | 39 |
+| repeat_enabled | 111 | 48 |
+| alarm_duration | 97 | 47 |
 | voice_gender | 59 | 24 |
 | unknown | 36 | 2 |
-| vibration_enabled | 32 | 26 |
+| vibration_enabled | 33 | 26 |
 | use_extended_range | 4 | 2 |
 
 ## Data Quality Warnings

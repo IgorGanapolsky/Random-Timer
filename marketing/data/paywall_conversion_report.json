@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-08-23T00:24:35+00:00",
+  "generated_at": "2026-08-23T06:15:03+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 75,
-    "offer_selects": 14,
+    "views": 79,
+    "offer_selects": 15,
     "purchase_attempts": 2,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.1867,
-    "select_to_attempt_rate": 0.1429,
+    "view_to_select_rate": 0.1899,
+    "select_to_attempt_rate": 0.1333,
     "attempt_to_success_rate": 0.5
   },
   "top_failure_reasons": [
@@ -60,7 +60,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "offer_selects": 8,
+      "offer_selects": 9,
       "attempts": 0,
       "successes": 0,
       "select_to_attempt_rate": 0.0,
@@ -81,7 +81,7 @@
   "entry_points": [
     {
       "entry_point": "unknown",
-      "views": 42,
+      "views": 43,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -89,7 +89,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 23,
+      "views": 26,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -139,7 +139,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "unknown",
-      "views": 42,
+      "views": 43,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -147,7 +147,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 23,
+      "views": 26,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -157,33 +157,33 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2833,
-      "users": 61
+      "changes": 2969,
+      "users": 65
     },
     {
       "setting_name": "volume",
-      "changes": 1728,
-      "users": 23
+      "changes": 1715,
+      "users": 24
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1105,
-      "users": 48
+      "changes": 1183,
+      "users": 50
     },
     {
       "setting_name": "sound_type",
-      "changes": 136,
-      "users": 38
+      "changes": 143,
+      "users": 39
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 110,
-      "users": 46
+      "changes": 111,
+      "users": 48
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 94,
-      "users": 46
+      "changes": 97,
+      "users": 47
     },
     {
       "setting_name": "voice_gender",
@@ -197,7 +197,7 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 32,
+      "changes": 33,
       "users": 26
     },
     {
