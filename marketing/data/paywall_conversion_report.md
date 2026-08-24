@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-08-24T12:15:22+00:00
+Generated: 2026-08-24T18:15:15+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **76**
+- Views: **78**
 - Offer Selects: **15**
 - Purchase Attempts: **2**
 - Purchase Successes: **1**
-- View -> Offer Select: **19.7%**
+- View -> Offer Select: **19.2%**
 - Select -> Purchase Attempt: **13.3%**
 - Attempt -> Purchase Success: **50.0%**
 
@@ -40,8 +40,8 @@ Window (days): 30
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| unknown | 41 | 0 | 0 | 0.0% | 0.0% |
-| qualified_training_gate | 25 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 42 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 26 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 4 | 0 | 0 | 0.0% | 0.0% |
 | range_gate | 2 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 2 | 0 | 0 | 0.0% | 0.0% |
@@ -49,18 +49,18 @@ Window (days): 30
 | sound_gate | 0 | 1 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
-- `unknown` had **41** views and **0** purchase attempts.
-- `qualified_training_gate` had **25** views and **0** purchase attempts.
+- `unknown` had **42** views and **0** purchase attempts.
+- `qualified_training_gate` had **26** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2888 | 63 |
+| max_seconds | 2868 | 63 |
 | volume | 1785 | 24 |
-| min_seconds | 1190 | 48 |
-| sound_type | 147 | 38 |
-| alarm_duration | 116 | 46 |
-| repeat_enabled | 112 | 46 |
+| min_seconds | 1147 | 47 |
+| sound_type | 146 | 37 |
+| alarm_duration | 119 | 48 |
+| repeat_enabled | 114 | 48 |
 | voice_gender | 51 | 23 |
 | unknown | 36 | 2 |
 | vibration_enabled | 33 | 25 |

@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-24T12:15:22+00:00",
+  "generated_at": "2026-08-24T18:15:15+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 76,
+    "views": 78,
     "offer_selects": 15,
     "purchase_attempts": 2,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.1974,
+    "view_to_select_rate": 0.1923,
     "select_to_attempt_rate": 0.1333,
     "attempt_to_success_rate": 0.5
   },
@@ -95,7 +95,7 @@
   "entry_points": [
     {
       "entry_point": "unknown",
-      "views": 41,
+      "views": 42,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -103,7 +103,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 25,
+      "views": 26,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -153,7 +153,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "unknown",
-      "views": 41,
+      "views": 42,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -161,7 +161,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 25,
+      "views": 26,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -171,7 +171,7 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2888,
+      "changes": 2868,
       "users": 63
     },
     {
@@ -181,23 +181,23 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1190,
-      "users": 48
+      "changes": 1147,
+      "users": 47
     },
     {
       "setting_name": "sound_type",
-      "changes": 147,
-      "users": 38
+      "changes": 146,
+      "users": 37
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 116,
-      "users": 46
+      "changes": 119,
+      "users": 48
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 112,
-      "users": 46
+      "changes": 114,
+      "users": 48
     },
     {
       "setting_name": "voice_gender",
