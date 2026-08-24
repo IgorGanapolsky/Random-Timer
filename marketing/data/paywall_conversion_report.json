@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-24T06:22:14+00:00",
+  "generated_at": "2026-08-24T12:15:22+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 77,
+    "views": 76,
     "offer_selects": 15,
     "purchase_attempts": 2,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.1948,
+    "view_to_select_rate": 0.1974,
     "select_to_attempt_rate": 0.1333,
     "attempt_to_success_rate": 0.5
   },
@@ -103,7 +103,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 26,
+      "views": 25,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -161,7 +161,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 26,
+      "views": 25,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -171,38 +171,38 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2946,
-      "users": 64
+      "changes": 2888,
+      "users": 63
     },
     {
       "setting_name": "volume",
-      "changes": 1793,
-      "users": 25
+      "changes": 1785,
+      "users": 24
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1220,
-      "users": 49
-    },
-    {
-      "setting_name": "sound_type",
-      "changes": 150,
-      "users": 39
-    },
-    {
-      "setting_name": "repeat_enabled",
-      "changes": 118,
+      "changes": 1190,
       "users": 48
     },
     {
+      "setting_name": "sound_type",
+      "changes": 147,
+      "users": 38
+    },
+    {
       "setting_name": "alarm_duration",
-      "changes": 117,
-      "users": 47
+      "changes": 116,
+      "users": 46
+    },
+    {
+      "setting_name": "repeat_enabled",
+      "changes": 112,
+      "users": 46
     },
     {
       "setting_name": "voice_gender",
-      "changes": 53,
-      "users": 24
+      "changes": 51,
+      "users": 23
     },
     {
       "setting_name": "unknown",
@@ -211,8 +211,8 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 34,
-      "users": 26
+      "changes": 33,
+      "users": 25
     },
     {
       "setting_name": "voice_callouts_enabled",
