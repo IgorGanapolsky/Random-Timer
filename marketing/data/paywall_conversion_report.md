@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-08-24T00:23:51+00:00
+Generated: 2026-08-24T06:22:14+00:00
 Window (days): 30
 
 ## Funnel
@@ -35,7 +35,7 @@ Window (days): 30
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
 |----------|------------|----------|-------|
-| (none) | (none) | 0 | 0 |
+| android | pro_base | 1 | 1 |
 
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
@@ -55,16 +55,19 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2944 | 63 |
-| volume | 1784 | 24 |
-| min_seconds | 1218 | 48 |
-| sound_type | 136 | 38 |
-| repeat_enabled | 110 | 47 |
-| alarm_duration | 89 | 46 |
-| voice_gender | 51 | 23 |
+| max_seconds | 2946 | 64 |
+| volume | 1793 | 25 |
+| min_seconds | 1220 | 49 |
+| sound_type | 150 | 39 |
+| repeat_enabled | 118 | 48 |
+| alarm_duration | 117 | 47 |
+| voice_gender | 53 | 24 |
 | unknown | 36 | 2 |
-| vibration_enabled | 32 | 25 |
-| use_extended_range | 4 | 2 |
+| vibration_enabled | 34 | 26 |
+| voice_callouts_enabled | 8 | 1 |
+| repeat_rounds | 6 | 1 |
+| use_extended_range | 5 | 3 |
 
 ## Data Quality Warnings
 - unknown paywall entry_point is still receiving meaningful traffic
+- product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status

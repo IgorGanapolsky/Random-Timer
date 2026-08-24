@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-24T00:23:51+00:00",
+  "generated_at": "2026-08-24T06:22:14+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -76,8 +76,22 @@
       "attempt_to_success_rate": 0.0
     }
   ],
-  "product_catalog_failures": [],
-  "product_catalog_failures_play_store": [],
+  "product_catalog_failures": [
+    {
+      "platform": "android",
+      "product_id": "pro_base",
+      "failures": 1,
+      "users": 1
+    }
+  ],
+  "product_catalog_failures_play_store": [
+    {
+      "platform": "android",
+      "product_id": "pro_base",
+      "failures": 1,
+      "users": 1
+    }
+  ],
   "entry_points": [
     {
       "entry_point": "unknown",
@@ -157,38 +171,38 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2944,
-      "users": 63
+      "changes": 2946,
+      "users": 64
     },
     {
       "setting_name": "volume",
-      "changes": 1784,
-      "users": 24
+      "changes": 1793,
+      "users": 25
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1218,
-      "users": 48
+      "changes": 1220,
+      "users": 49
     },
     {
       "setting_name": "sound_type",
-      "changes": 136,
-      "users": 38
+      "changes": 150,
+      "users": 39
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 110,
-      "users": 47
+      "changes": 118,
+      "users": 48
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 89,
-      "users": 46
+      "changes": 117,
+      "users": 47
     },
     {
       "setting_name": "voice_gender",
-      "changes": 51,
-      "users": 23
+      "changes": 53,
+      "users": 24
     },
     {
       "setting_name": "unknown",
@@ -197,17 +211,28 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 32,
-      "users": 25
+      "changes": 34,
+      "users": 26
+    },
+    {
+      "setting_name": "voice_callouts_enabled",
+      "changes": 8,
+      "users": 1
+    },
+    {
+      "setting_name": "repeat_rounds",
+      "changes": 6,
+      "users": 1
     },
     {
       "setting_name": "use_extended_range",
-      "changes": 4,
-      "users": 2
+      "changes": 5,
+      "users": 3
     }
   ],
   "data_quality_warnings": [
-    "unknown paywall entry_point is still receiving meaningful traffic"
+    "unknown paywall entry_point is still receiving meaningful traffic",
+    "product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status"
   ],
   "query_errors": []
 }
