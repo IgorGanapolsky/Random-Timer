@@ -1,15 +1,15 @@
 ---
 title: Mental Readiness: what we learned building Random Tactical Timer
 description: A short engineering update on how we ship Random Tactical Timer faster with automation, AI tooling, and measurable quality gates.
-date: 2026-03-24
+date: 2026-08-25
 tags: [ai, mobile, devops, github, testing]
 ---
 
 ## What changed today
-- fix(ci): restore native-release.yml from main to develop
-- fix: sync v1.3.11 hotfix chain back into develop (#859)
-- fix: restore iOS pro refresh copy parity (#844)
-- feat: overhauled App Store visuals and copy (#839)
+- chore(analytics): refresh marketing snapshots from wiki-sync
+- chore(play): refresh play_iap_catalog.json from IAP readback
+- chore(analytics): refresh marketing snapshots from wiki-sync
+- chore(analytics): refresh marketing snapshots from wiki-sync
 
 ## Search intent target
 - Primary keyword: **mental readiness**
@@ -38,12 +38,12 @@ Better release quality means fewer crashes, clearer store listing content, and f
 Tomorrow we will ship one more experiment on onboarding clarity and measure conversion delta.
 
 ## Try the app
-- iOS: [https://igorganapolsky.github.io/Random-Timer/download?platform=ios&utm_source=github_pages&utm_medium=organic&utm_campaign=daily_blog_20260324&utm_content=daily_blog](https://igorganapolsky.github.io/Random-Timer/download?platform=ios&utm_source=github_pages&utm_medium=organic&utm_campaign=daily_blog_20260324&utm_content=daily_blog)
-- Android: [https://igorganapolsky.github.io/Random-Timer/download?platform=android&utm_source=github_pages&utm_medium=organic&utm_campaign=daily_blog_20260324&utm_content=daily_blog](https://igorganapolsky.github.io/Random-Timer/download?platform=android&utm_source=github_pages&utm_medium=organic&utm_campaign=daily_blog_20260324&utm_content=daily_blog)
+- iOS: [https://igorganapolsky.github.io/Random-Timer/download?platform=ios&utm_source=github_pages&utm_medium=organic&utm_campaign=daily_blog_20260825&utm_content=daily_blog](https://igorganapolsky.github.io/Random-Timer/download?platform=ios&utm_source=github_pages&utm_medium=organic&utm_campaign=daily_blog_20260825&utm_content=daily_blog)
+- Android: [https://igorganapolsky.github.io/Random-Timer/download?platform=android&utm_source=github_pages&utm_medium=organic&utm_campaign=daily_blog_20260825&utm_content=daily_blog](https://igorganapolsky.github.io/Random-Timer/download?platform=android&utm_source=github_pages&utm_medium=organic&utm_campaign=daily_blog_20260825&utm_content=daily_blog)
 
 ## Help us improve
-- Leave an iOS review: [https://apps.apple.com/us/app/random-tactical-timer/id6758355312?action=write-review](https://apps.apple.com/us/app/random-tactical-timer/id6758355312?action=write-review)
-- Leave an Android review: [https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer&reviewId=0](https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer&reviewId=0)
+- Leave an iOS review: []()
+- Leave an Android review: []()
 
 ## Diagram
-![PaperBanana technology flow](../diagrams/2026-03-24-mental-readiness-what-we-learned-building-random-tactical-timer.svg)
+![PaperBanana technology flow](../diagrams/2026-08-25-mental-readiness-what-we-learned-building-random-tactical-timer.svg)
