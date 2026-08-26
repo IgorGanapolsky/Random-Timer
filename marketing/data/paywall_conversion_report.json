@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-26T12:15:56+00:00",
+  "generated_at": "2026-08-26T18:43:58+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -181,8 +181,8 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1105,
-      "users": 50
+      "changes": 1126,
+      "users": 51
     },
     {
       "setting_name": "sound_type",
