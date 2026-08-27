@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-26T18:43:58+00:00",
+  "generated_at": "2026-08-27T01:57:19+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -171,8 +171,8 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2867,
-      "users": 64
+      "changes": 2871,
+      "users": 65
     },
     {
       "setting_name": "volume",
@@ -186,8 +186,8 @@
     },
     {
       "setting_name": "sound_type",
-      "changes": 145,
-      "users": 37
+      "changes": 148,
+      "users": 38
     },
     {
       "setting_name": "alarm_duration",
