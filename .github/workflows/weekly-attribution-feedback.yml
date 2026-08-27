@@ -1,8 +1,9 @@
 name: Weekly Attribution Feedback Loop
 
 on:
-  schedule:
-    - cron: '0 8 * * 0' # Every Sunday at 08:00 UTC (before Monday ASO rotation)
+  # Schedule removed 2026-08-27: 12 consecutive weekly runs produced PRs with
+  # byte-identical metrics to the 6-hourly wiki-sync refresh (0 of 12 merged,
+  # pure timestamp churn). The pipeline stays available on demand below.
   workflow_dispatch:
     inputs:
       days:
