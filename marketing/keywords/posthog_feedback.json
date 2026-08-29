@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-08-29T06:33:06+00:00",
-  "status": "degraded",
+  "generated_at": "2026-08-29T12:27:00+00:00",
+  "status": "ok",
   "keyword_installs": {},
   "data_quality": {
-    "is_stale": true,
-    "preserved_previous_metrics": true,
-    "last_attempt_generated_at": "2026-08-29T06:33:06+00:00",
-    "last_good_generated_at": "2026-08-29T00:48:25+00:00",
-    "reason": "http_504"
+    "is_stale": false,
+    "preserved_previous_metrics": false,
+    "last_attempt_generated_at": "2026-08-29T12:27:00+00:00",
+    "last_good_generated_at": "",
+    "reason": ""
   }
 }
