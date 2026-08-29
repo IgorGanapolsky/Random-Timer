@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-08-29T00:48:04+00:00
+Generated: 2026-08-29T06:30:28+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **74**
-- Offer Selects: **15**
+- Views: **78**
+- Offer Selects: **17**
 - Purchase Attempts: **2**
 - Purchase Successes: **1**
-- View -> Offer Select: **20.3%**
-- Select -> Purchase Attempt: **13.3%**
+- View -> Offer Select: **21.8%**
+- Select -> Purchase Attempt: **11.8%**
 - Attempt -> Purchase Success: **50.0%**
 
 ## Top Failure Reasons
@@ -29,7 +29,7 @@ Window (days): 30
 |----------|------------|---------|----------|-----------|-----------------|------------------|
 | android | pro_base | 5 | 1 | 1 | 20.0% | 100.0% |
 | ios | com.iganapolsky.randomtimer.pro | 0 | 1 | 0 | 0.0% | 0.0% |
-| android | elite_tactical | 9 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical | 11 | 0 | 0 | 0.0% | 0.0% |
 | android | elite_tactical_monthly | 1 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
@@ -43,8 +43,8 @@ Window (days): 30
 | unknown | 39 | 0 | 0 | 0.0% | 0.0% |
 | qualified_training_gate | 25 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 4 | 0 | 0 | 0.0% | 0.0% |
-| range_gate | 2 | 0 | 0 | 0.0% | 0.0% |
-| repeat_gate | 2 | 0 | 0 | 0.0% | 0.0% |
+| range_gate | 4 | 0 | 0 | 0.0% | 0.0% |
+| repeat_gate | 4 | 0 | 0 | 0.0% | 0.0% |
 | sound_arsenal_gate | 2 | 1 | 1 | 50.0% | 100.0% |
 | sound_gate | 0 | 1 | 0 | 0.0% | 0.0% |
 
@@ -55,12 +55,12 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2879 | 65 |
+| max_seconds | 3034 | 65 |
 | volume | 1905 | 25 |
-| min_seconds | 1136 | 52 |
-| sound_type | 153 | 40 |
-| alarm_duration | 130 | 54 |
-| repeat_enabled | 120 | 52 |
+| min_seconds | 1341 | 53 |
+| sound_type | 155 | 41 |
+| alarm_duration | 131 | 55 |
+| repeat_enabled | 122 | 52 |
 | voice_gender | 51 | 23 |
 | vibration_enabled | 39 | 29 |
 | unknown | 36 | 2 |
