@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-08-30T06:32:02+00:00
+Generated: 2026-08-30T12:27:22+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **77**
-- Offer Selects: **17**
+- Views: **79**
+- Offer Selects: **18**
 - Purchase Attempts: **2**
 - Purchase Successes: **1**
-- View -> Offer Select: **22.1%**
-- Select -> Purchase Attempt: **11.8%**
+- View -> Offer Select: **22.8%**
+- Select -> Purchase Attempt: **11.1%**
 - Attempt -> Purchase Success: **50.0%**
 
 ## Top Failure Reasons
@@ -29,7 +29,7 @@ Window (days): 30
 |----------|------------|---------|----------|-----------|-----------------|------------------|
 | android | pro_base | 5 | 1 | 1 | 20.0% | 100.0% |
 | ios | com.iganapolsky.randomtimer.pro | 0 | 1 | 0 | 0.0% | 0.0% |
-| android | elite_tactical | 11 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical | 12 | 0 | 0 | 0.0% | 0.0% |
 | android | elite_tactical_monthly | 1 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
@@ -41,7 +41,7 @@ Window (days): 30
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | unknown | 39 | 0 | 0 | 0.0% | 0.0% |
-| qualified_training_gate | 24 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 26 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 4 | 0 | 0 | 0.0% | 0.0% |
 | range_gate | 4 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 4 | 0 | 0 | 0.0% | 0.0% |
@@ -50,18 +50,18 @@ Window (days): 30
 
 ## Leaky Entry Points
 - `unknown` had **39** views and **0** purchase attempts.
-- `qualified_training_gate` had **24** views and **0** purchase attempts.
+- `qualified_training_gate` had **26** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2959 | 63 |
-| volume | 1905 | 25 |
-| min_seconds | 1322 | 52 |
+| max_seconds | 3141 | 63 |
+| volume | 1867 | 25 |
+| min_seconds | 1498 | 52 |
 | sound_type | 151 | 39 |
-| alarm_duration | 129 | 53 |
+| alarm_duration | 133 | 53 |
 | repeat_enabled | 121 | 51 |
-| voice_gender | 51 | 23 |
+| voice_gender | 54 | 24 |
 | vibration_enabled | 39 | 29 |
 | unknown | 36 | 2 |
 | voice_callouts_enabled | 8 | 1 |
