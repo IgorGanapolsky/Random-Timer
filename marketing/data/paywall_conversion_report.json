@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-30T18:22:15+00:00",
+  "generated_at": "2026-08-31T00:59:50+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 79,
+    "views": 77,
     "offer_selects": 18,
     "purchase_attempts": 2,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.2278,
+    "view_to_select_rate": 0.2338,
     "select_to_attempt_rate": 0.1111,
     "attempt_to_success_rate": 0.5
   },
@@ -95,7 +95,7 @@
   "entry_points": [
     {
       "entry_point": "unknown",
-      "views": 39,
+      "views": 38,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -103,7 +103,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 26,
+      "views": 25,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -153,7 +153,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "unknown",
-      "views": 39,
+      "views": 38,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -161,7 +161,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 26,
+      "views": 25,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -171,7 +171,7 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 3124,
+      "changes": 3070,
       "users": 62
     },
     {
@@ -181,7 +181,7 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1490,
+      "changes": 1467,
       "users": 51
     },
     {
@@ -196,8 +196,8 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 118,
-      "users": 50
+      "changes": 117,
+      "users": 49
     },
     {
       "setting_name": "voice_gender",
