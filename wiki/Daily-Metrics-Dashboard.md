@@ -12,8 +12,8 @@
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 3 |
-| WAU | 24 |
+| DAU | 4 |
+| WAU | 22 |
 | MAU | 105 |
 <!-- DOWNLOADS_END -->
 
@@ -38,12 +38,12 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-08-31T18:27:57+00:00
+**Generated:** 2026-09-01T06:38:27+00:00
 
 ## Onboarding Funnel
-- First Open: **89**
-- First Timer Configured: **65** (73.0% of opens)
-- First Timer Completed: **44** (49.4% of opens)
+- First Open: **90**
+- First Timer Configured: **67** (74.4% of opens)
+- First Timer Completed: **45** (50.0% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -77,11 +77,9 @@
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 89 | — |
-| First Timer Configured | 65 | 73.0% of opens |
-| First Timer Completed | 44 | 49.4% of opens |
-
-_Data quality: stale; showing last good metrics from `2026-08-31T18:27:57+00:00`; latest read issue: `request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=30)`._
+| First Open | 90 | — |
+| First Timer Configured | 67 | 74.4% of opens |
+| First Timer Completed | 45 | 50.0% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -157,18 +155,18 @@ _Data quality: stale; showing last good metrics from `2026-08-31T18:27:57+00:00`
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-08-28" , "2026-08-29" , "2026-08-29" , "2026-08-29" , "2026-08-29" , "2026-08-30" , "2026-08-30" , "2026-08-30" , "2026-08-30" , "2026-08-31" , "2026-08-31" , "2026-08-31" , "2026-08-31" , "2026-09-01"]
+    x-axis ["2026-08-29" , "2026-08-29" , "2026-08-29" , "2026-08-29" , "2026-08-30" , "2026-08-30" , "2026-08-30" , "2026-08-30" , "2026-08-31" , "2026-08-31" , "2026-08-31" , "2026-08-31" , "2026-09-01" , "2026-09-01"]
     y-axis "Downloads"
-    line [60 , 60 , 60 , 60 , 60 , 60 , 59 , 58 , 57 , 55 , 54 , 54 , 54 , 55]
-    line [29 , 29 , 30 , 30 , 30 , 30 , 30 , 31 , 31 , 31 , 31 , 31 , 31 , 31]
+    line [60 , 60 , 60 , 60 , 60 , 59 , 58 , 57 , 55 , 54 , 54 , 54 , 55 , 55]
+    line [29 , 30 , 30 , 30 , 30 , 30 , 31 , 31 , 31 , 31 , 31 , 31 , 31 , 31]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-08-28" , "2026-08-29" , "2026-08-29" , "2026-08-29" , "2026-08-29" , "2026-08-30" , "2026-08-30" , "2026-08-30" , "2026-08-30" , "2026-08-31" , "2026-08-31" , "2026-08-31" , "2026-08-31" , "2026-09-01"]
+    x-axis ["2026-08-29" , "2026-08-29" , "2026-08-29" , "2026-08-29" , "2026-08-30" , "2026-08-30" , "2026-08-30" , "2026-08-30" , "2026-08-31" , "2026-08-31" , "2026-08-31" , "2026-08-31" , "2026-09-01" , "2026-09-01"]
     y-axis "Users"
-    line [12 , 12 , 12 , 12 , 12 , 11 , 11 , 11 , 10 , 10 , 10 , 10 , 8 , 8]
+    line [12 , 12 , 12 , 12 , 11 , 11 , 11 , 10 , 10 , 10 , 10 , 8 , 8 , 8]
 ```
 
 ```mermaid
@@ -196,4 +194,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-09-01T01:15:17+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-09-01T06:38:29+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
