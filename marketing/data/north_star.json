@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-02T12:31:51+00:00",
+  "generated_at": "2026-09-02T18:26:26+00:00",
   "source": "posthog",
   "status": "ok",
   "status_reason": "",
@@ -48,7 +48,7 @@
   "data_quality": {
     "is_stale": false,
     "preserved_previous_metrics": false,
-    "last_attempt_generated_at": "2026-09-02T12:31:51+00:00",
+    "last_attempt_generated_at": "2026-09-02T18:26:26+00:00",
     "last_good_generated_at": "",
     "reason": ""
   },
@@ -56,15 +56,6 @@
     "errors": []
   },
   "snapshots": [
-    {
-      "timestamp": "2026-08-03T18:42:17+00:00",
-      "wqtu_7d": 14,
-      "timer_completed_7d": 262,
-      "completed_users_7d": 17,
-      "paid_distinct_users_30d": 0,
-      "active_campaign_count": 0,
-      "guardrail_violated": false
-    },
     {
       "timestamp": "2026-08-04T00:51:19+00:00",
       "wqtu_7d": 14,
@@ -1129,6 +1120,15 @@
     },
     {
       "timestamp": "2026-09-02T12:31:51+00:00",
+      "wqtu_7d": 9,
+      "timer_completed_7d": 235,
+      "completed_users_7d": 13,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-09-02T18:26:26+00:00",
       "wqtu_7d": 9,
       "timer_completed_7d": 235,
       "completed_users_7d": 13,
