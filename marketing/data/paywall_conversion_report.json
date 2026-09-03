@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-09-02T18:26:38+00:00",
+  "generated_at": "2026-09-03T00:56:28+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 71,
-    "offer_selects": 18,
+    "views": 73,
+    "offer_selects": 19,
     "purchase_attempts": 2,
     "purchase_successes": 1,
-    "view_to_select_rate": 0.2535,
-    "select_to_attempt_rate": 0.1111,
+    "view_to_select_rate": 0.2603,
+    "select_to_attempt_rate": 0.1053,
     "attempt_to_success_rate": 0.5
   },
   "top_failure_reasons": [
@@ -60,7 +60,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "offer_selects": 12,
+      "offer_selects": 13,
       "attempts": 0,
       "successes": 0,
       "select_to_attempt_rate": 0.0,
@@ -110,15 +110,15 @@
       "attempt_to_success_rate": 0.0
     },
     {
-      "entry_point": "voice_gate",
-      "views": 4,
+      "entry_point": "range_gate",
+      "views": 6,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
       "attempt_to_success_rate": 0.0
     },
     {
-      "entry_point": "range_gate",
+      "entry_point": "voice_gate",
       "views": 4,
       "attempts": 0,
       "successes": 0,
@@ -171,8 +171,8 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 3070,
-      "users": 59
+      "changes": 3163,
+      "users": 60
     },
     {
       "setting_name": "volume",
@@ -181,8 +181,8 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1485,
-      "users": 50
+      "changes": 1536,
+      "users": 51
     },
     {
       "setting_name": "sound_type",
