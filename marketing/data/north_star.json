@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-05T06:30:23+00:00",
+  "generated_at": "2026-09-05T12:25:58+00:00",
   "source": "posthog",
   "status": "ok",
   "status_reason": "",
@@ -10,9 +10,9 @@
     "key": "WQTU",
     "definition": "distinct users with >=3 timer_completed events in trailing 7 days",
     "wqtu_7d": 6,
-    "timer_completed_7d": 118,
-    "completed_users_7d": 9,
-    "sessions_per_completed_user_7d": 13.11,
+    "timer_completed_7d": 121,
+    "completed_users_7d": 10,
+    "sessions_per_completed_user_7d": 12.1,
     "targets": {
       "checkpoint_2026_03_31": 8,
       "quarter_2026_06_30": 25
@@ -48,7 +48,7 @@
   "data_quality": {
     "is_stale": false,
     "preserved_previous_metrics": false,
-    "last_attempt_generated_at": "2026-09-05T06:30:23+00:00",
+    "last_attempt_generated_at": "2026-09-05T12:25:58+00:00",
     "last_good_generated_at": "",
     "reason": ""
   },
@@ -56,15 +56,6 @@
     "errors": []
   },
   "snapshots": [
-    {
-      "timestamp": "2026-08-06T12:46:41+00:00",
-      "wqtu_7d": 12,
-      "timer_completed_7d": 218,
-      "completed_users_7d": 17,
-      "paid_distinct_users_30d": 0,
-      "active_campaign_count": 0,
-      "guardrail_violated": false
-    },
     {
       "timestamp": "2026-08-06T22:33:28+00:00",
       "wqtu_7d": 12,
@@ -1132,6 +1123,15 @@
       "wqtu_7d": 6,
       "timer_completed_7d": 118,
       "completed_users_7d": 9,
+      "paid_distinct_users_30d": 0,
+      "active_campaign_count": 0,
+      "guardrail_violated": false
+    },
+    {
+      "timestamp": "2026-09-05T12:25:58+00:00",
+      "wqtu_7d": 6,
+      "timer_completed_7d": 121,
+      "completed_users_7d": 10,
       "paid_distinct_users_30d": 0,
       "active_campaign_count": 0,
       "guardrail_violated": false
