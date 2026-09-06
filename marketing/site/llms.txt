@@ -6,6 +6,8 @@ Preferred source format for agents: markdown URLs listed below.
 Base URL: https://igorganapolsky.github.io/Random-Timer/marketing/site
 
 Key resources:
+- https://igorganapolsky.github.io/Random-Timer/marketing/site/developers.md
+- https://igorganapolsky.github.io/Random-Timer/marketing/site/developer_capabilities.json
 - https://igorganapolsky.github.io/Random-Timer/marketing/site/index.html
 - https://igorganapolsky.github.io/Random-Timer/marketing/site/agents.md
 - https://igorganapolsky.github.io/Random-Timer/marketing/site/amp.json
