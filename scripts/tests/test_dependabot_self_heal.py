@@ -33,6 +33,9 @@ def test_dependabot_automerge_workflow_targets_bot_prs() -> None:
     assert "gh pr merge" in text
     assert "--auto" in text
     assert "pull_request_target" in text or "pull_request:" in text
+    # Concurrent labeled/opened events race; treat in-progress merge as success.
+    assert "Merge already in progress" in text
+    assert "concurrency:" in text
 
 
 def test_dependabot_self_heal_workflow_is_scheduled() -> None:
