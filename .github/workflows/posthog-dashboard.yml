@@ -21,10 +21,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
@@ -44,14 +44,14 @@ jobs:
             --json-stdout > posthog_dashboard_output.json
 
       - name: Upload dashboard JSON
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7
         with:
           name: posthog-dashboard
           path: posthog_dashboard_output.json
           retention-days: 1
 
       - name: Upload marketing data
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7
         with:
           name: posthog-dashboard-marketing
           path: marketing/data/posthog_dashboard.json

@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Validate Projects v2 token access
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           PROJECTS_V2_OWNER: IgorGanapolsky
           PROJECTS_V2_NUMBER: 1

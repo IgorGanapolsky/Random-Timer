@@ -25,9 +25,9 @@ jobs:
       expected_version: ${{ steps.gate.outputs.expected_version }}
       public_status: ${{ steps.gate.outputs.public_status }}
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v6.2.0
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 

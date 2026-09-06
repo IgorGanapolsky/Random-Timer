@@ -36,7 +36,7 @@ jobs:
     name: Nuke + regenerate Apple Distribution cert
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
 
@@ -60,7 +60,7 @@ jobs:
           done
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
           ruby-version: "3.3"
           bundler-cache: true

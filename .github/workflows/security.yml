@@ -30,13 +30,13 @@ jobs:
       matrix:
         scan-type: [dependencies, code, mobile]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
         if: matrix.scan-type == 'dependencies'
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: "npm"
@@ -72,14 +72,14 @@ jobs:
       # Code Security Scans
       - name: Run CodeQL Analysis
         if: matrix.scan-type == 'code'
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: javascript
           queries: security-extended,security-and-quality
 
       - name: Perform CodeQL Analysis
         if: matrix.scan-type == 'code'
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: "/language:javascript"
 
@@ -123,7 +123,7 @@ jobs:
       - name: Mobile Security Framework (MobSF)
         if: matrix.scan-type == 'mobile'
         continue-on-error: true
-        uses: MobSF/mobsfscan@ec2927a8cfab6626a67f26b223be3aba52a34b70 # main
+        uses: MobSF/mobsfscan@2659f2ac6d185f0c60ce2eb754f5f48b683f73fb # main
         with:
           args: ". --json --output mobile-security-results.json"
 
@@ -155,7 +155,7 @@ jobs:
     steps:
       - name: Notify Security Issues
         if: always() && env.SLACK_WEBHOOK_URL != ''
-        uses: 8398a7/action-slack@047b09b154480ed39076984b64f324fff010d703 # v3.9.3
+        uses: 8398a7/action-slack@77eaa4f1c608a7d68b38af4e3f739dcd8cba273e # v3.19.0
         with:
           status: ${{ job.status }}
           fields: repo,message,commit,author,action,eventName,ref,workflow

@@ -95,12 +95,12 @@ jobs:
       issues: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: ${{ fromJSON(inputs.fetch_depth) }}
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ inputs.python_version }}
 
@@ -165,7 +165,7 @@ jobs:
 
       - name: Publish wiki pages
         if: inputs.publish_wiki
-        uses: Andrew-Chen-Wang/github-wiki-action@50650fccf3a10f741995523cf9708c53cec8912a # v4
+        uses: Andrew-Chen-Wang/github-wiki-action@1bbb4280446f9630e8e21a18012cbacf3b0f992e # v5.0.6
         with:
           strategy: init
           path: ${{ inputs.wiki_path }}
@@ -193,7 +193,7 @@ jobs:
 
       - name: Create issue from report
         if: inputs.issue_title != '' && inputs.issue_content_path != ''
-        uses: peter-evans/create-issue-from-file@433e51abf769039ee20ba1293a088ca19d573b7f # v4
+        uses: peter-evans/create-issue-from-file@fca9117c27cdc29c6c4db3b86c48e4115a786710 # v6.0.0
         with:
           title: ${{ inputs.issue_title }}
           content-filepath: ${{ inputs.issue_content_path }}
