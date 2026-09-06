@@ -41,12 +41,12 @@ val ciVersionCode = providers.gradleProperty("ciVersionCode").orNull?.toIntOrNul
 
 android {
     namespace = "com.iganapolsky.randomtimer"
-    compileSdk = ciCompileSdk ?: 35
+    compileSdk = ciCompileSdk ?: 36
 
     defaultConfig {
         applicationId = "com.iganapolsky.randomtimer"
         minSdk = 26
-        targetSdk = ciTargetSdk ?: 35
+        targetSdk = ciTargetSdk ?: 36
         versionCode = ciVersionCode ?: 1778679360
         versionName = "1.3.58"
 
@@ -120,6 +120,20 @@ android {
         unitTests {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
+            // Robolectric 4.16 + SDK 36 requires JDK 21 and --add-opens (robolectric.org/getting-started).
+            all {
+                it.jvmArgs(
+                    "--add-opens=java.base/java.lang=ALL-UNNAMED",
+                    "--add-opens=java.base/java.util=ALL-UNNAMED",
+                    "--add-opens=java.base/java.io=ALL-UNNAMED",
+                    "--add-opens=java.base/java.net=ALL-UNNAMED",
+                    "--add-opens=java.base/java.security=ALL-UNNAMED",
+                    "--add-opens=java.base/java.text=ALL-UNNAMED",
+                    "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED",
+                    "--add-opens=java.desktop/java.awt.font=ALL-UNNAMED",
+                    "--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+                )
+            }
         }
     }
     lint {
