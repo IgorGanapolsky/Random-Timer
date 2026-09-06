@@ -16,7 +16,7 @@
     "verify:strict": "npm run lint:generated && npm run test:local:strict"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.1",
-    "typescript": "^5.9.3"
+    "@playwright/test": "^1.62.1",
+    "typescript": "^7.0.2"
   }
 }
