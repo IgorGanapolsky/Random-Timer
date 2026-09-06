@@ -17,10 +17,14 @@ CONTROLLED_PROVIDER_STATUSES = {
     "quota_exceeded",
     "payment_issue",
     "insufficient_credits",
+    "payment_required",
+    "paid_plan_required",
 }
 CONTROLLED_PROVIDER_MARKERS = (
     "no remaining credits",
     "failed or incomplete payment",
+    "paid plan required",
+    "free users cannot use library voices",
 )
 # ElevenLabs premade drill-sergeant male (Clyde). Do not allow DGzg6RaUqxGRTHSBjfgF (Angst, San Francisco).
 SUPPORTED_VOICE_ENDPOINTS = {
