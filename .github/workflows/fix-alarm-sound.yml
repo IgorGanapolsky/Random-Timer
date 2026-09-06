@@ -4,8 +4,8 @@ jobs:
   fix:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6.2.0
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
       - name: Generate alarm variants

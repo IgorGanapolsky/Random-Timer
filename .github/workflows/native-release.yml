@@ -73,7 +73,7 @@ jobs:
   release-intent-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7
 
       - name: Enforce release-branch intent (avoid accidental Android skip)
         env:
@@ -88,7 +88,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7
 
       - name: Require internal signoff statuses (unless waived)
         env:
@@ -141,7 +141,7 @@ jobs:
     runs-on: macos-26
     environment: production
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7
 
       - name: Write GoogleService-Info.plist from secret (Firebase)
         env:
@@ -178,12 +178,12 @@ jobs:
         run: bash scripts/shell/preflight-release.sh --platform ios --layer 1
 
       - name: Setup Python
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
           ruby-version: '3.2'
           bundler-cache: true
@@ -260,7 +260,7 @@ jobs:
         working-directory: native-ios
 
       - name: Upload IPA artifact
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: ios-ipa
@@ -278,9 +278,9 @@ jobs:
       contents: read
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -348,7 +348,7 @@ jobs:
       precondition_blocked: ${{ steps.play_result.outputs.precondition_blocked }}
       version_code: ${{ steps.play_result.outputs.version_code }}
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7
 
       - name: Fail fast on required Android release secrets
         env:
@@ -370,18 +370,18 @@ jobs:
         run: bash scripts/shell/preflight-release.sh --platform android --layer 1
 
       - name: Setup Python
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
       - name: Setup Java
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
 
       - name: Create google-services.json
         env:
@@ -512,7 +512,7 @@ jobs:
           echo "play_result requested=$REQUESTED_TRACK effective=$EFFECTIVE_TRACK fallback_used=$FALLBACK_USED precondition_blocked=$PRECONDITION_BLOCKED version_code=$VERSION_CODE"
 
       - name: Upload Play upload result (if any)
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: play-upload-result
@@ -521,7 +521,7 @@ jobs:
           retention-days: 1
 
       - name: Upload Play upload error (if any)
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: play-upload-error
@@ -530,7 +530,7 @@ jobs:
           retention-days: 1
 
       - name: Upload AAB artifact
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: android-aab
@@ -553,10 +553,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7
 
       - name: Setup Python
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
@@ -695,7 +695,7 @@ jobs:
 
       - name: Upload Play storefront verification report
         if: always() && needs.android-release.result == 'success' && steps.android_track.outputs.track == 'production'
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7
         with:
           name: play-public-listing-report
           path: /tmp/play-public-listing.txt
@@ -715,7 +715,7 @@ jobs:
     env:
       PYTHONPATH: ${{ github.workspace }}
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7
 
       - name: Gate submit-for-review (no secrets)
         id: gate
@@ -740,7 +740,7 @@ jobs:
 
       - name: Setup Python
         if: steps.gate.outputs.enabled == 'true'
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
@@ -841,7 +841,7 @@ jobs:
 
       - name: Setup Ruby
         if: steps.gate.outputs.enabled == 'true'
-        uses: ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
           ruby-version: '3.2'
           bundler-cache: true
@@ -938,7 +938,7 @@ jobs:
             --enforce
 
       - name: Upload readiness report
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7
         if: ${{ steps.gate.outputs.enabled == 'true' && always() }}
         with:
           name: asc-ready-report
@@ -976,7 +976,7 @@ jobs:
             --require-appstore-submission
 
       - name: Upload version resolution report
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7
         if: ${{ steps.gate.outputs.enabled == 'true' && always() }}
         with:
           name: asc-version-resolution
@@ -997,7 +997,7 @@ jobs:
     outputs:
       tag: ${{ steps.version.outputs.tag }}
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -1076,7 +1076,7 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7
         with:
           ref: develop
           fetch-depth: 0
@@ -1088,7 +1088,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Setup Python
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 

@@ -25,12 +25,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
@@ -102,7 +102,7 @@ jobs:
           git push origin HEAD:develop
 
       - name: Publish wiki pages
-        uses: Andrew-Chen-Wang/github-wiki-action@50650fccf3a10f741995523cf9708c53cec8912a # v4
+        uses: Andrew-Chen-Wang/github-wiki-action@1bbb4280446f9630e8e21a18012cbacf3b0f992e # v5.0.6
         with:
           strategy: init
           path: wiki/

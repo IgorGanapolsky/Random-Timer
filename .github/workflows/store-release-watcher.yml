@@ -27,9 +27,9 @@ jobs:
       ANDROID_PACKAGE: com.iganapolsky.randomtimer
       ISSUE_TITLE_PREFIX: 'Release watch: v'
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v6.2.0
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 

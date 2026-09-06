@@ -190,7 +190,7 @@ jobs:
     outputs:
       uploaded: ${{ steps.ios_lineage.outputs.uploadable }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.gate.outputs.ref }}
 
@@ -234,7 +234,7 @@ jobs:
         run: bash scripts/shell/preflight-release.sh --platform ios --layer 1
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
@@ -302,7 +302,7 @@ jobs:
 
       - name: Setup Ruby
         if: steps.ios_lineage.outputs.uploadable == 'true'
-        uses: ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
           ruby-version: "3.3"
           bundler-cache: true
@@ -396,7 +396,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: internal-play
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.gate.outputs.ref }}
 
@@ -427,13 +427,13 @@ jobs:
             --require-ack-env PLAY_FGS_DECLARATION_ACK
 
       - name: Setup Java
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           distribution: "temurin"
           java-version: "17"
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
@@ -441,7 +441,7 @@ jobs:
         run: python -m pip install google-auth requests
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
           ruby-version: "3.3"
           bundler-cache: true
@@ -595,7 +595,7 @@ jobs:
           echo "Reason: Play Protect classified a recent Firebase-distributed APK as harmful during tester install."
           echo "Use target=all_safe or target=android_play unless Firebase APK delivery is required for debugging."
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.gate.outputs.ref }}
 
@@ -663,13 +663,13 @@ jobs:
         run: bash scripts/shell/preflight-release.sh --platform android --layer 1
 
       - name: Setup Java
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           distribution: "temurin"
           java-version: "17"
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 

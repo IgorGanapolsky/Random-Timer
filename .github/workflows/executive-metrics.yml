@@ -21,9 +21,9 @@ jobs:
   snapshot:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v6.2.0
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
@@ -92,7 +92,7 @@ jobs:
           )
           PY
 
-      - uses: actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: executive-metrics

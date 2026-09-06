@@ -29,13 +29,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
@@ -62,7 +62,7 @@ jobs:
 
       - name: Create PR with feedback data
         if: inputs.dry_run != true
-        uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c # v6
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ github.token }}
           commit-message: "chore(analytics): weekly attribution feedback from PostHog"
