@@ -109,6 +109,8 @@ Details: iOS `native-ios/` (`xcodebuild`), Android `native-android/` (`./gradlew
 
 | Doc | Purpose |
 |-----|---------|
+| [`docs/DEVELOPERS.md`](docs/DEVELOPERS.md) | **Start here** — unified developer journey + capabilities |
+| [`docs/developer_capabilities.json`](docs/developer_capabilities.json) | Machine-readable capability catalog (Pages mirror under `marketing/site/`) |
 | [`docs/REPO_PROFILE.md`](docs/REPO_PROFILE.md) | **GitHub About** text, topics, links — keep in sync with this README |
 | [`docs/pr-review-bots.md`](docs/pr-review-bots.md) | PR review / bot matrix |
 | [`docs/north-star-baseline.md`](docs/north-star-baseline.md) | Dated WQTU snapshot (verify live metrics in PostHog) |

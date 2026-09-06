@@ -4,6 +4,10 @@
 
 All AI replies, code comments, commit messages, and documentation use **English**.
 
+## Developer hub (start here for build/ship)
+
+Unified journey + capability catalog: [`docs/DEVELOPERS.md`](docs/DEVELOPERS.md) and [`docs/developer_capabilities.json`](docs/developer_capabilities.json). Prefer that hub over scavenging overlapping guides. Audit with `python3 scripts/developers_docs_audit.py --repo-root .`.
+
 ## Communication Style
 
 **Default to concise, action-first replies.** This is a standing rule.

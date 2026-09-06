@@ -11,4 +11,9 @@
   <url><loc>https://igorganapolsky.github.io/Random-Timer/marketing/site/md/2026-03-11-how-we-implemented-agentic-merchant-protocol-amp-for-ai-discovery.md</loc></url>
   <url><loc>https://igorganapolsky.github.io/Random-Timer/marketing/site/posts/2026-02-19-the-inspiration-behind-random-tactical-timer.html</loc></url>
   <url><loc>https://igorganapolsky.github.io/Random-Timer/marketing/site/md/2026-02-19-the-inspiration-behind-random-tactical-timer.md</loc></url>
+  <url>
+    <loc>https://igorganapolsky.github.io/Random-Timer/marketing/site/developers.md</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
