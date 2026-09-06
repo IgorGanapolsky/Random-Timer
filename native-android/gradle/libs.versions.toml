@@ -28,7 +28,7 @@ crashlyticsPlugin = "3.0.2"
 firebasePerfPlugin = "2.0.2"
 media = "1.7.0"
 uiautomator = "2.3.0"
-robolectric = "4.14.1"
+robolectric = "4.16"
 workManager = "2.10.0"
 playServicesAds = "24.3.0"
 
