@@ -1,0 +1,68 @@
+name: Dependabot Automerge
+
+# Self-heal path: Dependabot (or agent heal PRs labeled auto-merge) land without CEO clicks.
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  enable-automerge:
+    if: |
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.base.ref == 'develop' &&
+      (
+        github.event.pull_request.user.login == 'dependabot[bot]' ||
+        contains(join(github.event.pull_request.labels.*.name, ','), 'auto-merge') ||
+        contains(join(github.event.pull_request.labels.*.name, ','), 'dependencies')
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Approve dependency PR
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROJECT_PAT: ${{ secrets.PROJECT_PAT }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          # Bot PRs often need a non-author approval for branch protection.
+          TOKEN="${PROJECT_PAT:-$GH_TOKEN}"
+          GH_TOKEN="$TOKEN" gh pr review "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --approve \
+            --body "Auto-approved: Dependabot/security dependency update (self-heal)." || true
+
+      - name: Enable squash auto-merge
+        env:
+          PROJECT_PAT: ${{ secrets.PROJECT_PAT }}
+          DEFAULT_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          enable_automerge() {
+            local label="$1"
+            local token="$2"
+            if [[ -z "$token" ]]; then
+              echo "Skipping ${label}: token missing"
+              return 1
+            fi
+            echo "Attempting auto-merge with ${label}"
+            GH_TOKEN="$token" gh pr merge "$PR_NUMBER" \
+              --repo "$GITHUB_REPOSITORY" \
+              --squash \
+              --auto \
+              --delete-branch
+          }
+
+          if enable_automerge "GITHUB_TOKEN" "$DEFAULT_TOKEN"; then
+            exit 0
+          fi
+          if enable_automerge "PROJECT_PAT fallback" "${PROJECT_PAT:-}"; then
+            exit 0
+          fi
+          echo "Unable to enable Dependabot auto-merge" >&2
+          exit 1

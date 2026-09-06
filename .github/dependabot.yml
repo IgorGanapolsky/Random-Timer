@@ -1,0 +1,90 @@
+# Dependabot — keep Python/JS security floors green without CEO babysitting.
+# Paired with:
+#   .github/workflows/dependabot-automerge.yml  (auto-merge bot PRs when CI green)
+#   .github/workflows/dependabot-self-heal.yml  (daily agent heal if alerts linger)
+version: 2
+updates:
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "security"
+      - "auto-merge"
+    groups:
+      uv-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      uv-routine:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "fix(deps)"
+      include: "scope"
+
+  - package-ecosystem: "npm"
+    directory: "/native-android"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:15"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "auto-merge"
+    groups:
+      android-npm:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  - package-ecosystem: "npm"
+    directory: "/tests/playwright"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:30"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 2
+    labels:
+      - "dependencies"
+      - "auto-merge"
+    groups:
+      playwright-npm:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "10:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "auto-merge"
+    groups:
+      actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"

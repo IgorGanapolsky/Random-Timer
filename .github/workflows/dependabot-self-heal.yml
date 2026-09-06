@@ -1,0 +1,103 @@
+name: Dependabot Self-Heal
+
+# Daily agent loop: if Dependabot alerts linger, raise floors + open a PR.
+on:
+  schedule:
+    - cron: "15 13 * * *" # 09:15 America/New_York roughly (UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  security-events: read
+
+concurrency:
+  group: dependabot-self-heal
+  cancel-in-progress: true
+
+jobs:
+  heal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Plan from live Dependabot alerts
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/dependabot_self_heal.py --plan --repo "$GITHUB_REPOSITORY" \
+            | tee /tmp/dependabot-plan.json
+          OPEN=$(python3 - <<'PY'
+          import json
+          data=json.load(open("/tmp/dependabot-plan.json"))
+          print(data["summary"]["open_count"])
+          PY
+          )
+          echo "open_count=${OPEN}" >> "$GITHUB_OUTPUT"
+          if [[ "$OPEN" == "0" ]]; then
+            echo "No open Dependabot alerts."
+          fi
+
+      - name: Apply upgrade plan
+        if: steps.plan.outputs.open_count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/dependabot_self_heal.py --apply --repo "$GITHUB_REPOSITORY"
+
+      - name: Open self-heal PR when tree dirty
+        if: steps.plan.outputs.open_count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROJECT_PAT: ${{ secrets.PROJECT_PAT }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "No file changes after apply (alerts may need GitHub re-scan)."
+            exit 0
+          fi
+          export GH_TOKEN="${PROJECT_PAT:-$GH_TOKEN}"
+          BRANCH="fix/dependabot-self-heal-$(date -u +%Y%m%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add pyproject.toml uv.lock
+          git commit -m "$(cat <<'EOF'
+          fix(deps): self-heal Dependabot security floors
+
+          Raised Python dependency floors from live Dependabot alerts and refreshed uv.lock.
+          EOF
+          )"
+          git push -u origin "$BRANCH" --force-with-lease
+          EXISTING=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number // empty')
+          if [[ -n "$EXISTING" ]]; then
+            echo "PR #${EXISTING} already open"
+            exit 0
+          fi
+          gh pr create \
+            --base develop \
+            --head "$BRANCH" \
+            --title "fix(deps): self-heal Dependabot security floors" \
+            --label dependencies \
+            --label security \
+            --label auto-merge \
+            --body "$(cat <<'EOF'
+          ## Summary
+          - Autonomous Dependabot self-heal from live GitHub security alerts
+          - Updates `pyproject.toml` floors + `uv.lock` via `scripts/dependabot_self_heal.py`
+
+          ## Test plan
+          - [ ] Python Script Tests pass
+          - [ ] Dependabot open-alert count drops after merge + GitHub re-scan
+          EOF
+          )"
