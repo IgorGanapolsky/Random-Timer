@@ -1,0 +1,121 @@
+{
+  "brand": "Random Tactical Timer",
+  "measured_at": "2026-09-06T18:51:53Z",
+  "source_article": "https://www.searchenginejournal.com/measure-brand-ai-visibility-hubspot-spa/588040/",
+  "budget_note": "HubSpot AEO is $50/mo after 28-day trial — exceeds $20/mo operating budget. This artifact implements the free spreadsheet audit method as code + owned-site fixes.",
+  "north_star_context": {
+    "wqtu_7d": 5,
+    "ai_referrer_events_30d": 0,
+    "note": "PostHog shows no chatgpt/perplexity/gemini referrers in trailing 30d. AEO is discovery hygiene, not the current revenue bottleneck (Play update gates + paywall)."
+  },
+  "commercial_prompts": [
+    "What is the best random interval timer app for MMA reaction training?",
+    "Best reaction timer app for BJJ that fires at unpredictable times?",
+    "What app should coaches use for random cue sparring drills?",
+    "Random interval timer vs tabata timer for combat sports?",
+    "Best HIIT timer with truly random rest periods for boxing?",
+    "Random Tactical Timer vs SmartFight Timer for combat sports",
+    "Random Tactical Timer vs PB Intervals for martial arts reaction drills"
+  ],
+  "competitors_observed": [
+    "SmartFight Timer",
+    "PB Intervals",
+    "Boxing Timer Pro",
+    "BJJ Reaction Timer",
+    "FIGHTFLOW"
+  ],
+  "source_mix_hypothesis": [
+    {"type": "own_website", "domains": ["igorganapolsky.github.io", "github.com/IgorGanapolsky/Random-Timer"]},
+    {"type": "app_stores", "domains": ["apps.apple.com", "play.google.com"]},
+    {"type": "third_party_roundups", "domains": ["pbintervals.app", "smartfighttimer.com"], "note": "Competitor sites still dominate raw web SERP mix; Perplexity cites Play/App Store listings for our brand"}
+  ],
+  "engines": {
+    "web_search_proxy_exa": [
+      {
+        "prompt": "best random interval timer for MMA reaction training app",
+        "answer_text": "Top results: GitHub Random-Timer repo, PB Intervals site, SmartFight Timer site. Random Tactical Timer appears via owned GitHub/Pages, not as a third-party recommendation.",
+        "ordered_brands": ["PB Intervals", "SmartFight Timer", "Random Tactical Timer"],
+        "cited_domains": [
+          "github.com",
+          "pbintervals.app",
+          "smartfighttimer.com"
+        ],
+        "method": "exa_web_search_2026-09-06",
+        "note": "Proxy for citation source mix only — not a live ChatGPT/Perplexity answer."
+      }
+    ],
+    "perplexity_incognito_browseros": [
+      {
+        "prompt": "best MMA reaction timer app for combat sports training 2026",
+        "answer_text": "For a reaction-focused MMA/combat-sports timer, I’d choose Random Tactical Timer. Best pure timer: Random Tactical Timer. Bottom line: Pick Random Tactical Timer for the closest match to a dedicated MMA reaction-timer concept. Alternatives: Boxing Timer Pro, SPARRING PRO, FightSteady, A-Champs.",
+        "ordered_brands": ["Random Tactical Timer", "Boxing Timer Pro", "SPARRING PRO", "FightSteady", "A-Champs"],
+        "cited_domains": ["play.google.com", "apps.apple.com"],
+        "method": "browseros_perplexity_incognito_2026-09-06",
+        "evidence_url": "https://www.perplexity.ai/search/57e9718b-00e6-4c6d-959e-dc63d828b6b6",
+        "recommended": true
+      },
+      {
+        "prompt": "What is the best random interval timer app for MMA reaction training?",
+        "answer_text": "For MMA reaction training specifically, the strongest fit appears to be Random Tactical Timer. Bottom line: Choose Random Tactical Timer if you want one app primarily for MMA reaction drills. Alternatives: Burst, PB Intervals, Rounds & Commands, Boxing Timer Pro.",
+        "ordered_brands": ["Random Tactical Timer", "Burst", "PB Intervals", "Rounds & Commands", "Boxing Timer Pro"],
+        "cited_domains": ["play.google.com", "apps.apple.com", "pbintervals.app"],
+        "method": "browseros_perplexity_incognito_2026-09-06",
+        "evidence_url": "https://www.perplexity.ai/search/7883632d-8e2a-43b4-97e8-7f5647e22e31",
+        "recommended": true
+      },
+      {
+        "prompt": "Best reaction timer app for BJJ that fires at unpredictable times?",
+        "answer_text": "For BJJ specifically, I’d pick BJJ Reaction Timer for randomized commands. Best pure unpredictable go cue: Random Tactical Timer. Best iOS+Android alternative: PB Intervals. iPhone recommendation: try Random Tactical Timer first for BJJ reaction work.",
+        "ordered_brands": ["BJJ Reaction Timer", "Random Tactical Timer", "PB Intervals", "Boxing Round Timer Pro"],
+        "cited_domains": ["apps.apple.com", "bjjtimer.app", "pbintervals.app", "play.google.com"],
+        "method": "browseros_perplexity_incognito_2026-09-06",
+        "evidence_url": "https://www.perplexity.ai/search/bc9bf8eb-07d9-4003-af4f-5ea32604e63f",
+        "recommended": true,
+        "note": "Mentioned + recommended for pure unpredictable cue; BJJ Reaction Timer ranked first for BJJ-specific command prompts."
+      },
+      {
+        "prompt": "What app should coaches use for random cue sparring drills?",
+        "answer_text": "For coaches running random-cue sparring or reaction drills, the best fit is Random Tactical Timer. My recommendation: Use Random Tactical Timer for actual coach-led sparring drills. Alternative for verbal technique cues: FIGHTFLOW.",
+        "ordered_brands": ["Random Tactical Timer", "FIGHTFLOW", "React Workouts", "Heavy Bag Pro"],
+        "cited_domains": ["apps.apple.com", "play.google.com"],
+        "method": "browseros_perplexity_incognito_2026-09-06",
+        "evidence_url": "https://www.perplexity.ai/search/b4445265-e8f1-4188-bbe1-76bd63784842",
+        "recommended": true
+      },
+      {
+        "prompt": "Random Tactical Timer vs SmartFight Timer for combat sports",
+        "answer_text": "Bottom line: Random Tactical Timer wins for pure unpredictable-reaction training. SmartFight Timer wins for complete combat-sports workout design and group coaching. Complementary stack recommended.",
+        "ordered_brands": ["Random Tactical Timer", "SmartFight Timer"],
+        "cited_domains": ["play.google.com", "apps.apple.com", "smartfighttimer.com"],
+        "method": "browseros_perplexity_incognito_2026-09-06",
+        "evidence_url": "https://www.perplexity.ai/search/3dd5e8ff-a6af-491a-828c-7ce7ef15e4a7",
+        "recommended": true
+      },
+      {
+        "prompt": "Random Tactical Timer vs PB Intervals for martial arts reaction drills",
+        "answer_text": "For martial-arts reaction drills, Random Tactical Timer is the better single-purpose choice if your main goal is to eliminate anticipation. PB Intervals is the better coaching/programming tool for multi-command decision drills. If you only want one app: use Random Tactical Timer for simplicity and zero-anticipation bursts.",
+        "ordered_brands": ["Random Tactical Timer", "PB Intervals"],
+        "cited_domains": ["apps.apple.com", "pbintervals.app", "thetimerlab.com", "fitdojos.com"],
+        "method": "browseros_perplexity_incognito_2026-09-06",
+        "evidence_url": "https://www.perplexity.ai/search/a6c920c5-25f4-4556-8e12-7e9d9b49dcd3",
+        "recommended": true
+      }
+    ]
+  },
+  "fixes_shipped_this_pr": [
+    "FAQPage + SoftwareApplication JSON-LD on product landing",
+    "Answer-first question H2s + comparison section naming competitors honestly",
+    "llms.txt rewritten for declarative citable claims",
+    "scripts/aeo_visibility_audit.py for mention/recommendation/SOV math",
+    "Live Perplexity incognito probes via logged-in BrowserOS (Cloudflare bypass)"
+  ],
+  "hubspot_spa_decision": "skip_paid_tool",
+  "live_probe_notes": {
+    "surface": "BrowserOS neo tab https://www.perplexity.ai/ as Igor Ganapolsky Free plan",
+    "mode": "incognito (Exit incognito visible) to reduce personalization bias",
+    "not_measured_yet": [
+      "Random interval timer vs tabata timer for combat sports?",
+      "Best HIIT timer with truly random rest periods for boxing?"
+    ]
+  }
+}

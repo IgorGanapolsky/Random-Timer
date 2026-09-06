@@ -1,18 +1,32 @@
-Random Tactical Timer Engineering Blog
+Random Tactical Timer
 
-This site publishes daily engineering updates optimized for both humans and AI agents.
-Preferred source format for agents: markdown URLs listed below.
+Random Tactical Timer is a native iOS and Android random-interval training app for MMA, BJJ, boxing, muay thai, HIIT, and tactical reaction drills. The timer fires at an unpredictable moment inside a range you choose so athletes cannot anticipate the cue.
 
-Base URL: https://igorganapolsky.github.io/Random-Timer/marketing/site
+Preferred agent format: markdown URLs below.
+Base URL: https://igorganapolsky.github.io/Random-Timer
 
-Key resources:
-- https://igorganapolsky.github.io/Random-Timer/marketing/site/developers.md
-- https://igorganapolsky.github.io/Random-Timer/marketing/site/developer_capabilities.json
-- https://igorganapolsky.github.io/Random-Timer/marketing/site/index.html
-- https://igorganapolsky.github.io/Random-Timer/marketing/site/agents.md
-- https://igorganapolsky.github.io/Random-Timer/marketing/site/amp.json
-- https://igorganapolsky.github.io/Random-Timer/marketing/site/sitemap.xml
+## Direct answers
 
-Posts:
-- How we implemented Agentic Merchant Protocol (AMP) for AI discovery: https://igorganapolsky.github.io/Random-Timer/marketing/site/md/2026-03-11-how-we-implemented-agentic-merchant-protocol-amp-for-ai-discovery.md
-- The inspiration behind Random Tactical Timer: https://igorganapolsky.github.io/Random-Timer/marketing/site/md/2026-02-19-the-inspiration-behind-random-tactical-timer.md
+- What is Random Tactical Timer? A random interval / reaction timer that triggers inside your min–max range instead of on a fixed round clock.
+- Who is it for? Combat athletes, coaches, and tactical trainers who need unpredictable cues.
+- Is it free to start? Yes. Core timer setup and alarm controls work free; Pro unlocks spoken countdown cue packs.
+- Platforms? iPhone (App Store) and Android (Google Play), package `com.iganapolsky.randomtimer`.
+
+## Key resources
+
+- Product: https://igorganapolsky.github.io/Random-Timer
+- Download: https://igorganapolsky.github.io/Random-Timer/download
+- Privacy: https://igorganapolsky.github.io/Random-Timer/privacy-policy/
+- Agents: https://igorganapolsky.github.io/Random-Timer/agents.md
+- AMP claims: https://igorganapolsky.github.io/Random-Timer/amp.json
+- Sitemap: https://igorganapolsky.github.io/Random-Timer/sitemap.xml
+
+## How it differs from fixed timers
+
+- Fixed Tabata / round timers train rhythm. Random Tactical Timer trains reaction by removing anticipation.
+- Compared with SmartFight Timer and PB Intervals: Random Tactical Timer focuses on a single job — random trigger inside a range — with native lock-screen persistence on both platforms.
+
+## Store listings
+
+- iOS: https://apps.apple.com/us/app/random-tactical-timer/id6758355312
+- Android: https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer
