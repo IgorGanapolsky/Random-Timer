@@ -41,12 +41,12 @@ val ciVersionCode = providers.gradleProperty("ciVersionCode").orNull?.toIntOrNul
 
 android {
     namespace = "com.iganapolsky.randomtimer"
-    compileSdk = ciCompileSdk ?: 35
+    compileSdk = ciCompileSdk ?: 36
 
     defaultConfig {
         applicationId = "com.iganapolsky.randomtimer"
         minSdk = 26
-        targetSdk = ciTargetSdk ?: 35
+        targetSdk = ciTargetSdk ?: 36
         versionCode = ciVersionCode ?: 1778679360
         versionName = "1.3.58"
 
