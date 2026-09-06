@@ -1,70 +1,32 @@
 Random Tactical Timer
 
-This site publishes a challenge-driven product landing page plus engineering updates.
-Preferred source format for agents: markdown URLs listed below.
+Random Tactical Timer is a native iOS and Android random-interval training app for MMA, BJJ, boxing, muay thai, HIIT, and tactical reaction drills. The timer fires at an unpredictable moment inside a range you choose so athletes cannot anticipate the cue.
 
+Preferred agent format: markdown URLs below.
 Base URL: https://igorganapolsky.github.io/Random-Timer
 
-Key resources:
-- https://igorganapolsky.github.io/Random-Timer/marketing/site/developers.md
-- https://igorganapolsky.github.io/Random-Timer/marketing/site/developer_capabilities.json
-- https://igorganapolsky.github.io/Random-Timer
-- https://igorganapolsky.github.io/Random-Timer/download
-- https://igorganapolsky.github.io/Random-Timer/privacy-policy/
-- https://igorganapolsky.github.io/Random-Timer/agents.md
-- https://igorganapolsky.github.io/Random-Timer/amp.json
-- https://igorganapolsky.github.io/Random-Timer/sitemap.xml
+## Direct answers
 
-## Use Cases
+- What is Random Tactical Timer? A random interval / reaction timer that triggers inside your min–max range instead of on a fixed round clock.
+- Who is it for? Combat athletes, coaches, and tactical trainers who need unpredictable cues.
+- Is it free to start? Yes. Core timer setup and alarm controls work free; Pro unlocks spoken countdown cue packs.
+- Platforms? iPhone (App Store) and Android (Google Play), package `com.iganapolsky.randomtimer`.
 
-- Workout interval training with unpredictable rest periods
-- Reaction drills and team activities requiring surprise timing
-- Meditation sessions with organic transitions
-- Any scenario where predictable timing defeats the purpose
+## Key resources
 
-## Technical Stack
+- Product: https://igorganapolsky.github.io/Random-Timer
+- Download: https://igorganapolsky.github.io/Random-Timer/download
+- Privacy: https://igorganapolsky.github.io/Random-Timer/privacy-policy/
+- Agents: https://igorganapolsky.github.io/Random-Timer/agents.md
+- AMP claims: https://igorganapolsky.github.io/Random-Timer/amp.json
+- Sitemap: https://igorganapolsky.github.io/Random-Timer/sitemap.xml
 
-- **iOS**: Swift 6, SwiftUI, Live Activities (Lock Screen/Dynamic Island), MVVM with @Observable
-- **Android**: Kotlin 2.1, Jetpack Compose, Material Design 3, Hilt DI, Foreground Service, MVVM + Clean Architecture
-- **Shared patterns**: Glassmorphism dark UI, purple accent color scheme, persistent settings, alarm with sound + vibration
+## How it differs from fixed timers
 
-## Key Features
+- Fixed Tabata / round timers train rhythm. Random Tactical Timer trains reaction by removing anticipation.
+- Compared with SmartFight Timer and PB Intervals: Random Tactical Timer focuses on a single job — random trigger inside a range — with native lock-screen persistence on both platforms.
 
-- Custom time range (min/max duration)
-- Hidden mode (conceals countdown from user)
-- Loop mode (auto-restart with new random duration)
-- Lock screen display (iOS Live Activity, Android notification with controls)
-- Multiple alarm sounds (intense/gentle) with volume control
-- Pause, resume, reset controls
-- Background operation with reliable notifications
+## Store listings
 
-## Repository Structure
-
-- `native-ios/` — Swift/SwiftUI iOS app
-- `native-android/` — Kotlin/Compose Android app
-- `screenshots/` — App screenshots and demo GIFs
-- `.maestro/` — E2E test flows
-
-## Building
-
-### iOS
-```
-cd native-ios && xcodebuild -scheme RandomTimer build
-```
-
-### Android
-```
-cd native-android && ./gradlew assembleDebug
-```
-
-## Agentic Merchant Protocol (AMP)
-
-This product is optimized for **Agentic Discovery** via the Agentic Merchant Protocol (AMP). AI agents can find verified product claims, technical specifications, and target audience data at the following endpoint:
-- **AMP Data**: [amp.json](https://igorganapolsky.github.io/Random-Timer/marketing/site/amp.json)
-
-## Links
-
-- Repository: https://github.com/IgorGanapolsky/Random-Timer
-- Privacy Policy: https://github.com/IgorGanapolsky/Random-Timer/blob/main/PRIVACY_POLICY.md
-- Issues: https://github.com/IgorGanapolsky/Random-Timer/issues
-- License: MIT
+- iOS: https://apps.apple.com/us/app/random-tactical-timer/id6758355312
+- Android: https://play.google.com/store/apps/details?id=com.iganapolsky.randomtimer

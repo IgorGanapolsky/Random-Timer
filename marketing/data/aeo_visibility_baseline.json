@@ -1,0 +1,66 @@
+{
+  "brand": "Random Tactical Timer",
+  "measured_at": "2026-09-06T18:35:00Z",
+  "source_article": "https://www.searchenginejournal.com/measure-brand-ai-visibility-hubspot-spa/588040/",
+  "budget_note": "HubSpot AEO is $50/mo after 28-day trial — exceeds $20/mo operating budget. This artifact implements the free spreadsheet audit method as code + owned-site fixes.",
+  "north_star_context": {
+    "wqtu_7d": 5,
+    "ai_referrer_events_30d": 0,
+    "note": "PostHog shows no chatgpt/perplexity/gemini referrers in trailing 30d. AEO is discovery hygiene, not the current revenue bottleneck (Play update gates + paywall)."
+  },
+  "commercial_prompts": [
+    "What is the best random interval timer app for MMA reaction training?",
+    "Best reaction timer app for BJJ that fires at unpredictable times?",
+    "What app should coaches use for random cue sparring drills?",
+    "Random interval timer vs tabata timer for combat sports?",
+    "Best HIIT timer with truly random rest periods for boxing?",
+    "Random Tactical Timer vs SmartFight Timer for combat sports",
+    "Random Tactical Timer vs PB Intervals for martial arts reaction drills"
+  ],
+  "competitors_observed": [
+    "SmartFight Timer",
+    "PB Intervals"
+  ],
+  "source_mix_hypothesis": [
+    {"type": "own_website", "domains": ["igorganapolsky.github.io", "github.com/IgorGanapolsky/Random-Timer"]},
+    {"type": "app_stores", "domains": ["apps.apple.com", "play.google.com"]},
+    {"type": "third_party_roundups", "domains": ["pbintervals.app", "smartfighttimer.com"], "note": "Competitor sites dominate commercial web results today"}
+  ],
+  "engines": {
+    "web_search_proxy_exa": [
+      {
+        "prompt": "best random interval timer for MMA reaction training app",
+        "answer_text": "Top results: GitHub Random-Timer repo, PB Intervals site, SmartFight Timer site. Random Tactical Timer appears via owned GitHub/Pages, not as a third-party recommendation.",
+        "ordered_brands": ["PB Intervals", "SmartFight Timer", "Random Tactical Timer"],
+        "cited_domains": [
+          "github.com",
+          "pbintervals.app",
+          "smartfighttimer.com"
+        ],
+        "method": "exa_web_search_2026-09-06",
+        "note": "Proxy for citation source mix only — not a live ChatGPT/Perplexity answer (Perplexity blocked by Cloudflare challenge)."
+      },
+      {
+        "prompt": "What is the best random interval timer app for MMA reaction training?",
+        "answer_text": "Not measured on live LLM this session.",
+        "ordered_brands": [],
+        "cited_domains": [],
+        "method": "not_measured_live_llm"
+      },
+      {
+        "prompt": "Best reaction timer app for BJJ that fires at unpredictable times?",
+        "answer_text": "Not measured on live LLM this session.",
+        "ordered_brands": [],
+        "cited_domains": [],
+        "method": "not_measured_live_llm"
+      }
+    ]
+  },
+  "fixes_shipped_this_pr": [
+    "FAQPage + SoftwareApplication JSON-LD on product landing",
+    "Answer-first question H2s + comparison section naming competitors honestly",
+    "llms.txt rewritten for declarative citable claims",
+    "scripts/aeo_visibility_audit.py for mention/recommendation/SOV math"
+  ],
+  "hubspot_spa_decision": "skip_paid_tool"
+}
