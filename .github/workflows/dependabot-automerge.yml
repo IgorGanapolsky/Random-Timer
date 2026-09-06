@@ -9,6 +9,10 @@ permissions:
   contents: write
   pull-requests: write
 
+concurrency:
+  group: dependabot-automerge-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
 jobs:
   enable-automerge:
     if: |
@@ -43,19 +47,38 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Success if merge/auto-merge is already underway from a sibling event.
+          is_benign_race() {
+            local out="$1"
+            grep -qiE 'Merge already in progress|already enabled|Pull Request is not mergeable: the merge is already in progress|Auto merge is already enabled' <<<"$out"
+          }
+
           enable_automerge() {
             local label="$1"
             local token="$2"
+            local out
             if [[ -z "$token" ]]; then
               echo "Skipping ${label}: token missing"
               return 1
             fi
             echo "Attempting auto-merge with ${label}"
-            GH_TOKEN="$token" gh pr merge "$PR_NUMBER" \
+            set +e
+            out=$(GH_TOKEN="$token" gh pr merge "$PR_NUMBER" \
               --repo "$GITHUB_REPOSITORY" \
               --squash \
               --auto \
-              --delete-branch
+              --delete-branch 2>&1)
+            local rc=$?
+            set -e
+            echo "$out"
+            if [[ $rc -eq 0 ]]; then
+              return 0
+            fi
+            if is_benign_race "$out"; then
+              echo "Treating as success: merge already in progress / auto-merge already enabled."
+              return 0
+            fi
+            return 1
           }
 
           if enable_automerge "GITHUB_TOKEN" "$DEFAULT_TOKEN"; then
