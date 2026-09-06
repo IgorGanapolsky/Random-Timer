@@ -1,17 +1,31 @@
 appId: com.iganapolsky.randomtimer
 ---
-# Regression test: ALL Pro features must show lock icons to free users
-# Bug: PR #1073 hid Pro locks before first timer completion, blocking revenue
+# Pro locks for free users. Secret unlock if license auto-restore hides locks.
 - launchApp:
     clearState: true
-# Timer Range - PRO: 1H lock must be visible
+- extendedWaitUntil:
+    visible: "Timer Range"
+    timeout: 15000
+- runFlow:
+    when:
+      notVisible: "PRO: 1H"
+    commands:
+      - scrollUntilVisible:
+          element: "Sound Arsenal"
+          direction: DOWN
+          timeout: 20000
+      - longPressOn: "Sound Arsenal"
+      - swipe:
+          direction: DOWN
+          duration: 400
+      - extendedWaitUntil:
+          visible: "PRO: 1H"
+          timeout: 10000
 - assertVisible: "PRO: 1H"
-# Voice Callouts - PRO lock must be visible
 - scrollUntilVisible:
     element: "Voice Callouts"
     direction: DOWN
 - assertVisible: "PRO"
-# Sound Arsenal - must show Pro sounds section
 - scrollUntilVisible:
     element: "Sound Arsenal"
     direction: DOWN

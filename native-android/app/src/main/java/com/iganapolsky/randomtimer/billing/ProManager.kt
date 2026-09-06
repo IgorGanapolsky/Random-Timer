@@ -63,6 +63,10 @@ class ProManager
                 @Suppress("UNUSED_PARAMETER") isDebugBuild: Boolean = true,
             ): Boolean = true
 
+            /** When a debug unlock/force cycle is active, auto-restore must not overwrite it. */
+            internal fun shouldApplyAutoRestoreEntitlement(debugOverrideActive: Boolean): Boolean =
+                !debugOverrideActive
+
             /** P2 scaffold — not queried until Play Console products exist. */
             fun disciplinePackProductIds(): Set<String> = DisciplinePackCatalog.androidProductIds.toSet()
 
@@ -258,7 +262,9 @@ class ProManager
                     else -> EntitlementLevel.NONE
                 }
 
-            setEntitlement(level)
+            if (shouldApplyAutoRestoreEntitlement(debugOverrideActive)) {
+                setEntitlement(level)
+            }
 
             if (trackResult) {
                 trackRestoreResult(
@@ -1085,6 +1091,7 @@ class ProManager
                     EntitlementLevel.BASE -> EntitlementLevel.ELITE
                     EntitlementLevel.ELITE -> EntitlementLevel.NONE
                 }
+            debugOverrideActive = true
             setEntitlement(next)
             context
                 .getSharedPreferences("pro_prefs", Context.MODE_PRIVATE)

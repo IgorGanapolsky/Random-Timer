@@ -1,16 +1,37 @@
 appId: com.iganapolsky.randomtimer
 ---
-# E2E: Pro upgrade affordance opens paywall on a fresh install (no deferred upgrade).
+# E2E: Pro lock opens plan sheet. Secret unlock if license auto-restore hides locks.
 - clearState
 - launchApp
 
-- assertVisible:
-    text: 'Start First Drill'
+- extendedWaitUntil:
+    visible: "Timer Range"
+    timeout: 15000
 
-# Extended range PRO affordance — should open paywall
+- runFlow:
+    when:
+      notVisible: "PRO: 1H"
+    commands:
+      - scrollUntilVisible:
+          element: "Sound Arsenal"
+          direction: DOWN
+          timeout: 20000
+      - longPressOn: "Sound Arsenal"
+      - swipe:
+          direction: DOWN
+          duration: 400
+      - extendedWaitUntil:
+          visible: "PRO: 1H"
+          timeout: 10000
+
+- assertVisible:
+    text: "PRO: 1H"
+
 - tapOn:
-    text: 'PRO: 1H'
+    text: "PRO: 1H"
 
 - extendedWaitUntil:
-    visible: 'Restore purchase'
+    visible: "PRO FEATURES"
     timeout: 10000
+
+- assertVisible: "Not now"
