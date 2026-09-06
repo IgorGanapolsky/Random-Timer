@@ -1,0 +1,37 @@
+---
+description: HydraFusion-style Single/Cascade/Critique routing before expensive agent legs
+alwaysApply: true
+---
+
+## HydraFusion orchestration (binding)
+
+Before spawning expensive subagents or multi-file edits, prefer the least-complex
+workflow that should clear the quality bar — inspired by GitHub Project HydraFusion
+(https://github.blog/ai-and-ml/github-copilot/project-hydrafusion-frontier-quality-via-multi-model-orchestration/).
+
+### Patterns
+
+1. **single** — one Quick/UltraBrain pass for low-risk utility
+2. **cascade** — Quick draft → quality gate → escalate Deep/UltraBrain only if rejected
+3. **critique** — draft → isolated tool-less critic from a **different** model family → revise once
+
+### How to choose
+
+```bash
+python3 scripts/hydrafusion_route.py --task "$TASK" --risk low|medium|high \
+  --files N --capabilities reasoning,code_generation,debugging,tool_use \
+  --domain store_publishing|security|""
+```
+
+Follow the returned `pattern`, `legs`, and `quality_gate`. Do not skip the gate on Cascade.
+On Critique, the critic must not write to the repo.
+
+### Principles
+
+- Complete accounting of every leg
+- Bounded timeouts per leg
+- Fail-safe: apply no incomplete patch if cancelled/gate fails
+- Validated routing before execution
+- Stay within the $20/mo external spend cap (this router is $0)
+
+Canonical detail: `.claude/rules/agent-model-matching.md`

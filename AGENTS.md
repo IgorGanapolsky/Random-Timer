@@ -36,9 +36,21 @@ Autonomous PR/branch hygiene and **never committing PATs** are defined in `CLAUD
 
 **Stack Overflow:** Draft answers as Markdown under `marketing/referral_content/stackoverflow_answers/` (see `docs/STACK_OVERFLOW_PLAYBOOK.md`); include `develop` permalinks to this repo where we actually use the pattern, plus disclosure when linking our code.
 
-## Agent-Model Matching Standard
+## Agent-Model Matching + HydraFusion Orchestration
 
-To maximize system performance and cost-efficiency, all agents must adhere to the **Agent-Model Matching** standard defined in `.claude/rules/agent-model-matching.md`.
+To maximize quality per dollar, all agents must adhere to `.claude/rules/agent-model-matching.md`
+and the always-on Cursor rule `.cursor/rules/hydrafusion-orchestration.mdc`.
+
+**Plan first** (zero-cost local router inspired by GitHub Project HydraFusion):
+
+```bash
+python3 scripts/hydrafusion_route.py --task "…" --risk medium --files 8 \
+  --capabilities code_generation,debugging
+```
+
+Patterns: **single** (cheap one-shot) → **cascade** (Quick draft + gate + escalate) →
+**critique** (draft + isolated other-family critic + revise once). Prefer the least complex
+pattern that clears the quality bar. Details: `docs/HYDRAFUSION_ORCHESTRATION.md`.
 
 Gemini-specific operating directives are maintained in `docs/GEMINI.md` (canonical path enforced by repo hygiene checks).
 
