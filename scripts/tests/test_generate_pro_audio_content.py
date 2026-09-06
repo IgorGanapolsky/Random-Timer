@@ -79,15 +79,16 @@ def test_ensure_release_month_pack_clones_active_pack_for_missing_month() -> Non
 def test_ensure_release_month_pack_uses_known_june_theme_slug() -> None:
     module = _load_module()
     manifest = module._load_manifest(MANIFEST_PATH)
+    prior_active = manifest["activePackId"]
 
     updated, created = module.ensure_release_month_pack(manifest, "2026-06")
 
-    assert updated["activePackId"] == "2026-06_conditioning_lane"
+    # Existing month packs are returned unchanged; activePackId only flips when a pack is created.
+    assert created is False
+    assert updated["activePackId"] == prior_active
     june_pack = next(pack for pack in updated["packs"] if pack["id"] == "2026-06_conditioning_lane")
     assert june_pack["releaseMonth"] == "2026-06"
     assert "Conditioning lane" in june_pack["theme"]
-    if created:
-        assert len(updated["packs"]) == len(manifest["packs"]) + 1
 
 
 def test_voice_catalog_contains_preview_elapsed_elapsed_and_command_cues():
