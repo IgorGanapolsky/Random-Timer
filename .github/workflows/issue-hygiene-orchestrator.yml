@@ -1,0 +1,50 @@
+name: Issue Hygiene Orchestrator
+
+# Autonomous triage for automation-generated GitHub issues (release-watch / PR incidents / CI gates).
+on:
+  schedule:
+    - cron: "25 */6 * * *" # every 6h, staggered
+  workflow_dispatch:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: issue-hygiene-orchestrator
+  cancel-in-progress: true
+
+jobs:
+  hygiene:
+    if: |
+      github.event_name != 'issues' ||
+      contains(join(github.event.issue.labels.*.name, ','), 'release-watch') ||
+      contains(join(github.event.issue.labels.*.name, ','), 'pr-state-machine') ||
+      contains(join(github.event.issue.labels.*.name, ','), 'incident') ||
+      startsWith(github.event.issue.title, 'Release watch:') ||
+      startsWith(github.event.issue.title, 'PR Incident:') ||
+      contains(github.event.issue.title, 'CI base gates red')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Run autonomous issue hygiene
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/issue_hygiene_orchestrator.py --apply --repo "$GITHUB_REPOSITORY" | tee /tmp/issue-hygiene.json
+          python3 - <<'PY'
+          import json
+          data=json.load(open("/tmp/issue-hygiene.json"))
+          print(f"scanned={data['open_issues_scanned']} close={data['close_count']} keep={data['keep_count']}")
+          print(f"live_ios={data.get('live_ios')} live_play={data.get('live_play')} voice_ok={data.get('voice_contracts_passing')}")
+          PY

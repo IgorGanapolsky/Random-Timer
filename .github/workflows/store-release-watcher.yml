@@ -178,3 +178,10 @@ jobs:
         run: |
           gh issue comment "$ISSUE_NUM" --body "✅ v${TARGET_VERSION} is LIVE on both stores. Closing watcher."
           gh issue close "$ISSUE_NUM" --reason completed
+
+      - name: Autonomous issue hygiene (superseded / stale watches)
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 scripts/issue_hygiene_orchestrator.py --apply --repo "$GITHUB_REPOSITORY" || true
