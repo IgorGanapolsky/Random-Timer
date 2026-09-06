@@ -2,21 +2,28 @@
   "brand": "Random Tactical Timer",
   "budget_note": "HubSpot AEO is $50/mo after 28-day trial \u2014 exceeds $20/mo operating budget. This artifact implements the free spreadsheet audit method as code + owned-site fixes.",
   "composite": {
-    "engines_scored": 1,
-    "mention_rate": 0.3333,
-    "recommendation_rate": 0.3333
+    "engines_scored": 2,
+    "mention_rate": 1.0,
+    "recommendation_rate": 1.0
   },
   "per_engine": {
+    "perplexity_incognito_browseros": {
+      "all_brand_mentions": 22,
+      "gap_prompts": [],
+      "mention_rate": 1.0,
+      "mentions": 6,
+      "prompts_tested": 6,
+      "recommendation_rate": 1.0,
+      "share_of_voice": 0.2727,
+      "top_three": 6
+    },
     "web_search_proxy_exa": {
       "all_brand_mentions": 3,
-      "gap_prompts": [
-        "What is the best random interval timer app for MMA reaction training?",
-        "Best reaction timer app for BJJ that fires at unpredictable times?"
-      ],
-      "mention_rate": 0.3333,
+      "gap_prompts": [],
+      "mention_rate": 1.0,
       "mentions": 1,
-      "prompts_tested": 3,
-      "recommendation_rate": 0.3333,
+      "prompts_tested": 1,
+      "recommendation_rate": 1.0,
       "share_of_voice": 0.3333,
       "top_three": 1
     }
