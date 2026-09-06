@@ -1,5 +1,5 @@
 {
-  "activePackId": "2026-07_range_day",
+  "activePackId": "2026-09_combatives_reset",
   "defaults": {
     "entitlement": "pro",
     "voiceNamePattern": "marine|drill|instructor|sergeant",
@@ -798,6 +798,267 @@
       "id": "2026-07_range_day",
       "releaseMonth": "2026-07",
       "theme": "Range day (July 2026 content window)",
+      "voiceNamePattern": "fighter|coach|combat|corner|operator|drill|sergeant",
+      "voiceModelId": "eleven_v3",
+      "voiceSettings": {
+        "stability": 0.52,
+        "similarity_boost": 0.82,
+        "style": 0.74,
+        "use_speaker_boost": true,
+        "speed": 1.02
+      },
+      "previewElapsed": {
+        "filename": "preview_elapsed",
+        "text": "Thirty seconds elapsed. Stay sharp and keep working."
+      },
+      "fallbackCommandFilename": "cmd_stay_locked_in",
+      "elapsedCues": [
+        {
+          "second": 15,
+          "filename": "elapsed_15s",
+          "text": "Fifteen seconds elapsed. Find your rhythm."
+        },
+        {
+          "second": 30,
+          "filename": "elapsed_30s",
+          "text": "Thirty seconds elapsed. Stay sharp and keep working."
+        },
+        {
+          "second": 45,
+          "filename": "elapsed_45s",
+          "text": "Forty-five seconds elapsed. Keep your feet alive."
+        },
+        {
+          "second": 60,
+          "filename": "elapsed_60s",
+          "text": "One minute elapsed. Breathe and stay dangerous."
+        },
+        {
+          "second": 75,
+          "filename": "elapsed_75s",
+          "text": "One minute fifteen elapsed. Win the next exchange."
+        },
+        {
+          "second": 90,
+          "filename": "elapsed_90s",
+          "text": "One minute thirty elapsed. Stay composed under pace."
+        },
+        {
+          "second": 105,
+          "filename": "elapsed_105s",
+          "text": "One minute forty-five elapsed. Pressure, angle, reset."
+        },
+        {
+          "second": 120,
+          "filename": "elapsed_120s",
+          "text": "Two minutes elapsed. Keep the tempo honest."
+        },
+        {
+          "second": 150,
+          "filename": "elapsed_150s",
+          "text": "Two minutes thirty elapsed. Own the center and keep firing."
+        },
+        {
+          "second": 180,
+          "filename": "elapsed_180s",
+          "text": "Three minutes elapsed. Dig in and close strong."
+        },
+        {
+          "second": 210,
+          "filename": "elapsed_210s",
+          "text": "Three minutes thirty elapsed. No drifting. Stay on offense."
+        },
+        {
+          "second": 240,
+          "filename": "elapsed_240s",
+          "text": "Four minutes elapsed. Smooth breathing. Violent pace."
+        },
+        {
+          "second": 300,
+          "filename": "elapsed_300s",
+          "text": "Five minutes elapsed. Championship pace now."
+        },
+        {
+          "second": 420,
+          "filename": "elapsed_420s",
+          "text": "Seven minutes elapsed. Your form still matters. Keep it clean."
+        },
+        {
+          "second": 540,
+          "filename": "elapsed_540s",
+          "text": "Nine minutes elapsed. Compete for every second."
+        },
+        {
+          "second": 600,
+          "filename": "elapsed_600s",
+          "text": "Ten minutes elapsed. You are still in it. Finish with intent."
+        }
+      ],
+      "commandCues": [
+        {
+          "filename": "cmd_move_with_a_purpose",
+          "text": "Cut the angle and go."
+        },
+        {
+          "filename": "cmd_pick_it_up",
+          "text": "Pick up the pace. Stay clean."
+        },
+        {
+          "filename": "cmd_stay_locked_in",
+          "text": "Stay locked in. Read and react."
+        },
+        {
+          "filename": "cmd_no_hesitation_move",
+          "text": "No hesitation. First move wins."
+        },
+        {
+          "filename": "cmd_keep_your_bearing",
+          "text": "Stay balanced. Stay ready."
+        },
+        {
+          "filename": "cmd_sound_off_and_drive",
+          "text": "Drive forward. Do not fade."
+        },
+        {
+          "filename": "cmd_eyes_up_keep_moving",
+          "text": "Eyes up. Find the opening."
+        },
+        {
+          "filename": "cmd_stay_disciplined",
+          "text": "Discipline over panic. Work the plan."
+        },
+        {
+          "filename": "cmd_breathe_recover_press",
+          "text": "Breathe once. Then pressure."
+        },
+        {
+          "filename": "cmd_do_not_coast",
+          "text": "Do not coast. Compete."
+        },
+        {
+          "filename": "cmd_own_this_rep",
+          "text": "Own the exchange."
+        },
+        {
+          "filename": "cmd_keep_pressure_on",
+          "text": "Keep them reacting."
+        },
+        {
+          "filename": "cmd_sharp_movement_sharp_focus",
+          "text": "Sharp feet. Sharp reads."
+        },
+        {
+          "filename": "cmd_stay_in_the_fight",
+          "text": "Stay in the pocket and work."
+        },
+        {
+          "filename": "cmd_drive_through_it",
+          "text": "Drive through the fatigue."
+        },
+        {
+          "filename": "cmd_reset_and_attack",
+          "text": "Reset your stance and attack."
+        },
+        {
+          "filename": "cmd_strong_feet_strong_pace",
+          "text": "Light feet. Hard pace."
+        },
+        {
+          "filename": "cmd_move_fast_stay_precise",
+          "text": "Fast hands. Precise decisions."
+        },
+        {
+          "filename": "cmd_keep_tempo_high",
+          "text": "Tempo stays high. Stay composed."
+        },
+        {
+          "filename": "cmd_most_ricky_tick",
+          "text": "Win this beat. Win the next."
+        },
+        {
+          "filename": "cmd_instant_response_go",
+          "text": "Instant reaction. Go now."
+        },
+        {
+          "filename": "cmd_maintain_your_interval",
+          "text": "Manage distance. Re-enter on your terms."
+        },
+        {
+          "filename": "cmd_snap_back_and_drive",
+          "text": "Snap back, re-center, fire."
+        },
+        {
+          "filename": "cmd_finish_rep_keep_pushing",
+          "text": "Finish the round like it counts."
+        }
+      ],
+      "soundArsenal": [
+        {
+          "soundType": "intense",
+          "filename": "alarm",
+          "durationSeconds": 4.0,
+          "prompt": "Fight-camp alarm hit, aggressive transient, compact loop, no melody, immediate urgency."
+        },
+        {
+          "soundType": "gentle",
+          "filename": "gentle-chime",
+          "durationSeconds": 4.0,
+          "prompt": "Clean coaching chime for interval transition, polished attack, restrained tail, no ambience."
+        },
+        {
+          "soundType": "klaxon",
+          "filename": "klaxon",
+          "durationSeconds": 4.0,
+          "prompt": "Arena-ready warning klaxon, tight and forceful, no crowd, loopable."
+        },
+        {
+          "soundType": "whistle",
+          "filename": "whistle",
+          "durationSeconds": 3.0,
+          "prompt": "Coach whistle with hard stop, gym-floor clarity, no crowd noise."
+        },
+        {
+          "soundType": "buzzer",
+          "filename": "buzzer",
+          "durationSeconds": 3.0,
+          "prompt": "Competition buzzer, clean electronic snap, assertive but not comedic."
+        },
+        {
+          "soundType": "gong",
+          "filename": "gong",
+          "durationSeconds": 5.0,
+          "prompt": "Large fight-night gong with bright metallic sustain, powerful center hit, no temple ambience."
+        },
+        {
+          "soundType": "airhorn",
+          "filename": "airhorn",
+          "durationSeconds": 3.0,
+          "prompt": "Short airhorn burst for sprint interval turnover, compressed and controlled."
+        },
+        {
+          "soundType": "drumRoll",
+          "filename": "drum_roll",
+          "durationSeconds": 4.0,
+          "prompt": "Snare build with competition tension, dry room, crisp finish."
+        },
+        {
+          "soundType": "siren",
+          "filename": "siren",
+          "durationSeconds": 4.0,
+          "prompt": "Compact rotating siren with combat-gym urgency, no ambience, clean loop."
+        },
+        {
+          "soundType": "bell",
+          "filename": "bell",
+          "durationSeconds": 4.0,
+          "prompt": "Authentic boxing round bell, bright brass strike, unmistakable ringside identity, no crowd."
+        }
+      ]
+    },
+    {
+      "id": "2026-09_combatives_reset",
+      "releaseMonth": "2026-09",
+      "theme": "Combatives reset (September 2026 content window)",
       "voiceNamePattern": "fighter|coach|combat|corner|operator|drill|sergeant",
       "voiceModelId": "eleven_v3",
       "voiceSettings": {

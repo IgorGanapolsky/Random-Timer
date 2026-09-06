@@ -31,7 +31,7 @@ def test_allowed_release_months_require_current_month_after_grace_day():
 def test_current_manifest_is_fresh_for_today():
     module = _load_module()
 
-    evidence = module.verify_manifest_freshness(MANIFEST_PATH, today=date(2026, 6, 3))
+    evidence = module.verify_manifest_freshness(MANIFEST_PATH, today=date(2026, 9, 6))
 
-    assert evidence["active_pack_id"] == "2026-06_conditioning_lane"
-    assert evidence["release_month"] == "2026-06"
+    assert evidence["release_month"] == "2026-09"
+    assert str(evidence["active_pack_id"]).startswith("2026-09_")
