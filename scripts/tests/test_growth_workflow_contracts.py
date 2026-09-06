@@ -110,7 +110,7 @@ def test_internal_distribution_workflow_keeps_ruby_setup_pin_in_sync_with_native
     internal_source = INTERNAL_DISTRIBUTION_WORKFLOW.read_text(encoding="utf-8")
     release_source = NATIVE_RELEASE_WORKFLOW.read_text(encoding="utf-8")
 
-    ruby_pin = "ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0"
+    ruby_pin = "ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0"
     assert ruby_pin in internal_source
     assert ruby_pin in release_source
 
@@ -356,8 +356,8 @@ def test_native_release_workflow_creates_annotated_release_from_exact_sha():
 def test_android_production_retry_uses_public_storefront_truth_instead_of_issue_title():
     source = ANDROID_PRODUCTION_RETRY_WORKFLOW.read_text(encoding="utf-8")
 
-    assert "actions/checkout@v6.0.2" in source
-    assert "actions/setup-python@v6.2.0" in source
+    assert "actions/checkout@v7" in source
+    assert "actions/setup-python@v7" in source
     assert "python -m pip install --upgrade pip requests==2.32.5" in source
     assert "scripts/source_versions.py --format value --key ANDROID_VERSION_NAME" in source
     assert "from scripts.verify_play_public_listing import build_store_url, verify_public_listing" in source

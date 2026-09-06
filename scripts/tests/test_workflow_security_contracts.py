@@ -205,17 +205,17 @@ def test_ci_secret_scan_does_not_scan_all_refs_when_range_is_available() -> None
 
 def test_security_sensitive_workflows_pin_third_party_actions() -> None:
     expected_pins = {
-        ".github/workflows/android17-canary.yml": "android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407",
-        ".github/workflows/device-tests.yml": "reactivecircus/android-emulator-runner@70f4dee990796918b78d040e3278474bdbd348a7",
-        ".github/workflows/internal-distribution.yml": "ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0",
-        ".github/workflows/internal-distribution.yml#firebase": "wzieba/Firebase-Distribution-Github-Action@bd494989dd4bec0343f78adee87fe66e48279ad6",
-        ".github/workflows/security.yml#snyk": "snyk/actions/node@9adf32b1121593767fc3c057af55b55db032dc04",
-        ".github/workflows/security.yml#dependency-check": "dependency-check/Dependency-Check_Action@1e54355a8b4c8abaa8cc7d0b70aa655a3bb15a6c",
-        ".github/workflows/security.yml#mobsf": "MobSF/mobsfscan@ec2927a8cfab6626a67f26b223be3aba52a34b70",
-        ".github/workflows/security.yml#slack": "8398a7/action-slack@047b09b154480ed39076984b64f324fff010d703",
-        ".github/workflows/weekly-attribution-feedback.yml": "peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c",
-        ".github/workflows/wiki-sync.yml": "Andrew-Chen-Wang/github-wiki-action@50650fccf3a10f741995523cf9708c53cec8912a",
-        ".github/workflows/pause-paid-campaigns.yml": "peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c",
+        ".github/workflows/android17-canary.yml": "android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1",
+        ".github/workflows/device-tests.yml": "reactivecircus/android-emulator-runner@70f4dee990796918b78d040e3278474bdbd348a7 # v2",
+        ".github/workflows/internal-distribution.yml": "ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0",
+        ".github/workflows/internal-distribution.yml#firebase": "wzieba/Firebase-Distribution-Github-Action@bd494989dd4bec0343f78adee87fe66e48279ad6 # v1",
+        ".github/workflows/security.yml#snyk": "snyk/actions/node@9adf32b1121593767fc3c057af55b55db032dc04 # master",
+        ".github/workflows/security.yml#dependency-check": "dependency-check/Dependency-Check_Action@1e54355a8b4c8abaa8cc7d0b70aa655a3bb15a6c # main",
+        ".github/workflows/security.yml#mobsf": "MobSF/mobsfscan@2659f2ac6d185f0c60ce2eb754f5f48b683f73fb # main",
+        ".github/workflows/security.yml#slack": "8398a7/action-slack@77eaa4f1c608a7d68b38af4e3f739dcd8cba273e # v3.19.0",
+        ".github/workflows/weekly-attribution-feedback.yml": "peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1",
+        ".github/workflows/wiki-sync.yml": "Andrew-Chen-Wang/github-wiki-action@1bbb4280446f9630e8e21a18012cbacf3b0f992e # v5.0.6",
+        ".github/workflows/pause-paid-campaigns.yml": "peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1",
     }
 
     assert not (REPO_ROOT / ".github/workflows/release.yml").exists()

@@ -108,8 +108,8 @@ def _assert_not_contains(source: str, needle: str, *, errors: list[str], label: 
 def check_android_retry_contract(repo_root: Path, errors: list[str]) -> None:
     source = _read(repo_root, ".github/workflows/android-production-retry.yml")
     label = ".github/workflows/android-production-retry.yml"
-    _assert_contains(source, "actions/checkout@v6.0.2", errors=errors, label=label)
-    _assert_contains(source, "actions/setup-python@v6.2.0", errors=errors, label=label)
+    _assert_contains(source, "actions/checkout@v7", errors=errors, label=label)
+    _assert_contains(source, "actions/setup-python@v7", errors=errors, label=label)
     _assert_contains(
         source,
         "scripts/source_versions.py --format value --key ANDROID_VERSION_NAME",
