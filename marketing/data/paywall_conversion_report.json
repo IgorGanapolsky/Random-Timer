@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-09-06T22:29:23+00:00",
+  "generated_at": "2026-09-07T00:59:36+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 62,
-    "offer_selects": 15,
+    "views": 60,
+    "offer_selects": 7,
     "purchase_attempts": 1,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.2419,
-    "select_to_attempt_rate": 0.0667,
+    "view_to_select_rate": 0.1167,
+    "select_to_attempt_rate": 0.1429,
     "attempt_to_success_rate": 0.0
   },
   "top_failure_reasons": [
@@ -51,25 +51,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "offer_selects": 11,
-      "attempts": 0,
-      "successes": 0,
-      "select_to_attempt_rate": 0.0,
-      "attempt_to_success_rate": 0.0
-    },
-    {
-      "platform": "android",
-      "product_id": "pro_base",
-      "offer_selects": 3,
-      "attempts": 0,
-      "successes": 0,
-      "select_to_attempt_rate": 0.0,
-      "attempt_to_success_rate": 0.0
-    },
-    {
-      "platform": "android",
-      "product_id": "elite_tactical_monthly",
-      "offer_selects": 1,
+      "offer_selects": 7,
       "attempts": 0,
       "successes": 0,
       "select_to_attempt_rate": 0.0,
@@ -80,40 +62,40 @@
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 2,
-      "users": 2
+      "failures": 6,
+      "users": 6
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 1,
-      "users": 1
+      "failures": 5,
+      "users": 5
     },
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 1,
-      "users": 1
+      "failures": 5,
+      "users": 5
     }
   ],
   "product_catalog_failures_play_store": [
     {
       "platform": "android",
       "product_id": "pro_base",
-      "failures": 2,
-      "users": 2
+      "failures": 6,
+      "users": 6
     },
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "failures": 1,
-      "users": 1
+      "failures": 5,
+      "users": 5
     },
     {
       "platform": "android",
       "product_id": "elite_tactical_monthly",
-      "failures": 1,
-      "users": 1
+      "failures": 5,
+      "users": 5
     }
   ],
   "entry_points": [
@@ -142,15 +124,15 @@
       "attempt_to_success_rate": 0.0
     },
     {
-      "entry_point": "repeat_gate",
-      "views": 4,
+      "entry_point": "voice_gate",
+      "views": 2,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
       "attempt_to_success_rate": 0.0
     },
     {
-      "entry_point": "voice_gate",
+      "entry_point": "repeat_gate",
       "views": 2,
       "attempts": 0,
       "successes": 0,
@@ -187,38 +169,48 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 3111,
-      "users": 60
+      "changes": 3085,
+      "users": 63
     },
     {
       "setting_name": "volume",
-      "changes": 1445,
-      "users": 23
+      "changes": 1480,
+      "users": 26
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1404,
-      "users": 49
+      "changes": 1336,
+      "users": 53
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 126,
-      "users": 46
+      "changes": 248,
+      "users": 51
     },
     {
       "setting_name": "sound_type",
-      "changes": 120,
-      "users": 31
+      "changes": 194,
+      "users": 35
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 99,
-      "users": 41
+      "changes": 143,
+      "users": 45
+    },
+    {
+      "setting_name": "voice_callouts_enabled",
+      "changes": 79,
+      "users": 6
     },
     {
       "setting_name": "voice_gender",
-      "changes": 44,
-      "users": 19
+      "changes": 60,
+      "users": 24
+    },
+    {
+      "setting_name": "vibration_enabled",
+      "changes": 52,
+      "users": 30
     },
     {
       "setting_name": "unknown",
@@ -226,24 +218,14 @@
       "users": 2
     },
     {
-      "setting_name": "vibration_enabled",
-      "changes": 36,
-      "users": 26
-    },
-    {
-      "setting_name": "voice_callouts_enabled",
-      "changes": 14,
-      "users": 2
-    },
-    {
       "setting_name": "repeat_rounds",
-      "changes": 9,
-      "users": 2
+      "changes": 32,
+      "users": 6
     },
     {
       "setting_name": "use_extended_range",
-      "changes": 6,
-      "users": 3
+      "changes": 21,
+      "users": 7
     }
   ],
   "data_quality_warnings": [
