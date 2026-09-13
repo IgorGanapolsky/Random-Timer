@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-09-13T12:27:51+00:00",
+  "generated_at": "2026-09-13T18:24:27+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 68,
+    "views": 70,
     "offer_selects": 6,
     "purchase_attempts": 1,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.0882,
+    "view_to_select_rate": 0.0857,
     "select_to_attempt_rate": 0.1667,
     "attempt_to_success_rate": 0.0
   },
@@ -101,7 +101,7 @@
   "entry_points": [
     {
       "entry_point": "unknown",
-      "views": 26,
+      "views": 28,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -151,7 +151,7 @@
   "leaky_entry_points": [
     {
       "entry_point": "unknown",
-      "views": 26,
+      "views": 28,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -161,17 +161,17 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 3267,
-      "users": 101
+      "changes": 3143,
+      "users": 102
     },
     {
       "setting_name": "volume",
-      "changes": 2117,
+      "changes": 2104,
       "users": 67
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1626,
+      "changes": 1628,
       "users": 101
     },
     {
@@ -181,8 +181,8 @@
     },
     {
       "setting_name": "sound_type",
-      "changes": 922,
-      "users": 91
+      "changes": 928,
+      "users": 92
     },
     {
       "setting_name": "voice_callouts_enabled",
@@ -191,8 +191,8 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 539,
-      "users": 92
+      "changes": 545,
+      "users": 94
     },
     {
       "setting_name": "repeat_rounds",
@@ -201,8 +201,8 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 218,
-      "users": 77
+      "changes": 220,
+      "users": 78
     },
     {
       "setting_name": "vibration_enabled",
@@ -216,8 +216,8 @@
     },
     {
       "setting_name": "unknown",
-      "changes": 27,
-      "users": 2
+      "changes": 7,
+      "users": 1
     }
   ],
   "data_quality_warnings": [
