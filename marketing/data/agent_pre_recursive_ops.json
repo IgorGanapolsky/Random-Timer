@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-09-13T22:44:05Z",
+  "source_episode": {
+    "title": "Dwarkesh Podcast \u2014 how close AI is to recursive self-improvement",
+    "url": "https://music.youtube.com/watch?v=PrSf7IOYu-I",
+    "note": "Act on testable implications; do not wait for full RSI."
+  },
+  "fleet_budget_usd_month": 20.0,
+  "posture": "application_layer_automation",
+  "claim_cards": [
+    {
+      "id": "reliable_agents_bottleneck",
+      "claim": "Reliable long-horizon agents and evals are the near-term bottleneck, not waiting for recursive self-improvement.",
+      "dependency": "acceptance_criteria + tool_trace_evals + human_review",
+      "wedge_12m": "Instrument fleet runs with agent_cost_reliability_audit + agent_pre_recursive_ops approval gates",
+      "proof_metric": "completion_rate_and_cost_per_success",
+      "layer": "application",
+      "bottleneck": "evaluation"
+    },
+    {
+      "id": "ai_for_ai_research_ops",
+      "claim": "Models already speed software R&D when coding reliability and review gates exist.",
+      "dependency": "coding_reliability + ci_gates + cite_required",
+      "wedge_12m": "Autonomous PR triage, research briefs, and store ops with evidence read-back",
+      "proof_metric": "hours_saved_per_week",
+      "layer": "application",
+      "bottleneck": "coding_reliability"
+    },
+    {
+      "id": "eval_verification_product",
+      "claim": "The monetizable layer is verification tooling that makes agent output deployable.",
+      "dependency": "measurable_acceptance + reproducible_evidence + fail_closed_gates",
+      "wedge_12m": "Ship claim cards + HITL approval as the default agent ops contract",
+      "proof_metric": "tickets_closed_with_evidence",
+      "layer": "application",
+      "bottleneck": "evaluation"
+    },
+    {
+      "id": "compound_hitl_loop",
+      "claim": "2\u20135x delivery speedup with humans in the loop beats unsupervised full replacement.",
+      "dependency": "human_in_loop + irreversible_approval",
+      "wedge_12m": "Engineer acceleration loops for CI, QA triage, and compliance docs",
+      "proof_metric": "cycle_time_reduction",
+      "layer": "application",
+      "bottleneck": "human_review"
+    },
+    {
+      "id": "infra_not_foundation",
+      "claim": "Under a $20/mo cap, opportunity is application-layer automation\u2014not foundation training.",
+      "dependency": "fleet_cap_enforcement",
+      "wedge_12m": "Deny foundation/lab spend; route work through local eval + cost routers",
+      "proof_metric": "month_to_date_spend_usd_under_20",
+      "layer": "application",
+      "bottleneck": "compute"
+    }
+  ],
+  "module": "scripts/agent_pre_recursive_ops.py",
+  "related_modules": [
+    "scripts/agent_eval_governance.py",
+    "scripts/agent_cost_reliability_audit.py",
+    "scripts/agent_deepseek_v4_router.py",
+    "scripts/agent_open_weight_cost_router.py"
+  ],
+  "evidence_status": "code_and_unit_tests_landed; live timed ROI before/after not verified this session"
+}
