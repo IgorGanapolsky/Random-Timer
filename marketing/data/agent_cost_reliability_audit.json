@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-09-13T21:34:12Z",
+  "source_episode": {
+    "title": "AWS DuckDB Moves, Fixing 'Lazy' AI Agents, and the 2026 AI Budget Reckoning",
+    "url": "https://music.youtube.com/watch?v=rThxZDYqnjk"
+  },
+  "fleet_budget_usd_month": 20.0,
+  "priorities": [
+    {
+      "rank": 1,
+      "theme": "fixing_lazy_agents",
+      "actions": [
+        "score_run_completion against explicit acceptance criteria + evidence",
+        "classify_laziness (incomplete_acceptance / stopped_at_diagnosis / babysitting)",
+        "retry_policy capped; escalate only on exceptions"
+      ],
+      "module": "scripts/agent_cost_reliability_audit.py"
+    },
+    {
+      "rank": 2,
+      "theme": "ai_budget_reckoning",
+      "actions": [
+        "evaluate_automation_roi under $20 fleet cap",
+        "automate high-frequency, well-defined I/O only when human_cost >> model+review"
+      ],
+      "module": "scripts/agent_cost_reliability_audit.py"
+    },
+    {
+      "rank": 3,
+      "theme": "duckdb_or_sqlite_before_models",
+      "actions": [
+        "inspect_json_rows_with_sql for structured preprocess",
+        "prefer deterministic SQL/code; escalate model tier only when needed"
+      ],
+      "module": "scripts/agent_cost_reliability_audit.py"
+    },
+    {
+      "rank": 4,
+      "theme": "cost_routing",
+      "actions": [
+        "prefer inspect_json_rows_with_sql + deterministic code before strong models",
+        "route remaining model spend via agent_deepseek_v4_router / agent_open_weight_cost_router"
+      ],
+      "module": "scripts/agent_cost_reliability_audit.py"
+    }
+  ],
+  "offer_angle": {
+    "name": "agent_cost_and_reliability_audit",
+    "pitch": "Instrument an existing workflow, identify failure/cost leaks, install evals and routing, charge against a defined savings or throughput target.",
+    "internal_first": true,
+    "note": "Apply to Random Timer agent fleet before any external offer; stay within $20/mo external spend."
+  },
+  "related_modules": [
+    "scripts/agent_deepseek_v4_router.py",
+    "scripts/agent_eval_governance.py",
+    "scripts/agent_open_weight_cost_router.py",
+    "scripts/agent_orchestration.py"
+  ],
+  "evidence_status": "code_and_unit_tests_landed; live PostHog agent-run telemetry not verified this session"
+}
