@@ -50,22 +50,23 @@ import com.iganapolsky.randomtimer.ui.theme.TimerColors
 import kotlinx.coroutines.withTimeoutOrNull
 
 internal const val HIDDEN_UNLOCK_HOLD_DURATION_MS = 8_000L
-internal const val PAYWALL_HEADLINE = "Unlock Full Fight-Ready Training"
+internal const val PAYWALL_HEADLINE = "React Faster. Train Harder. Stay Unpredictable."
 internal const val PAYWALL_SUBHEADLINE =
-    "Unlock 60-minute random windows, combat voice callouts, round-capped loops, and the full sound arsenal built for pressure drills."
-internal const val PAYWALL_HEADLINE_OUTCOMES_FIRST = "Finish Strong With Full Random Pressure"
+    "Pro turns every session into live pressure — longer random windows, combat callouts, and member-only sounds."
+internal const val PAYWALL_DAILY_PRICE_HOOK = "All for under $0.15 a day with Pro."
+internal const val PAYWALL_HEADLINE_OUTCOMES_FIRST = "Stress Less About Timing. Focus On The Fight."
 internal const val PAYWALL_SUBHEADLINE_OUTCOMES_FIRST =
     "Longer random windows, combat callouts, and full-spectrum sounds — built so every rep feels closer to live pressure."
 internal const val PAYWALL_PRICING_FOOTER =
-    "Elite plans from about $4.99–9.99/mo (store price on checkout). Cancel anytime; subscription auto-renews until cancelled."
+    "Plans from about $3.99/mo or save with annual (store price on checkout). Cancel anytime; subscription auto-renews until cancelled."
 internal val PAYWALL_FEATURE_ROWS =
     listOf(
-        "Ad-free training — Elite subscription removes rewarded ads",
-        "60-minute random windows for full-length drills",
-        "Combat and MMA voice callouts with live time checks",
-        "Round-capped loops for pad work, sparring, and circuits",
-        "Full sound arsenal — bells, horns, sirens, and more",
-        "Fresh pro audio drops when new packs land",
+        "Full-length 60-minute random windows",
+        "Combat + MMA callouts with live time checks",
+        "Member-only sound arsenal — bells, horns, sirens",
+        "Round-capped loops for pads, sparring, circuits",
+        "Ad-free Elite training — no rewarded-ad breaks",
+        "Effortless setup — train, don't tinker",
     )
 
 internal data class PaywallFeatureContext(
@@ -356,6 +357,14 @@ fun PaywallSheet(
                     text = subheadline,
                     style = MaterialTheme.typography.bodySmall,
                     color = TimerColors.TextSecondary,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = PAYWALL_DAILY_PRICE_HOOK,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = TimerColors.AccentPrimary,
                     textAlign = TextAlign.Center,
                 )
                 Spacer(modifier = Modifier.height(12.dp))

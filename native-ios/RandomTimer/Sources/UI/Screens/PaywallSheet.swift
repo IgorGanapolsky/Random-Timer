@@ -139,25 +139,26 @@ func hasAnyPurchasablePaywallPlan(availableProductIDs: Set<String>) -> Bool {
 
 struct PaywallSheet: View {
     static let hiddenUnlockHoldDuration: TimeInterval = 8.0
-    static let headline = "Unlock Full Fight-Ready Training"
-    static let headlineOutcomesFirst = "Finish Strong With Full Random Pressure"
+    static let headline = "React Faster. Train Harder. Stay Unpredictable."
+    static let headlineOutcomesFirst = "Stress Less About Timing. Focus On The Fight."
     static let subheadline =
-        "Unlock 60-minute random windows, combat voice callouts, round-capped loops, "
-        + "and the full sound arsenal built for pressure drills."
+        "Pro turns every session into live pressure — longer random windows, combat callouts, "
+        + "and member-only sounds."
     static let subheadlineOutcomesFirst =
         "Longer random windows, combat callouts, and full-spectrum sounds — "
         + "built so every rep feels closer to live pressure."
+    static let dailyPriceHook = "All for under $0.15 a day with Pro."
     static let subscriptionFooter =
-        "Elite plans from about $4.99–9.99/mo (store price on checkout). Cancel anytime; "
+        "Plans from about $3.99/mo or save with annual (store price on checkout). Cancel anytime; "
         + "subscription auto-renews until cancelled."
     static let featureTitle = "PRO FEATURES"
     static let featureRows = [
-        "Ad-free training — Elite subscription removes rewarded ads",
-        "60-minute random windows for full-length drills",
-        "Combat and MMA voice callouts with live time checks",
-        "Round-capped loops for pad work, sparring, and circuits",
-        "Full sound arsenal — bells, horns, sirens, and more",
-        "Fresh pro audio drops when new packs land",
+        "Full-length 60-minute random windows",
+        "Combat + MMA callouts with live time checks",
+        "Member-only sound arsenal — bells, horns, sirens",
+        "Round-capped loops for pads, sparring, circuits",
+        "Ad-free Elite training — no rewarded-ad breaks",
+        "Effortless setup — train, don't tinker",
     ]
 
     @EnvironmentObject var proManager: ProManager
@@ -298,6 +299,9 @@ struct PaywallSheet: View {
 
                 VStack(spacing: 4) {
                     Text(displaySubheadline)
+                    Text(Self.dailyPriceHook)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.accentPrimary)
                     Text(Self.subscriptionFooter)
                 }
                 .font(.caption)

@@ -12,23 +12,24 @@ class PaywallSheetTest {
 
     @Test
     fun `paywall copy focuses on training outcomes`() {
-        assertEquals("Unlock Full Fight-Ready Training", PAYWALL_HEADLINE)
+        assertEquals("React Faster. Train Harder. Stay Unpredictable.", PAYWALL_HEADLINE)
         assertEquals(
-            "Unlock 60-minute random windows, combat voice callouts, round-capped loops, and the full sound arsenal built for pressure drills.",
+            "Pro turns every session into live pressure — longer random windows, combat callouts, and member-only sounds.",
             PAYWALL_SUBHEADLINE,
         )
+        assertEquals("All for under $0.15 a day with Pro.", PAYWALL_DAILY_PRICE_HOOK)
         assertEquals(
-            "Elite plans from about $4.99–9.99/mo (store price on checkout). Cancel anytime; subscription auto-renews until cancelled.",
+            "Plans from about $3.99/mo or save with annual (store price on checkout). Cancel anytime; subscription auto-renews until cancelled.",
             PAYWALL_PRICING_FOOTER,
         )
         assertEquals(
             listOf(
-                "Ad-free training — Elite subscription removes rewarded ads",
-                "60-minute random windows for full-length drills",
-                "Combat and MMA voice callouts with live time checks",
-                "Round-capped loops for pad work, sparring, and circuits",
-                "Full sound arsenal — bells, horns, sirens, and more",
-                "Fresh pro audio drops when new packs land",
+                "Full-length 60-minute random windows",
+                "Combat + MMA callouts with live time checks",
+                "Member-only sound arsenal — bells, horns, sirens",
+                "Round-capped loops for pads, sparring, circuits",
+                "Ad-free Elite training — no rewarded-ad breaks",
+                "Effortless setup — train, don't tinker",
             ),
             PAYWALL_FEATURE_ROWS,
         )

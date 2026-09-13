@@ -1,0 +1,68 @@
+{
+  "metric_id": "apollo_neuro_monetization_theft",
+  "generated_at_utc": "2026-09-13T21:10:00Z",
+  "source": {
+    "competitor": "Apollo Neuro",
+    "url": "https://apolloneuro.com/",
+    "in_app_screenshot": "assets/Screenshot_20260913_160654_Apollo-2eef0f84-8bc6-4681-8ec2-68da4ad78ce1.jpg",
+    "notes": "Patterns stolen from marketing site + in-app SmartVibes membership upsell. No Apollo clinical percentages reused (would be fabricated for Random Timer)."
+  },
+  "patterns_stolen": [
+    {
+      "pattern": "outcome_triad_headline",
+      "apollo": "Sleep deeper. Stress less. Focus better.",
+      "random_timer": "React Faster. Train Harder. Stay Unpredictable."
+    },
+    {
+      "pattern": "daily_micro_price_framing",
+      "apollo": "All for under $0.30 a day with Apollo.",
+      "random_timer": "All for under $0.15 a day with Pro.",
+      "basis": "Anchors to monthly Pro (~3.99/mo) as pennies-per-day; store price still shown on checkout."
+    },
+    {
+      "pattern": "member_only_exclusive_content",
+      "apollo": "Exclusive Member-Only Vibes",
+      "random_timer": "Member-only sound arsenal — bells, horns, sirens"
+    },
+    {
+      "pattern": "quantified_or_concrete_benefit_bullets",
+      "apollo": "Up to 1 Extra Hour of Sleep / 40% Less Stress / 25% More Focus",
+      "random_timer": "Concrete capability bullets (60-minute windows, callouts, round caps) — no invented clinical %s"
+    },
+    {
+      "pattern": "effortless_experience",
+      "apollo": "Effortless Experience",
+      "random_timer": "Effortless setup — train, don't tinker"
+    },
+    {
+      "pattern": "site_trust_strip",
+      "apollo": "Backed By Real Science / Made In USA / 30 Days Money Back",
+      "random_timer_followups": [
+        "Store listing: keep risk-free cancel anytime language",
+        "Future: add social proof only from verified review counts (proxy-labeled)"
+      ]
+    },
+    {
+      "pattern": "hardware_plus_membership_bundle",
+      "apollo": "Wearable + SmartVibes AI Membership",
+      "random_timer_followups": [
+        "Keep Lifetime as one-time unlock + Annual as membership membership",
+        "Consider Pro audio pack drops as recurring membership value"
+      ]
+    }
+  ],
+  "shipped_in_pr": {
+    "android_paywall": "native-android/.../PaywallSheet.kt",
+    "ios_paywall": "native-ios/.../PaywallSheet.swift",
+    "store_subtitle_ios": "React Faster Under Pressure",
+    "store_short_android": "React faster under pressure. Random MMA timer with combat cues and Pro sounds."
+  },
+  "posthog_context": {
+    "window": "30d",
+    "note": "execute-sql on paywall_viewed/paywall_purchase_success returned taxonomy miss + zeros in this session — treat conversion impact as not verified until live funnel events appear under current event names."
+  },
+  "proxy_vs_ground_truth": {
+    "daily_price_hook": "marketing framing only; actual price is store catalog on checkout",
+    "paywall_purchase_success": "telemetry proxy, not ledger revenue"
+  }
+}

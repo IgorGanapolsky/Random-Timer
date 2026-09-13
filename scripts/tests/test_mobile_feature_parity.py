@@ -64,9 +64,9 @@ def test_paywall_hidden_unlock_is_on_title_and_unlocks_pro_not_elite():
     android_source = _read(ANDROID_PAYWALL)
     ios_paywall = _read(IOS_PAYWALL)
 
-    assert "Unlock Full Fight-Ready Training" in android_source and "holdForHiddenUnlock" in android_source
+    assert "React Faster. Train Harder. Stay Unpredictable." in android_source and "holdForHiddenUnlock" in android_source
     assert "8_000L" in android_source
-    assert "Unlock Full Fight-Ready Training" in ios_paywall and "highPriorityGesture" in ios_paywall
+    assert "React Faster. Train Harder. Stay Unpredictable." in ios_paywall and "highPriorityGesture" in ios_paywall
     assert "LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration" in ios_paywall
     assert "triggerDebugUnlock()" in ios_paywall
     assert "unlockProForDebug" in ios_paywall
@@ -78,8 +78,8 @@ def test_paywall_single_offer_parity():
     ios_paywall = _read(IOS_PAYWALL)
 
     assert "Elite Tactical" not in android_paywall
-    assert "Unlock Full Fight-Ready Training" in android_paywall
-    assert "Unlock Full Fight-Ready Training" in ios_paywall
+    assert "React Faster. Train Harder. Stay Unpredictable." in android_paywall
+    assert "React Faster. Train Harder. Stay Unpredictable." in ios_paywall
     assert "Unlock 60-minute random windows" in android_paywall
     assert "Unlock 60-minute random windows" in ios_paywall
     assert "Start Monthly" in android_paywall
