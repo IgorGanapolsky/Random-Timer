@@ -64,9 +64,9 @@ def test_paywall_hidden_unlock_is_on_title_and_unlocks_pro_not_elite():
     android_source = _read(ANDROID_PAYWALL)
     ios_paywall = _read(IOS_PAYWALL)
 
-    assert "Unlock Full Fight-Ready Training" in android_source and "holdForHiddenUnlock" in android_source
+    assert "React Faster. Train Harder. Stay Unpredictable." in android_source and "holdForHiddenUnlock" in android_source
     assert "8_000L" in android_source
-    assert "Unlock Full Fight-Ready Training" in ios_paywall and "highPriorityGesture" in ios_paywall
+    assert "React Faster. Train Harder. Stay Unpredictable." in ios_paywall and "highPriorityGesture" in ios_paywall
     assert "LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration" in ios_paywall
     assert "triggerDebugUnlock()" in ios_paywall
     assert "unlockProForDebug" in ios_paywall
@@ -78,10 +78,12 @@ def test_paywall_single_offer_parity():
     ios_paywall = _read(IOS_PAYWALL)
 
     assert "Elite Tactical" not in android_paywall
-    assert "Unlock Full Fight-Ready Training" in android_paywall
-    assert "Unlock Full Fight-Ready Training" in ios_paywall
-    assert "Unlock 60-minute random windows" in android_paywall
-    assert "Unlock 60-minute random windows" in ios_paywall
+    assert "React Faster. Train Harder. Stay Unpredictable." in android_paywall
+    assert "React Faster. Train Harder. Stay Unpredictable." in ios_paywall
+    assert "Full-length 60-minute random windows" in android_paywall
+    assert "Full-length 60-minute random windows" in ios_paywall
+    assert "All for under $0.15 a day with Pro." in android_paywall
+    assert "All for under $0.15 a day with Pro." in ios_paywall
     assert "Start Monthly" in android_paywall
     assert "Start Annual" in android_paywall
     assert "Start Monthly" in ios_paywall
@@ -239,11 +241,11 @@ def test_sound_arsenal_copy_and_purchase_path_are_normalized_for_pro():
     assert '.accessibilityLabel("Unlock Sound Arsenal")' in ios_setup
     android_paywall_norm = _android_paywall_em_dash_normalized(android_paywall)
     for expected in (
-        "60-minute random windows for full-length drills",
-        "Combat and MMA voice callouts with live time checks",
-        "Round-capped loops for pad work, sparring, and circuits",
-        "Full sound arsenal — bells, horns, sirens, and more",
-        "Fresh pro audio drops when new packs land",
+        "Full-length 60-minute random windows",
+        "Combat + MMA callouts with live time checks",
+        "Round-capped loops for pads, sparring, circuits",
+        "Member-only sound arsenal — bells, horns, sirens",
+        "Effortless setup — train, don't tinker",
     ):
         assert expected in android_paywall_norm
         assert expected in ios_paywall

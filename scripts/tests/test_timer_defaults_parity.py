@@ -176,9 +176,9 @@ def test_hidden_debug_unlock_holds_for_8_seconds_and_unlocks_pro():
     android_navigation = ANDROID_NAVIGATION.read_text(encoding="utf-8")
     ios_paywall = IOS_PAYWALL.read_text(encoding="utf-8")
 
-    assert "Unlock Full Fight-Ready Training" in android_paywall
+    assert "React Faster. Train Harder. Stay Unpredictable." in android_paywall
     assert "holdForHiddenUnlock" in android_paywall and "8_000" in android_paywall
-    assert "Unlock Full Fight-Ready Training" in ios_paywall
+    assert "React Faster. Train Harder. Stay Unpredictable." in ios_paywall
     assert "highPriorityGesture" in ios_paywall
     assert "LongPressGesture(minimumDuration: Self.hiddenUnlockHoldDuration" in ios_paywall
     assert "triggerDebugUnlock()" in ios_paywall
