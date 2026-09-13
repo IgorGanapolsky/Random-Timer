@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-09-13T22:48:08Z",
+  "source_episode": {
+    "title": "What to Use the Latest AI Tools For",
+    "show": "The AI Breakdown",
+    "url": "https://music.youtube.com/watch?v=Y2hE6kYZPg0",
+    "note": "No transcript on page; implemented practical bake-off filter from listed next steps."
+  },
+  "fleet_budget_usd_month": 20.0,
+  "min_hours_saved_per_month": 2.0,
+  "active_experiment": {
+    "bottleneck": "bounded_github_issue_to_merge_ready_pr",
+    "work_kind": "coding",
+    "candidates": ["cursor_agent", "paste_into_chat"],
+    "planned_winner_proxy": "cursor_agent",
+    "evidence_status": "framework_landed; timed live bake-off hours not verified this session"
+  },
+  "next_experiments": [
+    {
+      "work_kind": "research",
+      "bottleneck": "cited_paywall_funnel_brief_from_posthog"
+    },
+    {
+      "work_kind": "computer_use",
+      "bottleneck": "play_console_readback_draft_only_no_irreversible"
+    },
+    {
+      "work_kind": "automation",
+      "bottleneck": "intake_to_implementation_plan_with_human_approval"
+    }
+  ],
+  "module": "scripts/agent_tool_bakeoff.py",
+  "related_modules": [
+    "scripts/agent_pre_recursive_ops.py",
+    "scripts/agent_cost_reliability_audit.py",
+    "scripts/agent_eval_governance.py"
+  ]
+}
