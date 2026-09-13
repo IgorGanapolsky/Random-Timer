@@ -42,7 +42,7 @@ final class TimerConfigProClampingTests: XCTestCase {
 
     @MainActor
     func testPaywallOutcomesFirstHeadlineMatchesAndroidExperimentCopy() {
-        XCTAssertEqual(PaywallSheet.headlineOutcomesFirst, "Finish Strong With Full Random Pressure")
+        XCTAssertEqual(PaywallSheet.headlineOutcomesFirst, "Stress Less About Timing. Focus On The Fight.")
     }
 
     func testPaywallFeatureContextExplainsSelectedGateValue() {
