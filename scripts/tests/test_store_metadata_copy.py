@@ -18,9 +18,9 @@ def test_android_store_copy_uses_reaction_positioning() -> None:
     assert "wrestling" in full_description.lower()
     assert "serious fighters and operators" not in full_description
     assert len(short_description) <= 80
-    assert "interval timer" in short_description.lower()
+    assert "react" in short_description.lower()
     assert "mma" in short_description.lower()
-    assert "tactical" in short_description.lower()
+    assert "timer" in short_description.lower()
     assert "coach voices" not in short_description.lower()
     assert "ai coach" not in short_description.lower()
 
@@ -43,7 +43,8 @@ def test_ios_store_copy_matches_reaction_positioning() -> None:
     assert "trains reaction" in description.lower()
     assert "wrestling" in description.lower()
     assert len(subtitle) <= 30
-    assert "round timer" in subtitle.lower() or "interval" in subtitle.lower()
+    assert "react" in subtitle.lower()
+    assert "pressure" in subtitle.lower()
     assert len(promotional_text) <= 170
     assert "unpredictable" in promotional_text.lower()
     assert "ai coach" not in promotional_text.lower()
