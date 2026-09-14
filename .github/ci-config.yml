@@ -67,7 +67,7 @@ automation:
 quality:
   test_coverage:
     minimum: 80          # north-star target
-    enforced_floor: 66   # wired in ci.yml --cov-fail-under (2026-05-26)
+    enforced_floor: 68   # raised Phase 2 tech-debt audit 2026-09-14 (local scripts cov ~70%)
     critical: 70
   sonar:
     reliability_rating: A
