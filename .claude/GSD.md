@@ -59,3 +59,9 @@ See **`docs/AUTONOMOUS_OPERATIONS.md`** and **`.claude/scheduled_tasks.json`**.
 - Ralph Loop for multi-step fixes: `.claude/skills/ralph-mode.md`
 - TDD for product code: `AGENTS.md`
 - Device evidence: `scripts/agent_device_doctor.py` + `docs/DEVICE_E2E_TESTS.md`
+
+## Spec Kit bridge (feature SDD)
+
+Upstream: https://github.com/github/spec-kit
+Feature specs: `specs/`. Install: `./scripts/install_speckit.sh`.
+Gate: `python3 scripts/speckit_gate.py --json` (see `docs/SPEC_KIT.md`).

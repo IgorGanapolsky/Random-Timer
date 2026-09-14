@@ -1,0 +1,25 @@
+{
+  "version": "1.0.6",
+  "integration_state_schema": 1,
+  "installed_integrations": [
+    "cursor-agent",
+    "claude",
+    "hermes"
+  ],
+  "integration_settings": {
+    "cursor-agent": {
+      "script": "sh",
+      "invoke_separator": "-"
+    },
+    "claude": {
+      "script": "sh",
+      "invoke_separator": "-"
+    },
+    "hermes": {
+      "script": "sh",
+      "invoke_separator": "-"
+    }
+  },
+  "integration": "cursor-agent",
+  "default_integration": "cursor-agent"
+}
