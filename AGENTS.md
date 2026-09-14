@@ -12,6 +12,10 @@ Unified journey + capability catalog: [`docs/DEVELOPERS.md`](docs/DEVELOPERS.md)
 
 Gated issue→PR lane (plan → approve/yolo → worktree → tests → evidence). Docs: [`docs/PI_YOLO.md`](docs/PI_YOLO.md). Terminal: `pi-yolo` / `pi-yolo doctor` / `pi-yolo guide --json`. Module: `scripts/agent_pi_yolo.py`.
 
+## AI employees (not agents)
+
+Bounded operational workers with role contracts, draft-only approvals, and a 5x ROI kill/scale gate — not multi-agent platforms. Docs: [`docs/AGENT_AI_EMPLOYEES.md`](docs/AGENT_AI_EMPLOYEES.md). Module: `scripts/agent_ai_employees.py`. Seeded: `consulting_sales_engineer`, `delivery_manager`.
+
 ## Communication Style
 
 **Default to concise, action-first replies.** This is a standing rule.

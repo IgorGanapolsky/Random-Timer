@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-09-14T13:31:44Z",
+  "source_episode": {
+    "title": "AI employees, not agents",
+    "url": "https://music.youtube.com/watch?v=LE0LNULrsEM",
+    "note": "No transcript assumed; implemented bounded-employee recommendations from episode framing."
+  },
+  "fleet_budget_usd_month": 20.0,
+  "min_roi_multiple": 5.0,
+  "posture": "ai_employees_not_agents",
+  "seed_employees": [
+    {
+      "employee_id": "consulting_sales_engineer",
+      "business_outcome": "qualified pipeline and proposal turnaround",
+      "playbooks": ["lead_to_proposal", "discovery_to_sow"]
+    },
+    {
+      "employee_id": "delivery_manager",
+      "business_outcome": "faster client-ready status with lower PM overhead",
+      "playbooks": ["meeting_to_execution"]
+    }
+  ],
+  "avoid": [
+    "generic_research_agents",
+    "multi_agent_swarms_before_one_loop",
+    "unbounded_browser_computer_control",
+    "activity_metrics_without_outcomes",
+    "platform_before_proven_job"
+  ],
+  "kpis": [
+    "acceptance_rate",
+    "edit_distance",
+    "factual_error_rate",
+    "elapsed_sec",
+    "cost_usd",
+    "revenue_influenced_usd"
+  ],
+  "thirty_day_plan": {
+    "week_1": "baseline one 3-5h/week workflow",
+    "week_2": "draft-only end-to-end + approval",
+    "week_3": "systems of record + memory + 20-30 cases",
+    "week_4": "5x ROI scale/redesign/kill"
+  },
+  "module": "scripts/agent_ai_employees.py",
+  "docs": "docs/AGENT_AI_EMPLOYEES.md",
+  "memory_template": "marketing/data/ai_employee_memory.template.json",
+  "evidence_status": "code_and_unit_tests_landed; live_30d_kpi_not_verified"
+}

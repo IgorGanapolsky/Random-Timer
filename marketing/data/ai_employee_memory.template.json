@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "clients": [],
+  "icp": "Teams that need measurable AI automation without agent sprawl",
+  "offers": [
+    "AI employee setup sprint",
+    "Random Timer Pro"
+  ],
+  "projects": [
+    {
+      "name": "Random Timer",
+      "north_star": "WQTU + $100/day after-tax app sales"
+    }
+  ],
+  "decisions": [
+    "Prefer AI employees over open-ended agent swarms",
+    "Draft-only for email, CRM, GitHub, and client docs until human approval",
+    "Kill or redesign below 5x ROI on tool+engineering cost"
+  ],
+  "brand_voice": "direct, evidence-first, English-only",
+  "pricing": {
+    "fleet_monthly_cap_usd": 20.0
+  },
+  "prior_outputs": []
+}
