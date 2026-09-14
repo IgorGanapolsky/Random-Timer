@@ -56,3 +56,7 @@ Fixture: `docs/solutions/003-compound-lite-readiness.md`
 ```bash
 ./scripts/install_compound_lite.sh
 ```
+
+## pstack bridge
+
+`encode-lessons-in-structure` maps to Compound write-ups under `docs/solutions/` — see `docs/PSTACK.md`.

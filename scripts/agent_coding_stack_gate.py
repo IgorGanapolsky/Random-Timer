@@ -22,6 +22,7 @@ REQUIRED_DOCS = (
     "docs/SUPERPOWERS.md",
     "docs/BMAD.md",
     "docs/COMPOUND_ENGINEERING.md",
+    "docs/PSTACK.md",
     "AGENTS.md",
     "CLAUDE.md",
 )
@@ -32,6 +33,7 @@ REQUIRED_SCRIPTS = (
     "scripts/superpowers_gate.py",
     "scripts/bmad_readiness_gate.py",
     "scripts/compound_gate.py",
+    "scripts/pstack_gate.py",
 )
 
 BANNED_MARKERS = (
@@ -79,6 +81,10 @@ def evaluate(root: Path) -> dict[str, Any]:
     if not child["compound"].get("ready"):
         blockers.append("compound_fixture_not_ready")
 
+    child["pstack"] = _run_json(root, "scripts/pstack_gate.py")
+    if not child["pstack"].get("ready"):
+        blockers.append("pstack_not_ready")
+
     child["speckit"] = _run_json(root, "scripts/speckit_gate.py")
     if child["speckit"].get("error"):
         blockers.append("speckit_gate_error")
@@ -111,6 +117,7 @@ def evaluate(root: Path) -> dict[str, Any]:
             "superpowers_ready": child["superpowers"].get("ready"),
             "bmad_ready": child["bmad"].get("ready"),
             "compound_ready": child["compound"].get("ready"),
+            "pstack_ready": child["pstack"].get("ready"),
             "speckit_implement_ready": child["speckit"].get("implement_ready"),
             "gsd_source": child["gsd"].get("source"),
             "gsd_ship_ready": child["gsd"].get("ship_ready"),

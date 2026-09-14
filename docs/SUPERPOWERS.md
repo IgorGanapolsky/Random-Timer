@@ -49,3 +49,7 @@ Five-element SPEC + readiness: see `docs/BMAD.md` and `python3 scripts/bmad_read
 ## Compound Engineering lite
 
 Learning capture (`docs/solutions/`): see `docs/COMPOUND_ENGINEERING.md` and `python3 scripts/compound_gate.py --json`.
+
+## pstack lite
+
+Principles and poteto-mode sit beside Superpowers process skills: `docs/PSTACK.md`.

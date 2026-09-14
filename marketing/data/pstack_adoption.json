@@ -1,0 +1,17 @@
+{
+  "framework": "pstack-lite",
+  "upstream": "https://github.com/cursor/plugins/tree/main/pstack",
+  "pin": "0.15.2",
+  "adopted_at_utc": "2026-09-14T00:00:00Z",
+  "vendored": [
+    "23 principle-* skills",
+    "poteto-mode (Random Timer adapted)",
+    "unslop"
+  ],
+  "skipped": [
+    "full marketplace skill set",
+    "setup-pstack model panel as CI dependency"
+  ],
+  "gate": "python3 scripts/pstack_gate.py --json",
+  "doc": "docs/PSTACK.md"
+}
