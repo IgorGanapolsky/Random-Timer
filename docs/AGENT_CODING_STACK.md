@@ -1,0 +1,67 @@
+# Agent coding stack (SSOT)
+
+This is Random Timer’s answer to “which LLM framework?” — **none as a universal winner**. We layer a **coding-agent workflow stack** on top of durable repo contracts. Not LangGraph; not an agent runtime.
+
+Canonical recommendation this file encodes (successor-aware):
+
+- Do **not** use archived [`gsd-build/get-shit-done`](https://github.com/gsd-build/get-shit-done) — use [`open-gsd/gsd-core`](https://github.com/open-gsd/gsd-core).
+- Treat **AGENTS.md / CLAUDE.md** as the invariant repo contract.
+- Layer planning/artifacts, then rigor, then compound learnings.
+
+## Verdict map (job → default)
+
+| Need | Default here | Evidence |
+|------|----------------|----------|
+| Solo / long-running features | **OpenGSD (gsd-core)** | `docs/GSD_OPENGSD.md`, `python3 scripts/gsd_phase_gate.py --json` |
+| Auditable feature specs | **GitHub Spec Kit** | `docs/SPEC_KIT.md`, `python3 scripts/speckit_gate.py --json` |
+| Highest SE rigor (TDD/worktrees/review) | **Superpowers** | `docs/SUPERPOWERS.md`, `python3 scripts/superpowers_gate.py --json` |
+| Product-scale discovery→QA | **BMAD-lite** (not full install) | `docs/BMAD.md`, `python3 scripts/bmad_readiness_gate.py --json` |
+| Capture repeated corrections | **Compound Engineering lite** | `docs/COMPOUND_ENGINEERING.md`, `python3 scripts/compound_gate.py --json` |
+| Execution runtime (model-separable) | **Cursor / Claude Code / Codex** (+ optional OpenCode) | Host tools; OpenCode CLI may exist locally |
+| Hawk metrics / lifecycle ROI | PlayerZero **method** only | `docs/AGENT_COMPOUNDING_ROI.md` |
+
+## Layered stack (do not pick only one)
+
+```text
+AGENTS.md + CLAUDE.md          ← invariant contract
+        │
+        ├─ OpenGSD             ← everyday phase loop (.planning/)
+        ├─ Spec Kit + BMAD-lite← feature SPEC / plan / tasks (specs/)
+        ├─ Superpowers         ← process skills (TDD, worktrees, verify)
+        └─ Compound lite       ← docs/solutions/ after non-trivial work
+```
+
+### When to use which
+
+1. **Default feature / refactor / migration** → OpenGSD discuss→plan→execute→verify→ship.
+2. **Correctness / high-risk code** → Superpowers TDD + worktree + verification-before-completion.
+3. **Shared / auditable specs** → Spec Kit constitution + `specs/<###>/`.
+4. **Quick vs Full planning** → BMAD-lite five-element `SPEC.md` readiness gate.
+5. **Same mistake twice** → Compound lite write-up under `docs/solutions/`.
+
+## Explicitly rejected
+
+| Temptation | Why rejected |
+|------------|--------------|
+| `gsd-build/get-shit-done` | Archived 2026-06-26; successor is open-gsd/gsd-core |
+| Full `bmad-method` install | Overlaps Spec Kit / Superpowers; we keep lite contract + gate |
+| Full EveryInc Compound plugin (33 skills + reviewer farm) | Token/churn cost; fourth step only |
+| “Just prompt harder” / Ralph with no anchors | Expensive wrong cascades |
+| Claiming one framework is “best LLM framework” | Wrong category — these are workflow layers |
+
+## Presence gate
+
+```bash
+python3 scripts/agent_coding_stack_gate.py --json
+```
+
+`ready=true` means all layer docs + scripts exist and child gates report healthy **presence** (not “an active GSD phase is ship-ready”).
+
+## Adoption artifacts
+
+- `marketing/data/opengsd_adoption.json`
+- `marketing/data/speckit_adoption.json`
+- `marketing/data/superpowers_adoption.json`
+- `marketing/data/bmad_adoption.json`
+- `marketing/data/compound_engineering_adoption.json`
+- `marketing/data/agent_coding_stack_adoption.json`

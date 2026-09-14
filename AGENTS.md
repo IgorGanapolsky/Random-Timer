@@ -40,6 +40,8 @@ Policy for Agents API `openai_hosted` sandboxes: local-first, network disabled b
 
 **Cursor:** `.cursor/rules/operational-reliability.mdc` (always applied).
 
+**Agent coding stack (SSOT):** `docs/AGENT_CODING_STACK.md` — layered OpenGSD + Spec Kit + Superpowers + BMAD-lite + Compound lite; never install archived `gsd-build/get-shit-done`. Gate: `python3 scripts/agent_coding_stack_gate.py --json`.
+
 **OpenGSD:** `.claude/GSD.md` + `docs/GSD_OPENGSD.md` — Discuss→Plan→Execute→Verify→Ship via [open-gsd/gsd-core](https://github.com/open-gsd/gsd-core); gate with `python3 scripts/gsd_phase_gate.py --json`.
 
 Store and executive JSON expose **`review_count_metric_id`** where applicable so counts are never read as undefined “total reviews.”
