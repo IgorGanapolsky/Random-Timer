@@ -41,3 +41,7 @@ python3 scripts/superpowers_gate.py --json
 | Feature SDD artifacts | Spec Kit (`docs/SPEC_KIT.md`) |
 | Phase roadmap | OpenGSD (`docs/GSD_OPENGSD.md`) |
 | Ship evidence | Artifact GSD (merge SHA / CI / marketing JSON) |
+
+## BMAD-lite
+
+Five-element SPEC + readiness: see `docs/BMAD.md` and `python3 scripts/bmad_readiness_gate.py --json`.

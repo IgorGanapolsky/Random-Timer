@@ -1,0 +1,22 @@
+{
+  "source_article": "https://sam-solutions.com/blog/spec-driven-development-with-bmad-method/",
+  "mode": "bmad-lite",
+  "upstream_oss": "bmad-method",
+  "upstream_installed": false,
+  "adopted_utc": "2026-09-14T19:30:00Z",
+  "roi": [
+    "spec_five_elements",
+    "readiness_gate",
+    "quick_vs_full_flow",
+    "artifact_handoffs"
+  ],
+  "skipped": [
+    "full_npx_bmad_method_install",
+    "enterprise_prd_ux_spine_default"
+  ],
+  "gate": "scripts/bmad_readiness_gate.py",
+  "template": "templates/bmad/SPEC.md",
+  "fixture": "specs/002-bmad-lite-readiness",
+  "docs": "docs/BMAD.md",
+  "external_cost": 0
+}

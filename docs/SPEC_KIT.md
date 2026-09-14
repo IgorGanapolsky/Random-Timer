@@ -51,3 +51,7 @@ Do not delete without replacing another green fixture.
 ## Superpowers
 
 Process skills: see `docs/SUPERPOWERS.md` and `python3 scripts/superpowers_gate.py --json`.
+
+## BMAD-lite
+
+Five-element SPEC + readiness: see `docs/BMAD.md` and `python3 scripts/bmad_readiness_gate.py --json`.
