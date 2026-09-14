@@ -17,6 +17,7 @@ Canonical recommendation this file encodes (successor-aware):
 | Highest SE rigor (TDD/worktrees/review) | **Superpowers** | `docs/SUPERPOWERS.md`, `python3 scripts/superpowers_gate.py --json` |
 | Product-scale discovery→QA | **BMAD-lite** (not full install) | `docs/BMAD.md`, `python3 scripts/bmad_readiness_gate.py --json` |
 | Capture repeated corrections | **Compound Engineering lite** | `docs/COMPOUND_ENGINEERING.md`, `python3 scripts/compound_gate.py --json` |
+| Principle-steered rigor / anti-slop | **pstack lite** (poteto-mode) | `docs/PSTACK.md`, `python3 scripts/pstack_gate.py --json` |
 | Execution runtime (model-separable) | **Cursor / Claude Code / Codex** (+ optional OpenCode) | Host tools; OpenCode CLI may exist locally |
 | Hawk metrics / lifecycle ROI | PlayerZero **method** only | `docs/AGENT_COMPOUNDING_ROI.md` |
 
@@ -28,17 +29,18 @@ AGENTS.md + CLAUDE.md          ← invariant contract
         ├─ OpenGSD             ← everyday phase loop (.planning/)
         ├─ Spec Kit + BMAD-lite← feature SPEC / plan / tasks (specs/)
         ├─ Superpowers         ← process skills (TDD, worktrees, verify)
+        ├─ pstack lite         ← 23 principles + poteto-mode + unslop
         └─ Compound lite       ← docs/solutions/ after non-trivial work
 ```
 
 ### When to use which
 
 1. **Default feature / refactor / migration** → OpenGSD discuss→plan→execute→verify→ship.
-2. **Correctness / high-risk code** → Superpowers TDD + worktree + verification-before-completion.
+2. **Correctness / high-risk code** → Superpowers TDD + worktree + verification-before-completion; start with poteto-mode.
 3. **Shared / auditable specs** → Spec Kit constitution + `specs/<###>/`.
 4. **Quick vs Full planning** → BMAD-lite five-element `SPEC.md` readiness gate.
-5. **Same mistake twice** → Compound lite write-up under `docs/solutions/`.
-
+5. **Same mistake twice** → Compound lite write-up under `docs/solutions/` (encode-lessons-in-structure).
+6. **Steer with principle names** → pstack lite (`prove it works`, `subtract before you add`, …).
 ## Explicitly rejected
 
 | Temptation | Why rejected |
