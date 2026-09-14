@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "source": "fleet_assets",
+  "inspired_by": "https://docs.dagster.io/",
+  "notes": "Dagster-style assets without Dagster+. JSON files are materializations; fleet_assets.py observes and checks them. Do not claim live store/NSM state without a passing check on freshness + required keys.",
+  "assets": [
+    {
+      "key": "wqtu_health",
+      "path": "marketing/data/wqtu_health.json",
+      "deps": [],
+      "materialize_hint": "scripts/wqtu_dashboard.py",
+      "checks": ["file_exists", "has_generated_at", "required_keys", "fresh_within_days"],
+      "required_keys": ["generated_at", "status", "nsm"],
+      "freshness_days": 14
+    },
+    {
+      "key": "north_star",
+      "path": "marketing/data/north_star.json",
+      "deps": ["wqtu_health"],
+      "materialize_hint": "scripts/north_star_ops.py",
+      "checks": ["file_exists", "has_generated_at", "required_keys", "fresh_within_days"],
+      "required_keys": ["generated_at", "source", "north_star"],
+      "freshness_days": 14
+    },
+    {
+      "key": "paywall_conversion",
+      "path": "marketing/data/paywall_conversion_report.json",
+      "deps": [],
+      "materialize_hint": "scripts/post_publish_revenue_gate.py / paywall report jobs",
+      "checks": ["file_exists", "has_generated_at", "required_keys", "fresh_within_days"],
+      "required_keys": ["generated_at", "funnel", "window_days"],
+      "freshness_days": 14
+    },
+    {
+      "key": "executive_metrics",
+      "path": "marketing/data/executive_metrics.json",
+      "deps": ["north_star", "paywall_conversion"],
+      "materialize_hint": "scripts/executive_metrics_snapshot.py",
+      "checks": [
+        "file_exists",
+        "has_generated_at",
+        "required_keys",
+        "fresh_within_days",
+        "proxy_labels_present"
+      ],
+      "required_keys": ["generated_at", "source", "definitions"],
+      "freshness_days": 14
+    },
+    {
+      "key": "post_publish_gate",
+      "path": "marketing/data/post_publish_gate.json",
+      "deps": ["executive_metrics"],
+      "materialize_hint": "scripts/post_publish_revenue_gate.py",
+      "checks": ["file_exists", "has_generated_at", "required_keys", "fresh_within_days"],
+      "required_keys": ["generated_at", "stores", "store_public_pass"],
+      "freshness_days": 30
+    }
+  ],
+  "automation_map": {
+    "schedules": "GitHub Actions cron workflows (north-star, store snapshots)",
+    "sensors": "store-release-watcher.yml, internal-signoff statuses",
+    "asset_sensors": "When north_star rematerializes, refresh executive_metrics then post_publish_gate",
+    "declarative_rule": "Never claim READY/LIVE unless asset checks for post_publish_gate + store observations pass"
+  }
+}
