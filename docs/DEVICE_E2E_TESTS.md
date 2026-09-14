@@ -59,6 +59,22 @@ Skill: `.claude/skills/vphone-cli-ios-lane/SKILL.md`.
 - **iOS Maestro:** `.maestro/ios-smoke-test.yaml` and paywall/pro regressions (see `run-ios-simulator.sh`).
 - **vphone (optional):** same iOS Maestro smoke when doctor + Maestro device binding succeed.
 
+## Callstack agent-device ROI (2026-09)
+
+Stolen from Callstack Incubator Aug dispatch — only patterns that apply to this **native** app:
+
+| Pattern | Action | Cost |
+| --- | --- | --- |
+| Runtime evidence > green unit CI | `./scripts/device-tests/agent-device-pr-evidence.sh` before claiming UI done | $0 |
+| Self-host Mac simulator cloud | `./scripts/device-tests/agent-device-proxy-host.sh` + SSH `-L 4310:127.0.0.1:4310` | $0 |
+| Doctor | `python3 scripts/agent_device_doctor.py --json` | $0 |
+| Expo EAS cloud sims / paid Apex / RN Rozenite | **Skip** (waitlist/paid/wrong stack) | — |
+
+Skill: `.claude/skills/callstack-agent-device-roi/SKILL.md`.  
+Upstream proxy docs: https://oss.callstack.com/agent-device/docs/remote-proxy
+
+Never commit `AGENT_DEVICE_DAEMON_AUTH_TOKEN`. Prefer Tailscale/SSH over paid ngrok.
+
 ## Local Gradle note
 
 `native-android/gradle/gradle-daemon-jvm.properties` pins JetBrains Runtime 21; foojay cannot download it on **macOS arm64**. Device-test scripts temporarily move that file aside and use Homebrew **openjdk@21** for builds.

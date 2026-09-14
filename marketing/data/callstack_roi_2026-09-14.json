@@ -1,0 +1,39 @@
+{
+  "source": "callstack.pdf",
+  "generated_at": "2026-09-14T18:45:00Z",
+  "newsletter": "Margelo Joins Callstack, React Native 0.87, React 19.3, Apex almost GA, Rozenite UI",
+  "app_stack": "native_kotlin_swift_not_rn",
+  "implemented_high_roi": [
+    {
+      "item": "agent-device doctor + readiness statuses",
+      "path": "scripts/agent_device_doctor.py"
+    },
+    {
+      "item": "self-host proxy host/connect scripts (SSH/Tailscale preferred)",
+      "paths": [
+        "scripts/device-tests/agent-device-proxy-host.sh",
+        "scripts/device-tests/agent-device-proxy-connect.sh"
+      ]
+    },
+    {
+      "item": "PR runtime evidence capture (steal Expo/Callstack PR review pattern)",
+      "path": "scripts/device-tests/agent-device-pr-evidence.sh"
+    },
+    {
+      "item": "agent skill for future sessions",
+      "path": ".claude/skills/callstack-agent-device-roi/SKILL.md"
+    }
+  ],
+  "skipped_low_roi": [
+    "React Native 0.87 / Strict TS API",
+    "React Navigation / Lynx",
+    "Rozenite UI/RPC (RN DevTools)",
+    "Margelo Nitro/MMKV/VisionCamera",
+    "Expo EAS cloud simulators waitlist",
+    "Paid Apex GA / Agent Conf LATE30 tickets"
+  ],
+  "budget": {
+    "cap_usd_month": 20,
+    "external_spend_this_change_usd": 0
+  }
+}
