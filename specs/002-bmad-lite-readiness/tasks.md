@@ -1,0 +1,3 @@
+- [x] Template SPEC.md
+- [x] Readiness gate + tests
+- [x] Docs + skill + fixture
