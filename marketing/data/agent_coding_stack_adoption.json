@@ -1,0 +1,20 @@
+{
+  "framework": "agent-coding-stack-ssot",
+  "adopted_at_utc": "2026-09-14T00:00:00Z",
+  "invariant_contract": ["AGENTS.md", "CLAUDE.md"],
+  "layers": [
+    "open-gsd/gsd-core",
+    "github/spec-kit",
+    "obra/superpowers",
+    "bmad-lite",
+    "compound-engineering-lite"
+  ],
+  "rejected": [
+    "gsd-build/get-shit-done (archived)",
+    "full bmad-method install",
+    "full EveryInc compound plugin"
+  ],
+  "gate": "python3 scripts/agent_coding_stack_gate.py --json",
+  "doc": "docs/AGENT_CODING_STACK.md",
+  "opencode": "optional_runtime_not_required"
+}
