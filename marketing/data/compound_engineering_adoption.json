@@ -1,0 +1,22 @@
+{
+  "framework": "compound-engineering-lite",
+  "article": "https://theaiengineer.substack.com/p/superpowers-vs-gsd-vs-compound-engineering",
+  "upstream_plugin": "https://github.com/EveryInc/compound-engineering-plugin",
+  "doctrine": "https://every.to/guides/compound-engineering",
+  "adopted_at_utc": "2026-09-14T00:00:00Z",
+  "full_plugin_installed": false,
+  "high_roi": [
+    "plan_work_review_compound_fourth_step",
+    "docs/solutions searchable writeups",
+    "scripts/compound_gate.py",
+    "compose_with_superpowers_and_opengsd"
+  ],
+  "skipped": [
+    "full_33_skill_plugin",
+    "parallel_reviewer_farm_default",
+    "ce-lfg_50_agent_pipeline"
+  ],
+  "gate": "python3 scripts/compound_gate.py --json",
+  "fixture": "docs/solutions/003-compound-lite-readiness.md",
+  "related_but_separate": "docs/AGENT_COMPOUNDING_ROI.md"
+}

@@ -42,3 +42,7 @@ python3 scripts/bmad_readiness_gate.py --json --feature 002
 ```
 
 Fixture: `specs/002-bmad-lite-readiness/`
+
+## Compound Engineering lite
+
+After implementation, compound learnings: see `docs/COMPOUND_ENGINEERING.md`.

@@ -55,3 +55,7 @@ Process skills: see `docs/SUPERPOWERS.md` and `python3 scripts/superpowers_gate.
 ## BMAD-lite
 
 Five-element SPEC + readiness: see `docs/BMAD.md` and `python3 scripts/bmad_readiness_gate.py --json`.
+
+## Compound Engineering lite
+
+After Spec Kit implement/converge, capture learnings in `docs/solutions/` — see `docs/COMPOUND_ENGINEERING.md`.
