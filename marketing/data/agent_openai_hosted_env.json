@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-09-14T13:59:14Z",
+  "source": {
+    "title": "OpenAI-hosted sandboxes",
+    "url": "https://developers.openai.com/api/docs/guides/agents-api/environments/openai-hosted"
+  },
+  "fleet_budget_usd_month": 20.0,
+  "default_network_access": "disabled",
+  "workspace_outputs": "/workspace/outputs",
+  "posture": [
+    "prefer_local_first",
+    "hosted_only_when_isolated_linux_needed",
+    "api_key_outside_sandbox",
+    "wait_for_connected",
+    "publish_outputs_to_artifact_vault",
+    "delete_session_when_done",
+    "template_cannot_broaden_network"
+  ],
+  "module": "scripts/agent_openai_hosted_env.py",
+  "docs": "docs/AGENT_OPENAI_HOSTED_ENV.md",
+  "related_modules": [
+    "scripts/agent_artifact_transparency.py",
+    "scripts/agent_local_first_router.py",
+    "scripts/agent_ai_employees.py"
+  ],
+  "evidence_status": "code_and_unit_tests_landed; live_openai_agents_session_not_verified"
+}

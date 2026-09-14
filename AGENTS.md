@@ -20,6 +20,10 @@ Bounded operational workers with role contracts, draft-only approvals, and a 5x 
 
 Persist tool traces, generated code, and downloadable artifacts before compaction; recall via tool. Docs: [`docs/AGENT_ARTIFACT_TRANSPARENCY.md`](docs/AGENT_ARTIFACT_TRANSPARENCY.md). Module: `scripts/agent_artifact_transparency.py`. Lesson: [Willison Astra routes](https://simonwillison.net/2026/Sep/12/astra-running-routes/).
 
+## OpenAI-hosted environments
+
+Policy for Agents API `openai_hosted` sandboxes: local-first, network disabled by default, `/workspace/outputs` → artifact vault, $20 fleet budget gate. Docs: [`docs/AGENT_OPENAI_HOSTED_ENV.md`](docs/AGENT_OPENAI_HOSTED_ENV.md). Module: `scripts/agent_openai_hosted_env.py`. Guide: [OpenAI-hosted sandboxes](https://developers.openai.com/api/docs/guides/agents-api/environments/openai-hosted).
+
 ## Communication Style
 
 **Default to concise, action-first replies.** This is a standing rule.
