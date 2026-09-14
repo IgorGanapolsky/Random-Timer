@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# pi-yolo — Pi-style gated issue→PR engineering harness for Random Timer.
+# Loop: plan → approve/yolo → worktree impl → tests → evidence package.
+set -euo pipefail
+
+ROOT="${PI_YOLO_ROOT:-}"
+if [[ -z "$ROOT" ]]; then
+  if git rev-parse --show-toplevel >/dev/null 2>&1; then
+    ROOT="$(git rev-parse --show-toplevel)"
+  else
+    ROOT="$HOME/workspace/git/igor/Random-Timer"
+  fi
+fi
+
+MODULE="$ROOT/scripts/agent_pi_yolo.py"
+if [[ ! -f "$MODULE" ]]; then
+  echo "[pi-yolo] missing $MODULE — run from Random-Timer or set PI_YOLO_ROOT" >&2
+  exit 1
+fi
+
+cd "$ROOT"
+
+if [[ $# -eq 0 ]]; then
+  set -- guide --json
+fi
+
+case "${1:-}" in
+  -h|--help|help)
+    cat <<'EOF'
+pi-yolo — gated agentic engineering harness (issue→PR lane)
+
+Usage:
+  pi-yolo                 Print repo guide (JSON)
+  pi-yolo doctor          Health check
+  pi-yolo guide --json    Architecture map, quality commands, DoD, rules
+  pi-yolo check [flags]   Evaluate a harness run (plan/rules/DoD)
+
+Check flags (common):
+  --plan --yolo --criteria tests_green --criteria evidence_package
+  --worktree --file path --test path --tests-passed --risks-ok --rollback-ok
+  --evidence path --plan-summary "..." --rollback "revert SHA" --json
+
+Rules: no secrets, no production changes, no deps without approval, worktree only.
+EOF
+    exit 0
+    ;;
+esac
+
+exec python3 "$MODULE" "$@"
