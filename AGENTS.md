@@ -16,6 +16,10 @@ Gated issue→PR lane (plan → approve/yolo → worktree → tests → evidence
 
 Bounded operational workers with role contracts, draft-only approvals, and a 5x ROI kill/scale gate — not multi-agent platforms. Docs: [`docs/AGENT_AI_EMPLOYEES.md`](docs/AGENT_AI_EMPLOYEES.md). Module: `scripts/agent_ai_employees.py`. Seeded: `consulting_sales_engineer`, `delivery_manager`.
 
+## Artifact transparency (compaction-safe)
+
+Persist tool traces, generated code, and downloadable artifacts before compaction; recall via tool. Docs: [`docs/AGENT_ARTIFACT_TRANSPARENCY.md`](docs/AGENT_ARTIFACT_TRANSPARENCY.md). Module: `scripts/agent_artifact_transparency.py`. Lesson: [Willison Astra routes](https://simonwillison.net/2026/Sep/12/astra-running-routes/).
+
 ## Communication Style
 
 **Default to concise, action-first replies.** This is a standing rule.

@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-09-14T13:43:23Z",
+  "source": {
+    "title": "Generating running routes with GPT-6 Astra and ChatGPT Work",
+    "author": "Simon Willison",
+    "url": "https://simonwillison.net/2026/Sep/12/astra-running-routes/",
+    "date": "2026-09-12",
+    "lesson": "Opacity + compaction without recoverable pre-compacted artifacts is an anti-feature."
+  },
+  "fleet_budget_usd_month": 20.0,
+  "posture": "compaction_safe_artifact_vault",
+  "requirements": [
+    "persist_tool_trace",
+    "persist_generated_code",
+    "persist_downloadable_artifacts",
+    "recall_pre_compaction_via_tool",
+    "allowlisted_cdn_share_html",
+    "fetch_open_data_then_local_compute"
+  ],
+  "blocked": [
+    "opaque_chat_only",
+    "narrative_without_code",
+    "non_allowlisted_cdn"
+  ],
+  "module": "scripts/agent_artifact_transparency.py",
+  "docs": "docs/AGENT_ARTIFACT_TRANSPARENCY.md",
+  "related_modules": [
+    "scripts/agent_pi_yolo.py",
+    "scripts/agent_local_first_router.py",
+    "scripts/agent_ai_employees.py"
+  ],
+  "evidence_status": "code_and_unit_tests_landed; external_chatgpt_work_not_integrated"
+}
