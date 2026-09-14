@@ -33,3 +33,7 @@ Repo still enforces Random-Timer **artifact GSD** (merge SHA / CI URL / `marketi
 ## Spec Kit
 
 Feature-level SDD: see `docs/SPEC_KIT.md` and `python3 scripts/speckit_gate.py --json`.
+
+## Superpowers
+
+Process skills: see `docs/SUPERPOWERS.md` and `python3 scripts/superpowers_gate.py --json`.

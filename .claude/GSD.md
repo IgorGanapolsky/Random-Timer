@@ -65,3 +65,7 @@ See **`docs/AUTONOMOUS_OPERATIONS.md`** and **`.claude/scheduled_tasks.json`**.
 Upstream: https://github.com/github/spec-kit
 Feature specs: `specs/`. Install: `./scripts/install_speckit.sh`.
 Gate: `python3 scripts/speckit_gate.py --json` (see `docs/SPEC_KIT.md`).
+
+## Superpowers
+
+Process skills: see `docs/SUPERPOWERS.md` and `python3 scripts/superpowers_gate.py --json`.

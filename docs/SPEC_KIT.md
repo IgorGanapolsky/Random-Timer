@@ -47,3 +47,7 @@ See `.claude/GSD.md` and `docs/GSD_OPENGSD.md`.
 
 `specs/001-speckit-harness-gate/` is the first tracked feature used to prove the gate.
 Do not delete without replacing another green fixture.
+
+## Superpowers
+
+Process skills: see `docs/SUPERPOWERS.md` and `python3 scripts/superpowers_gate.py --json`.
