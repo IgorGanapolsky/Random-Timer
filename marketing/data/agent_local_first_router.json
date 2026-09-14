@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-09-14T13:16:20Z",
+  "source_episode": {
+    "title": "16GB Is All You Need for Serious AI",
+    "show": "The Augmented Mind: Thinking With AI",
+    "url": "https://music.youtube.com/watch?v=qILTuXLxfBM",
+    "note": "No transcript on page; implemented selectively-local hybrid recommendations."
+  },
+  "fleet_budget_usd_month": 20.0,
+  "posture": "local_first_hybrid",
+  "hardware_default": "keep_16gb_optimize_workflow",
+  "models": {
+    "local": "local/hermes-cheap",
+    "cloud": "cloud/frontier"
+  },
+  "lanes": {
+    "local": [
+      "routing",
+      "classification",
+      "extraction",
+      "formatting",
+      "summarization",
+      "private_summary",
+      "simple_coding",
+      "test_generation",
+      "draft_code"
+    ],
+    "cloud": [
+      "architecture",
+      "hard_debugging",
+      "agent_planning",
+      "final_review",
+      "long_context_coding"
+    ]
+  },
+  "private_data_lane": "force_local",
+  "escalation": {
+    "complexity_gte": 0.65,
+    "confidence_lte": 0.45
+  },
+  "template_pipeline": [
+    "classify",
+    "retrieve_context",
+    "local_draft",
+    "cloud_escalate_if_needed",
+    "human_approval",
+    "log_acceptance"
+  ],
+  "module": "scripts/agent_local_first_router.py",
+  "related_modules": [
+    "scripts/agent_deepseek_v4_router.py",
+    "scripts/agent_open_weight_cost.py",
+    "scripts/agent_tool_bakeoff.py",
+    "scripts/agent_cost_reliability_audit.py"
+  ],
+  "evidence_status": "code_and_unit_tests_landed; 2-4 week acceptance telemetry not verified this session"
+}
