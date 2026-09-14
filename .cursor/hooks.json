@@ -5,6 +5,11 @@
       {
         "command": "bash .cursor/hooks/rose-lite-session.sh",
         "timeout": 45
+      },
+      {
+        "type": "command",
+        "command": "node .cursor/hooks/gsd-cursor-session-start.js",
+        "gsd-managed": true
       }
     ],
     "beforeSubmitPrompt": [
@@ -19,12 +24,45 @@
         "command": "bash .cursor/hooks/shunt-intercept.sh",
         "timeout": 10,
         "matcher": "Read"
+      },
+      {
+        "type": "command",
+        "command": "node .cursor/hooks/gsd-cursor-pre-tool.js",
+        "gsd-managed": true
       }
     ],
     "beforeShellExecution": [
       {
         "command": "bash .cursor/hooks/shunt-intercept.sh",
         "timeout": 10
+      }
+    ],
+    "postToolUse": [
+      {
+        "type": "command",
+        "command": "node .cursor/hooks/gsd-cursor-post-tool.js",
+        "gsd-managed": true
+      }
+    ],
+    "stop": [
+      {
+        "type": "command",
+        "command": "node .cursor/hooks/gsd-cursor-stop.js",
+        "gsd-managed": true
+      }
+    ],
+    "subagentStart": [
+      {
+        "type": "command",
+        "command": "node .cursor/hooks/gsd-cursor-subagent-start.js",
+        "gsd-managed": true
+      }
+    ],
+    "subagentStop": [
+      {
+        "type": "command",
+        "command": "node .cursor/hooks/gsd-cursor-subagent-stop.js",
+        "gsd-managed": true
       }
     ]
   }
