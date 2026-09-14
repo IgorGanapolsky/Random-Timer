@@ -13,7 +13,7 @@
 | Active Users | Count |
 |-------------|:-----:|
 | DAU | 10 |
-| WAU | 74 |
+| WAU | 64 |
 | MAU | 172 |
 <!-- DOWNLOADS_END -->
 
@@ -23,9 +23,9 @@
 | Metric | Value |
 |--------|-------|
 | WQTU (7d) | 4 |
-| Timer Completed (7d) | 98 |
-| Completed Users (7d) | 28 |
-| Sessions/Completed User (7d) | 3.5 |
+| Timer Completed (7d) | 97 |
+| Completed Users (7d) | 27 |
+| Sessions/Completed User (7d) | 3.59 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
@@ -38,7 +38,7 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-09-14T19:53:06+00:00
+**Generated:** 2026-09-14T21:03:20+00:00
 
 ## Onboarding Funnel
 - First Open: **150**
@@ -157,8 +157,8 @@ xychart-beta
     title "Downloads (30d rolling)"
     x-axis ["2026-09-14" , "2026-09-14" , "2026-09-14" , "2026-09-14" , "2026-09-14" , "2026-09-14" , "2026-09-14" , "2026-09-14" , "2026-09-14" , "2026-09-14" , "2026-09-14" , "2026-09-14" , "2026-09-14" , "2026-09-14"]
     y-axis "Downloads"
-    line [52 , 52 , 52 , 52 , 53 , 52 , 52 , 52 , 52 , 52 , 52 , 52 , 52 , 52]
-    line [93 , 93 , 93 , 94 , 96 , 96 , 95 , 95 , 95 , 95 , 95 , 95 , 95 , 95]
+    line [52 , 52 , 52 , 53 , 52 , 52 , 52 , 52 , 52 , 52 , 52 , 52 , 52 , 52]
+    line [93 , 93 , 94 , 96 , 96 , 95 , 95 , 95 , 95 , 95 , 95 , 95 , 95 , 95]
 ```
 
 ```mermaid
@@ -194,4 +194,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-09-14T19:53:08+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-09-14T21:03:21+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
