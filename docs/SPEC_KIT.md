@@ -50,4 +50,4 @@ Do not delete without replacing another green fixture.
 
 ## Superpowers
 
-Process skills: see \`docs/SUPERPOWERS.md\` and \`python3 scripts/superpowers_gate.py --json\`.
+Process skills: see `docs/SUPERPOWERS.md` and `python3 scripts/superpowers_gate.py --json`.

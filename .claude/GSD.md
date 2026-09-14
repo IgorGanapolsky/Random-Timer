@@ -68,4 +68,4 @@ Gate: `python3 scripts/speckit_gate.py --json` (see `docs/SPEC_KIT.md`).
 
 ## Superpowers
 
-Process skills: see \`docs/SUPERPOWERS.md\` and \`python3 scripts/superpowers_gate.py --json\`.
+Process skills: see `docs/SUPERPOWERS.md` and `python3 scripts/superpowers_gate.py --json`.

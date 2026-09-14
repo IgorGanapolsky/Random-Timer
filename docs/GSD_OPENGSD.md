@@ -36,4 +36,4 @@ Feature-level SDD: see `docs/SPEC_KIT.md` and `python3 scripts/speckit_gate.py -
 
 ## Superpowers
 
-Process skills: see \`docs/SUPERPOWERS.md\` and \`python3 scripts/superpowers_gate.py --json\`.
+Process skills: see `docs/SUPERPOWERS.md` and `python3 scripts/superpowers_gate.py --json`.
