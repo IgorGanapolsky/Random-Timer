@@ -88,6 +88,8 @@ def test_gitignore_covers_known_local_artifact_buckets() -> None:
     expected_entries = (
         ".venv-chatterbox/",
         "native-android/.venv-chatterbox/",
+        ".venv-audit/",
+        ".tmp/",
         ".thumbgate/feedback-log.jsonl",
         ".thumbgate/memory-log.jsonl",
         "evidence/",

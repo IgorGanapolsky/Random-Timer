@@ -68,6 +68,8 @@ coverage-python.xml
 *.log
 tmp/
 temp/
+.tmp/
+.venv-audit/
 
 # Trunk (linter cache)
 .trunk/

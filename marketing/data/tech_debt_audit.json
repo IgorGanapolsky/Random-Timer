@@ -1,0 +1,62 @@
+{
+  "audit_id": "tech-debt-2026-09-14",
+  "generated_at": "2026-09-14T18:20:00Z",
+  "scope": "phase1_baseline_and_safe_hygiene",
+  "claim_full_line_by_line": false,
+  "reason_not_complete": "Monorepo-scale line-by-line + 100% coverage is multi-sprint; Phase 1 snapshots and closes highest-risk hygiene debt only.",
+  "baseline": {
+    "tracked_files": 1614,
+    "text_tracked_files": 1148,
+    "python_lines": 50235,
+    "kotlin_lines": 17773,
+    "swift_lines": 11648,
+    "markdown_lines": 20863,
+    "scripts_py_top_level": 246,
+    "python_test_files": 126,
+    "python_scripts_coverage_percent": 67,
+    "python_tests_passed": 796,
+    "ci_cov_fail_under": 66,
+    "hygiene_check": "PASS 7/0"
+  },
+  "protected_systems": {
+    "rose_lite_session": "present but cells empty / not verified for this query",
+    "thumbgate_rag_cleanup_lessons": "no relevant prior cleanup lessons (noise match only)",
+    "orchestration": "not mutated this phase",
+    "ci_gate": "python --cov-fail-under=66; local 67% with 796 passed"
+  },
+  "phase1_fixes": [
+    "gitignore .tmp/ and .venv-audit/",
+    "rename .claude/GEMINI.md -> .claude/pr-hygiene-session.md (was PR hygiene, not Gemini policy)",
+    "hygiene contract test requires .tmp/ ignore"
+  ],
+  "issues_found_not_yet_fixed": {
+    "untested_large_scripts_top": [
+      "scripts/posthog_dashboard.py (535)",
+      "scripts/complete_all_declarations.py (429)",
+      "scripts/generate_monthly_audio_pack.py (357)",
+      "scripts/aso_keyword_rotation.py (346)",
+      "scripts/backlinks_referral.py (330)"
+    ],
+    "stale_docs_candidates": [
+      "docs/CI_CD_GAP_ANALYSIS_2026-05-26.md",
+      "docs/reports/technical-debt-audit-2026-05-31.md"
+    ],
+    "android_todo": "BootReceiver.kt TODO x2",
+    "tmp_untracked_count_pre_ignore": 191
+  },
+  "files_deleted": [],
+  "files_renamed": [
+    {
+      "from": ".claude/GEMINI.md",
+      "to": ".claude/pr-hygiene-session.md",
+      "justification": "Misnamed; content is PR hygiene session directive; canonical Gemini is docs/GEMINI.md"
+    }
+  ],
+  "rag_entries_cleaned": 0,
+  "follow_up_waves": [
+    "Wave2: add tests for top untested scripts until cov >=75%",
+    "Wave3: archive/consolidate stale dated audit docs",
+    "Wave4: Android/iOS unit coverage report read-back from CI artifacts",
+    "Wave5: dead-code delete only with import-graph evidence"
+  ]
+}
