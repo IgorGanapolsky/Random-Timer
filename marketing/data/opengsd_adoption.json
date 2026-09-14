@@ -1,0 +1,22 @@
+{
+  "source": "https://github.com/open-gsd/gsd-core",
+  "version_pinned": "1.14.0",
+  "generated_at": "2026-09-14T18:54:16Z",
+  "profile": "core",
+  "runtime": "cursor",
+  "install": "scripts/install_opengsd_cursor.sh",
+  "planning_ssot": [
+    ".planning/STATE.md",
+    ".planning/PROJECT.md",
+    ".planning/ROADMAP.md"
+  ],
+  "gate": "scripts/gsd_phase_gate.py",
+  "improvements": [
+    "phase_loop_discuss_plan_execute_verify_ship",
+    "fresh_context_subagents_against_context_rot",
+    "tracked_planning_state_across_sessions",
+    "ship_gate_blocks_done_without_VERIFICATION"
+  ],
+  "budget_usd_month": 20,
+  "external_spend_usd": 0
+}

@@ -40,6 +40,8 @@ Policy for Agents API `openai_hosted` sandboxes: local-first, network disabled b
 
 **Cursor:** `.cursor/rules/operational-reliability.mdc` (always applied).
 
+**OpenGSD:** `.claude/GSD.md` + `docs/GSD_OPENGSD.md` — Discuss→Plan→Execute→Verify→Ship via [open-gsd/gsd-core](https://github.com/open-gsd/gsd-core); gate with `python3 scripts/gsd_phase_gate.py --json`.
+
 Store and executive JSON expose **`review_count_metric_id`** where applicable so counts are never read as undefined “total reviews.”
 
 ## PR management & secrets (cross-reference)
