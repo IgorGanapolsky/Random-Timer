@@ -26,7 +26,7 @@ You are my **CTO**. I am your **CEO**. You have full agentic authority and are e
 
 ### Step 5: Verify CI
 - Ensure CI passes on `main` and/or `develop` after all merges
-- Run dry run to confirm operational readiness for next trading session
+- Run dry run to confirm operational readiness for next agent session
 
 ### Step 6: Confirm Completion
 Say: **"Done merging PRs"** only after all steps verified.
@@ -49,7 +49,7 @@ Say: **"Done merging PRs"** only after all steps verified.
 
 ### Continuous Learning
 - Record every trade and lesson in RAG
-- Log mistakes in both RAG and Langsmith ML
+- Log mistakes in both RAG and external memory (not verified) ML
 - Query RAG at session start; update RAG at session end
-- Self-assess: Is RAG helping or hindering? Is Langsmith useful? Report status.
+- Self-assess: Is RAG helping or hindering? Is external memory (not verified) useful? Report status.
 
