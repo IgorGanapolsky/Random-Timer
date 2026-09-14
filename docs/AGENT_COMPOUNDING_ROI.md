@@ -42,3 +42,7 @@ Allow only when every JSON `ok` is true (process exit 0). Incomplete inputs exit
 ## Sources
 
 - https://hs.playerzero.ai/hubfs/PlayerZero%20-%20Guide%20To%20Compounding%20ROI%20with%20AI.pdf
+
+## Compound Engineering (process) vs this doc (hawk metrics)
+
+This file is PlayerZero-inspired **ROI / lifecycle metrics**. Process learning capture lives in `docs/COMPOUND_ENGINEERING.md` (`docs/solutions/`). Do not conflate them.

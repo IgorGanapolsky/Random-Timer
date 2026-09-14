@@ -45,3 +45,7 @@ python3 scripts/superpowers_gate.py --json
 ## BMAD-lite
 
 Five-element SPEC + readiness: see `docs/BMAD.md` and `python3 scripts/bmad_readiness_gate.py --json`.
+
+## Compound Engineering lite
+
+Learning capture (`docs/solutions/`): see `docs/COMPOUND_ENGINEERING.md` and `python3 scripts/compound_gate.py --json`.
