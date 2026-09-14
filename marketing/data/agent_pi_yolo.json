@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-09-13T22:51:35Z",
+  "source_episode": {
+    "title": "Pi Agent developer workflow",
+    "url": "https://music.youtube.com/watch?v=SxuQs9GGYbk",
+    "note": "Extract gated loop primitives; do not copy a full multi-agent stack."
+  },
+  "fleet_budget_usd_month": 20.0,
+  "terminal_command": "pi-yolo",
+  "default_task_class": "issue_to_pr",
+  "loop": [
+    "plan",
+    "approve_or_yolo",
+    "implement_in_worktree",
+    "run_tests_self_review",
+    "emit_evidence_package"
+  ],
+  "principles": [
+    "prompt_spec_with_acceptance_criteria",
+    "plan_before_code",
+    "tool_permissions_fail_closed",
+    "test_and_self_review_loop",
+    "concise_evidence_handoff",
+    "single_agent_lane_before_multi_agent"
+  ],
+  "kpis": [
+    "minutes_to_mergeable_pr",
+    "human_review_minutes",
+    "first_pass_test_pass_rate",
+    "rework_revert_rate",
+    "usd_per_success"
+  ],
+  "module": "scripts/agent_pi_yolo.py",
+  "bin": "bin/pi-yolo",
+  "docs": "docs/PI_YOLO.md",
+  "evidence_status": "harness_and_terminal_command_landed; 5-10 task KPI baseline not verified this session"
+}

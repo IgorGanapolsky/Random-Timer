@@ -8,6 +8,10 @@ All AI replies, code comments, commit messages, and documentation use **English*
 
 Unified journey + capability catalog: [`docs/DEVELOPERS.md`](docs/DEVELOPERS.md) and [`docs/developer_capabilities.json`](docs/developer_capabilities.json). Prefer that hub over scavenging overlapping guides. Audit with `python3 scripts/developers_docs_audit.py --repo-root .`.
 
+## Pi YOLO harness (`pi-yolo`)
+
+Gated issue→PR lane (plan → approve/yolo → worktree → tests → evidence). Docs: [`docs/PI_YOLO.md`](docs/PI_YOLO.md). Terminal: `pi-yolo` / `pi-yolo doctor` / `pi-yolo guide --json`. Module: `scripts/agent_pi_yolo.py`.
+
 ## Communication Style
 
 **Default to concise, action-first replies.** This is a standing rule.
