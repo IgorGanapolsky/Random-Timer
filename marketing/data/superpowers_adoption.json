@@ -1,0 +1,23 @@
+{
+  "source": "obra/superpowers",
+  "pin": "v6.3.0",
+  "commit_inspected": "b36e082",
+  "adopted_utc": "2026-09-14T19:25:00Z",
+  "skills_vendored": 13,
+  "skipped": [
+    "writing-skills",
+    "visual_companion_traffic"
+  ],
+  "session_hook": ".cursor/hooks/superpowers-session-start.sh",
+  "gate": "scripts/superpowers_gate.py",
+  "docs": "docs/SUPERPOWERS.md",
+  "external_cost": 0,
+  "roi": [
+    "verification_before_completion",
+    "systematic_debugging",
+    "tdd",
+    "worktrees",
+    "subagent_driven",
+    "session_bootstrap"
+  ]
+}
