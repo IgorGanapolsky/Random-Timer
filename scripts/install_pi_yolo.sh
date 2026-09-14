@@ -10,16 +10,21 @@ if [[ -L "$TARGET" ]]; then
 fi
 cat > "$TARGET" <<EOF
 #!/usr/bin/env bash
+# cwd-aware dispatcher: Random-Timer uses bin/pi-yolo; RealEstate uses ./pi-yolo
 set -euo pipefail
 if git rev-parse --show-toplevel >/dev/null 2>&1; then
   R="\$(git rev-parse --show-toplevel)"
-  if [[ -f "\$R/bin/pi-yolo" ]]; then
+  if [[ -x "\$R/bin/pi-yolo" ]]; then
     exec env PI_YOLO_ROOT="\$R" "\$R/bin/pi-yolo" "\$@"
+  fi
+  if [[ -x "\$R/pi-yolo" ]]; then
+    exec env PI_YOLO_ROOT="\$R" "\$R/pi-yolo" "\$@"
   fi
 fi
 R="\${PI_YOLO_ROOT:-$ROOT}"
 exec env PI_YOLO_ROOT="\$R" "\$R/bin/pi-yolo" "\$@"
 EOF
 chmod +x "$TARGET"
-echo "installed $TARGET -> $ROOT/bin/pi-yolo"
-"$TARGET" doctor --json
+echo "installed $TARGET (cwd-aware; fallback $ROOT/bin/pi-yolo)"
+# Smoke from this repo only — do not require RealEstate doctor.
+(cd "$ROOT" && "$TARGET" doctor --json)
