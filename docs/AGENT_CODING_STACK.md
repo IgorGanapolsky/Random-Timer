@@ -65,3 +65,7 @@ python3 scripts/agent_coding_stack_gate.py --json
 - `marketing/data/bmad_adoption.json`
 - `marketing/data/compound_engineering_adoption.json`
 - `marketing/data/agent_coding_stack_adoption.json`
+
+## pstack lite
+
+Rigor principles + poteto-mode: see `docs/PSTACK.md` and `python3 scripts/pstack_gate.py --json`.
