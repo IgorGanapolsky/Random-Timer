@@ -1,0 +1,28 @@
+{
+  "source": "github/spec-kit",
+  "cli": "specify-cli",
+  "cli_version": "1.0.6",
+  "adopted_utc": "2026-09-14T19:20:00Z",
+  "integrations": [
+    "cursor-agent",
+    "claude"
+  ],
+  "extensions": [
+    "bug"
+  ],
+  "skipped": [
+    "assess_extension",
+    "hermes_empty_stub"
+  ],
+  "gate": "scripts/speckit_gate.py",
+  "fixture_feature": "specs/001-speckit-harness-gate",
+  "docs": "docs/SPEC_KIT.md",
+  "roi": [
+    "spec_before_code",
+    "bug_assess_fix_test",
+    "constitution_enforced",
+    "cursor_claude_skills",
+    "gate_blocks_false_done"
+  ],
+  "cost_usd": 0
+}

@@ -29,3 +29,7 @@ Heavy runtime under `.cursor/gsd-core/` stays **gitignored**. Skills + hooks are
 ## Compatibility
 
 Repo still enforces Random-Timer **artifact GSD** (merge SHA / CI URL / `marketing/data/*.json`). See `.claude/GSD.md`.
+
+## Spec Kit
+
+Feature-level SDD: see `docs/SPEC_KIT.md` and `python3 scripts/speckit_gate.py --json`.
