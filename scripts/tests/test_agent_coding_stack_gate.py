@@ -36,6 +36,7 @@ def test_evaluate_ready_when_docs_and_children_ok(tmp_path: Path) -> None:
         "scripts/maintainability_gap_gate.py": {"ready": True},
         "scripts/diff_delta_gate.py": {"ready": True},
         "scripts/looped_flows_gate.py": {"ready": True},
+        "scripts/dair_academy_gate.py": {"ready": True},
         "scripts/speckit_gate.py": {"constitution": {"ok": True}, "implement_ready": True},
         "scripts/gsd_phase_gate.py": {"source": "open-gsd/gsd-core", "ship_ready": False},
     }
@@ -54,6 +55,7 @@ def test_evaluate_ready_when_docs_and_children_ok(tmp_path: Path) -> None:
     assert report["children"]["maintainability_gap_ready"] is True
     assert report["children"]["diff_delta_ready"] is True
     assert report["children"]["looped_flows_ready"] is True
+    assert report["children"]["dair_academy_ready"] is True
 
 
 def test_evaluate_blocks_missing_ssot_ban(tmp_path: Path) -> None:

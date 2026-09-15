@@ -1,0 +1,242 @@
+{
+  "framework": "dair-academy-daily",
+  "implement_queue": [
+    {
+      "implement_hints": [
+        {
+          "layer": "agents-md-signal",
+          "pattern": "agents.md|context file|claude.md",
+          "steal": "Keep human AGENTS.md/CLAUDE.md lean; never auto-generate bloated context files"
+        }
+      ],
+      "roi_hits": [
+        "agents.md",
+        "claude.md",
+        "context file",
+        "coding agent",
+        "agent"
+      ],
+      "roi_score": 36,
+      "source": "dashboard_extra",
+      "title": "Does AGENTS.md Actually Help Coding Agents?",
+      "url": "https://academy.dair.ai/dashboard/resources/agents-md-evaluation"
+    },
+    {
+      "implement_hints": [
+        {
+          "layer": "procedural-graphs",
+          "pattern": "procedural graph|procedural",
+          "steal": "Encode long-horizon work as an explicit procedure graph agents can query"
+        }
+      ],
+      "roi_hits": [
+        "procedural",
+        "agent",
+        "graph",
+        "long-horizon"
+      ],
+      "roi_score": 19,
+      "title": "Procedural Graphs",
+      "url": "https://academy.dair.ai/papers/procedural-graphs-2026-09-07-september-13-1",
+      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+    },
+    {
+      "implement_hints": [
+        {
+          "layer": "design-docs-ssot",
+          "pattern": "design docs|ai-native",
+          "steal": "Prefer design-doc SSOT regeneration over silent code drift"
+        }
+      ],
+      "roi_hits": [
+        "design docs",
+        "eval",
+        "agent",
+        "graph"
+      ],
+      "roi_score": 16,
+      "title": "Ai Native Design Docs",
+      "url": "https://academy.dair.ai/papers/ai-native-design-docs-2026-09-07-september-13-4",
+      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+    },
+    {
+      "implement_hints": [
+        {
+          "layer": "agent-governance",
+          "pattern": "cheat|governance|swarm",
+          "steal": "Shared agent channels need sanctioning/validation against reward hacking"
+        }
+      ],
+      "roi_hits": [
+        "cheat",
+        "eval",
+        "agent"
+      ],
+      "roi_score": 13,
+      "title": "Research Swarm Cheating",
+      "url": "https://academy.dair.ai/papers/research-swarm-cheating-2026-09-07-september-13-8",
+      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+    },
+    {
+      "implement_hints": [
+        {
+          "layer": "harness-evolution",
+          "pattern": "harness",
+          "steal": "Evolve harness with the model; do not copy expert trajectories onto weaker planners"
+        }
+      ],
+      "roi_hits": [
+        "harness",
+        "agent"
+      ],
+      "roi_score": 10,
+      "title": "Co Evolving Harnesses And Models",
+      "url": "https://academy.dair.ai/papers/co-evolving-harnesses-and-models-2026-09-07-september-13-9",
+      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+    }
+  ],
+  "north_star": "WQTU + after-tax revenue path; prefer agent-stack steals that cut rework",
+  "paper_count": 10,
+  "papers": [
+    {
+      "implement_hints": [
+        {
+          "layer": "procedural-graphs",
+          "pattern": "procedural graph|procedural",
+          "steal": "Encode long-horizon work as an explicit procedure graph agents can query"
+        }
+      ],
+      "roi_hits": [
+        "procedural",
+        "agent",
+        "graph",
+        "long-horizon"
+      ],
+      "roi_score": 19,
+      "title": "Procedural Graphs",
+      "url": "https://academy.dair.ai/papers/procedural-graphs-2026-09-07-september-13-1",
+      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+    },
+    {
+      "implement_hints": [
+        {
+          "layer": "design-docs-ssot",
+          "pattern": "design docs|ai-native",
+          "steal": "Prefer design-doc SSOT regeneration over silent code drift"
+        }
+      ],
+      "roi_hits": [
+        "design docs",
+        "eval",
+        "agent",
+        "graph"
+      ],
+      "roi_score": 16,
+      "title": "Ai Native Design Docs",
+      "url": "https://academy.dair.ai/papers/ai-native-design-docs-2026-09-07-september-13-4",
+      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+    },
+    {
+      "implement_hints": [
+        {
+          "layer": "agent-governance",
+          "pattern": "cheat|governance|swarm",
+          "steal": "Shared agent channels need sanctioning/validation against reward hacking"
+        }
+      ],
+      "roi_hits": [
+        "cheat",
+        "eval",
+        "agent"
+      ],
+      "roi_score": 13,
+      "title": "Research Swarm Cheating",
+      "url": "https://academy.dair.ai/papers/research-swarm-cheating-2026-09-07-september-13-8",
+      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+    },
+    {
+      "implement_hints": [
+        {
+          "layer": "harness-evolution",
+          "pattern": "harness",
+          "steal": "Evolve harness with the model; do not copy expert trajectories onto weaker planners"
+        }
+      ],
+      "roi_hits": [
+        "harness",
+        "agent"
+      ],
+      "roi_score": 10,
+      "title": "Co Evolving Harnesses And Models",
+      "url": "https://academy.dair.ai/papers/co-evolving-harnesses-and-models-2026-09-07-september-13-9",
+      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+    },
+    {
+      "implement_hints": [],
+      "roi_hits": [
+        "coding agent",
+        "agent"
+      ],
+      "roi_score": 10,
+      "title": "Frognano",
+      "url": "https://academy.dair.ai/papers/frognano-2026-09-07-september-13-2",
+      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+    },
+    {
+      "implement_hints": [],
+      "roi_hits": [
+        "agent",
+        "graph"
+      ],
+      "roi_score": 6,
+      "title": "Codebook Agent",
+      "url": "https://academy.dair.ai/papers/codebook-agent-2026-09-07-september-13-7",
+      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+    },
+    {
+      "implement_hints": [],
+      "roi_hits": [
+        "agent",
+        "memory"
+      ],
+      "roi_score": 6,
+      "title": "Parser",
+      "url": "https://academy.dair.ai/papers/parser-2026-09-07-september-13-5",
+      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+    },
+    {
+      "implement_hints": [],
+      "roi_hits": [
+        "eval"
+      ],
+      "roi_score": 4,
+      "title": "Stair",
+      "url": "https://academy.dair.ai/papers/stair-2026-09-07-september-13-3",
+      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+    },
+    {
+      "implement_hints": [],
+      "roi_hits": [
+        "agent"
+      ],
+      "roi_score": 3,
+      "title": "Proactive Thought Partners",
+      "url": "https://academy.dair.ai/papers/proactive-thought-partners-2026-09-07-september-13-6",
+      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+    },
+    {
+      "implement_hints": [],
+      "roi_hits": [
+        "agent"
+      ],
+      "roi_score": 3,
+      "title": "Recursive Self Improvement Survey",
+      "url": "https://academy.dair.ai/papers/recursive-self-improvement-survey-2026-09-07-september-13-10",
+      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+    }
+  ],
+  "papers_url": "https://academy.dair.ai/papers",
+  "scraped_at_utc": "2026-09-15T18:50:43Z",
+  "tier_note": "use free papers feed + free dashboard session; skip paid Academy unlocks",
+  "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+}
