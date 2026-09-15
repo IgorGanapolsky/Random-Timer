@@ -20,6 +20,7 @@ Canonical recommendation this file encodes (successor-aware):
 | Capture repeated corrections | **Compound Engineering lite** | `docs/COMPOUND_ENGINEERING.md`, `python3 scripts/compound_gate.py --json` |
 | Principle-steered rigor / anti-slop | **pstack lite** (poteto-mode) | `docs/PSTACK.md`, `python3 scripts/pstack_gate.py --json` |
 | Value-center / agency+coherence | **Value Center lite** (Rohrer VSM) | `docs/VALUE_CENTER.md`, `python3 scripts/value_center_gate.py --json` |
+| Escape AI pilot purgatory | **Workflow Economics lite** | `docs/WORKFLOW_ECONOMICS.md`, `python3 scripts/workflow_economics_gate.py --json` |
 | Execution runtime (model-separable) | **Cursor / Claude Code / Codex** (+ optional OpenCode) | Host tools; OpenCode CLI may exist locally |
 | Hawk metrics / lifecycle ROI | PlayerZero **method** only | `docs/AGENT_COMPOUNDING_ROI.md` |
 
@@ -71,6 +72,7 @@ python3 scripts/agent_coding_stack_gate.py --json
 - `marketing/data/agent_coding_stack_adoption.json`
 - `marketing/data/value_center_adoption.json`
 - `marketing/data/spec_governance_adoption.json`
+- `marketing/data/workflow_economics_adoption.json`
 
 ## pstack lite
 
@@ -79,3 +81,7 @@ Rigor principles + poteto-mode: see `docs/PSTACK.md` and `python3 scripts/pstack
 ## Value Center lite
 
 Agency + coherence (InfoQ Rohrer VSM): see `docs/VALUE_CENTER.md` and `python3 scripts/value_center_gate.py --json`.
+
+## Workflow Economics lite
+
+Escape AI pilot purgatory (completion loop + economic metrics): see `docs/WORKFLOW_ECONOMICS.md` and `python3 scripts/workflow_economics_gate.py --json`.
