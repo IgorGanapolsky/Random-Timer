@@ -18,10 +18,8 @@ High-ROI steals for Random Timer:
 
 from __future__ import annotations
 
-import argparse
 import json
 import sys
-from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -34,6 +32,7 @@ from scripts.lite_gate_common import (
     norm,
     require_docs_needles,
     require_dual_skills,
+    run_presence_cli,
 )
 
 SOURCE = "https://thenewstack.io/ai-coding-duplication-rose/"
@@ -179,25 +178,12 @@ def evaluate(repo: Path) -> dict[str, Any]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--repo", type=Path, default=Path.cwd())
-    parser.add_argument("--json", action="store_true")
-    parser.add_argument("--claim-json", type=Path, default=None)
-    args = parser.parse_args(argv)
-
-    report = evaluate(args.repo.resolve())
-    if args.claim_json and args.claim_json.is_file():
-        claim = json.loads(args.claim_json.read_text(encoding="utf-8"))
-        report["claim"] = asdict(evaluate_change_claim(claim))
-        report["ready"] = report["ready"] and report["claim"]["ok"]
-
-    if args.json:
-        print(json.dumps(report, indent=2, sort_keys=True))
-    else:
-        print("READY" if report["ready"] else "BLOCKED")
-        for b in report["blockers"]:
-            print(f"  - {b}")
-    return 0 if report["ready"] else 1
+    return run_presence_cli(
+        description=__doc__ or "maintainability-gap-lite",
+        evaluate=evaluate,
+        claim_evaluator=evaluate_change_claim,
+        argv=argv,
+    )
 
 
 if __name__ == "__main__":
