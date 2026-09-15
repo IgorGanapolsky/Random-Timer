@@ -1,0 +1,25 @@
+{
+  "framework": "trust-reliability-loop-lite",
+  "adopted_at_utc": "2026-09-15T22:02:53Z",
+  "source": "https://music.youtube.com/watch?v=Xa1jm2VWEHk",
+  "doc": "docs/TRUST_RELIABILITY_LOOP.md",
+  "gate": "python3 scripts/trust_reliability_loop_gate.py --json",
+  "skill": "trust-reliability-loop-lite",
+  "fixture": "marketing/data/code_health/trust_reliability_loop_discipline.json",
+  "workflow_fixture": "marketing/data/workflows/ops_daily_brief.json",
+  "pairs_with": [
+    "docs/WORKFLOW_ECONOMICS.md",
+    "docs/HYDRAFUSION_ROUTING.md",
+    "docs/LLM_RESPONSE_CACHE.md",
+    "docs/AGENTZIP_MEMORY.md",
+    "docs/AGENT_INTEGRITY.md"
+  ],
+  "rejected": [
+    "continuous always-on reasoning under flat subscription economics",
+    "general-purpose do-anything chat as the product",
+    "unconfirmed external writes (email/calendar/purchase)",
+    "alerts without eval log or provenance",
+    "unit-economics claims without cost_per_retained",
+    "unbounded multi-agent orchestration without workflow metrics"
+  ]
+}

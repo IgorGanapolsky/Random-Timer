@@ -1,0 +1,30 @@
+{
+  "workflow_id": "ops_daily_brief",
+  "owner": "CTO",
+  "title": "Daily ops brief (recommend-first)",
+  "mode": "recommend_first",
+  "metric": "actionable_alert_precision",
+  "kpis": [
+    "wqtu",
+    "actionable_alert_precision",
+    "correction_rate",
+    "cost_per_retained_user"
+  ],
+  "surfaces": [
+    "tomorrow_release_calendar",
+    "paywall_attempt_success_failures",
+    "north_star_wqtu_drift",
+    "store_or_ci_conflicts",
+    "time_sensitive_unanswered_ops"
+  ],
+  "inference_default": "rules",
+  "premium_only_when": [
+    "ambiguous_cross_source_conflict",
+    "drafting_external_reply",
+    "consequential_store_change"
+  ],
+  "provenance_required": true,
+  "alert_budget_per_day": 5,
+  "source": "https://music.youtube.com/watch?v=Xa1jm2VWEHk",
+  "updated_at_utc": "2026-09-15T22:02:53Z"
+}
