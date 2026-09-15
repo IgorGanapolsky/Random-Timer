@@ -4,7 +4,7 @@
 Verifies docs + scripts for OpenGSD, Spec Kit, Superpowers, BMAD-lite,
 Compound Engineering lite, Value Center lite, Workflow Economics lite,
 Agent Integrity lite, Maintainability Gap lite, Diff Delta lite, Looped Flows lite,
-DAIR Academy Daily lite, LLM Response Cache lite, and AgentZip Memory lite. Does NOT require an
+DAIR Academy Daily lite, LLM Response Cache lite, AgentZip Memory lite, and Apple PCC lite. Does NOT require an
 active GSD phase to be ship_ready (that is phase-local).
 """
 
@@ -34,6 +34,7 @@ REQUIRED_DOCS = (
     "docs/DAIR_ACADEMY_DAILY.md",
     "docs/LLM_RESPONSE_CACHE.md",
     "docs/AGENTZIP_MEMORY.md",
+    "docs/APPLE_PRIVATE_CLOUD_COMPUTE.md",
     "AGENTS.md",
     "CLAUDE.md",
 )
@@ -54,6 +55,7 @@ REQUIRED_SCRIPTS = (
     "scripts/dair_academy_gate.py",
     "scripts/llm_response_cache_gate.py",
     "scripts/agentzip_memory_gate.py",
+    "scripts/apple_pcc_gate.py",
 )
 
 BANNED_MARKERS = (
@@ -141,6 +143,10 @@ def evaluate(root: Path) -> dict[str, Any]:
     if not child["agentzip_memory"].get("ready"):
         blockers.append("agentzip_memory_not_ready")
 
+    child["apple_pcc"] = _run_json(root, "scripts/apple_pcc_gate.py")
+    if not child["apple_pcc"].get("ready"):
+        blockers.append("apple_pcc_not_ready")
+
     child["speckit"] = _run_json(root, "scripts/speckit_gate.py")
     if child["speckit"].get("error"):
         blockers.append("speckit_gate_error")
@@ -183,6 +189,7 @@ def evaluate(root: Path) -> dict[str, Any]:
             "dair_academy_ready": child["dair_academy"].get("ready"),
             "llm_response_cache_ready": child["llm_response_cache"].get("ready"),
             "agentzip_memory_ready": child["agentzip_memory"].get("ready"),
+            "apple_pcc_ready": child["apple_pcc"].get("ready"),
             "speckit_implement_ready": child["speckit"].get("implement_ready"),
             "gsd_source": child["gsd"].get("source"),
             "gsd_ship_ready": child["gsd"].get("ship_ready"),

@@ -36,6 +36,11 @@ final class TimerManager: ObservableObject { // swiftlint:disable:this no_observ
         ) {
             qualifiedTrainingPaywallPending = true
         }
+        // Zero-cost Apple Intelligence tip (on-device / future PCC) to drive another rep.
+        let lastDuration = timerState.map { Int($0.targetDuration.rounded()) }
+        AppleIntelligenceCoachService.shared.refreshTipAfterSession(
+            lastDurationSeconds: lastDuration
+        )
     }
 
     // MARK: - Initialization
