@@ -1,0 +1,29 @@
+{
+  "framework": "gpt6-astra-harness-lite",
+  "adopted_at_utc": "2026-09-15T22:31:59Z",
+  "source": "https://www.infoq.com/news/2026/09/openai-gpt6-astra/",
+  "doc": "docs/GPT6_ASTRA_HARNESS.md",
+  "gate": "python3 scripts/gpt6_astra_harness_gate.py --json",
+  "skill": "gpt6-astra-harness-lite",
+  "fixture": "marketing/data/code_health/gpt6_astra_harness_discipline.json",
+  "session_notes_example": "marketing/data/session_notes/astra_harness_example.md",
+  "pairs_with": [
+    "docs/HYDRAFUSION_ROUTING.md",
+    "docs/TRUST_RELIABILITY_LOOP.md",
+    "docs/AGENTZIP_MEMORY.md",
+    "docs/WORKFLOW_ECONOMICS.md"
+  ],
+  "infoq_proxies_not_repo_measured": {
+    "osworld_2_0_pct": 72.6,
+    "terminal_bench_4_0_pct": 57.9,
+    "hallucination_pct": 4.2
+  },
+  "rejected": [
+    "default paid gpt-6-astra API under hard monthly cap",
+    "offensive cyber / exploit development",
+    "compaction-only memory",
+    "full tool catalog dumps",
+    "unconfirmed consequential actions",
+    "claims without evidence"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "computer_use_first": true,
+  "searchable_session_notes": true,
+  "confirm_consequential": true,
+  "tool_search": true,
+  "evidence_before_retry": true,
+  "cyber_defensive_only": true,
+  "monitorability_evidence_trail": true,
+  "budget_gated_astra_api": true,
+  "stay_in_scope": true,
+  "budget": {
+    "default_to_astra_api": false,
+    "hard_monthly_usd_cap": 20
+  },
+  "source": "https://www.infoq.com/news/2026/09/openai-gpt6-astra/",
+  "updated_at_utc": "2026-09-15T22:31:59Z"
+}
