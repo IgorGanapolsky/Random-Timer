@@ -4,26 +4,6 @@
     {
       "implement_hints": [
         {
-          "layer": "agents-md-signal",
-          "pattern": "agents.md|context file|claude.md",
-          "steal": "Keep human AGENTS.md/CLAUDE.md lean; never auto-generate bloated context files"
-        }
-      ],
-      "roi_hits": [
-        "agents.md",
-        "claude.md",
-        "context file",
-        "coding agent",
-        "agent"
-      ],
-      "roi_score": 36,
-      "source": "dashboard_extra",
-      "title": "Does AGENTS.md Actually Help Coding Agents?",
-      "url": "https://academy.dair.ai/dashboard/resources/agents-md-evaluation"
-    },
-    {
-      "implement_hints": [
-        {
           "layer": "procedural-graphs",
           "pattern": "procedural graph|procedural",
           "steal": "Encode long-horizon work as an explicit procedure graph agents can query"
@@ -236,7 +216,7 @@
     }
   ],
   "papers_url": "https://academy.dair.ai/papers",
-  "scraped_at_utc": "2026-09-15T18:50:43Z",
+  "scraped_at_utc": "2026-09-15T19:14:40Z",
   "tier_note": "use free papers feed + free dashboard session; skip paid Academy unlocks",
   "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
 }
