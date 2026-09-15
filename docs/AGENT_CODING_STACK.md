@@ -32,6 +32,7 @@ Canonical recommendation this file encodes (successor-aware):
 | Multi-model routing (cost/quality) | **HydraFusion Routing lite** (InfoQ / Copilot research) | `docs/HYDRAFUSION_ROUTING.md`, `python3 scripts/hydrafusion_routing_gate.py --json` |
 | Scope / eval / trust / margins | **Trust Reliability Loop lite** (always-on assistant economics) | `docs/TRUST_RELIABILITY_LOOP.md`, `python3 scripts/trust_reliability_loop_gate.py --json` |
 | Computer-use + session notes harness | **GPT-6 Astra Harness lite** (InfoQ / OpenAI Astra) | `docs/GPT6_ASTRA_HARNESS.md`, `python3 scripts/gpt6_astra_harness_gate.py --json` |
+| Retrieve→rank search discipline | **Semantic Search Stack lite** (LinkedIn Engineering) | `docs/SEMANTIC_SEARCH_STACK.md`, `python3 scripts/semantic_search_stack_gate.py --json` |
 | Execution runtime (model-separable) | **Cursor / Claude Code / Codex** (+ optional OpenCode) | Host tools; OpenCode CLI may exist locally |
 | Hawk metrics / lifecycle ROI | PlayerZero **method** only | `docs/AGENT_COMPOUNDING_ROI.md` |
 
@@ -95,6 +96,7 @@ python3 scripts/agent_coding_stack_gate.py --json
 - `marketing/data/hydrafusion_routing_adoption.json`
 - `marketing/data/trust_reliability_loop_adoption.json`
 - `marketing/data/gpt6_astra_harness_adoption.json`
+- `marketing/data/semantic_search_stack_adoption.json`
 
 ## pstack lite
 
@@ -151,3 +153,7 @@ Tighter scope, eval-first precision, tiered inference, recommend-first trust, co
 ## GPT-6 Astra Harness lite
 
 Computer-use first, searchable session notes, confirm consequential, tool search, retry evidence, cyber defensive-only (no default Astra API): see `docs/GPT6_ASTRA_HARNESS.md` and `python3 scripts/gpt6_astra_harness_gate.py --json`.
+
+## Semantic Search Stack lite
+
+Query understanding → retrieve → depth-controlled rank → product-policy eval (keyword|semantic|hybrid; score cache; explainability; distill/compress; no GPU exhaustive SaaS): see `docs/SEMANTIC_SEARCH_STACK.md` and `python3 scripts/semantic_search_stack_gate.py --json`.

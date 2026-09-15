@@ -1,0 +1,23 @@
+{
+  "framework": "semantic-search-stack-lite",
+  "adopted_at_utc": "2026-09-15T22:47:40Z",
+  "source": "https://www.linkedin.com/blog/engineering/search/reimagining-linkedins-search-stack",
+  "doc": "docs/SEMANTIC_SEARCH_STACK.md",
+  "gate": "python3 scripts/semantic_search_stack_gate.py --json",
+  "skill": "semantic-search-stack-lite",
+  "fixture": "marketing/data/code_health/semantic_search_stack_discipline.json",
+  "golden": "marketing/data/search/product_policy_golden.json",
+  "pairs_with": [
+    "scripts/search_isolation.py",
+    "docs/HYDRAFUSION_ROUTING.md",
+    "docs/TRUST_RELIABILITY_LOOP.md",
+    "docs/LLM_RESPONSE_CACHE.md",
+    "docs/GPT6_ASTRA_HARNESS.md"
+  ],
+  "rejected": [
+    "single-stage frontier over full corpus",
+    "GPU exhaustive search SaaS under hard monthly cap",
+    "ranking changes without product-policy eval",
+    "uncontrolled rank depth on large candidate sets"
+  ]
+}
