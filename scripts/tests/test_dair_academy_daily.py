@@ -6,9 +6,42 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Any
 
 from scripts.dair_academy_daily import build_report, rank_papers, score_text, slug_to_title
 from scripts.dair_academy_gate import HEALTH_SIGNALS, evaluate, evaluate_learn_claim
+
+
+def _scaffold_gate_tree(root: Path, learn: dict[str, Any] | None) -> None:
+    (root / "docs").mkdir()
+    (root / "docs" / "DAIR_ACADEMY_DAILY.md").write_text(
+        "papers roi implement agents.md cron paid unlocks skipped\n",
+        encoding="utf-8",
+    )
+    (root / "scripts").mkdir()
+    (root / "scripts" / "dair_academy_daily.py").write_text("#\n")
+    (root / "scripts" / "dair_academy_gate.py").write_text("#\n")
+    wf = root / ".github" / "workflows"
+    wf.mkdir(parents=True)
+    (wf / "dair-academy-daily.yml").write_text("name: x\n")
+    for sr in (".cursor/skills", ".claude/skills"):
+        p = root / sr / "dair-academy-daily"
+        p.mkdir(parents=True)
+        (p / "SKILL.md").write_text("# dair-academy-daily\n")
+    fixture = root / "marketing" / "data" / "code_health"
+    fixture.mkdir(parents=True)
+    (fixture / "dair_academy_discipline.json").write_text(
+        json.dumps(
+            {
+                "daily_scrape_papers": True,
+                "rank_by_wqtu_profit_roi": "x",
+                "queue_implementable_steals": "y",
+                "human_agents_md_not_llm_bloat": "z",
+            }
+        )
+    )
+    payload = "{}\n" if learn is None else json.dumps(learn) + "\n"
+    (root / "marketing" / "data" / "dair_daily_learn.json").write_text(payload)
 
 
 class SlugTests(unittest.TestCase):
@@ -91,82 +124,25 @@ class GatePresenceTests(unittest.TestCase):
     def test_empty_artifact_blocked(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            (root / "docs").mkdir()
-            (root / "docs" / "DAIR_ACADEMY_DAILY.md").write_text(
-                "papers roi implement agents.md cron paid\n", encoding="utf-8"
-            )
-            (root / "scripts").mkdir()
-            (root / "scripts" / "dair_academy_daily.py").write_text("#\n")
-            (root / "scripts" / "dair_academy_gate.py").write_text("#\n")
-            wf = root / ".github" / "workflows"
-            wf.mkdir(parents=True)
-            (wf / "dair-academy-daily.yml").write_text("name: x\n")
-            for sr in (".cursor/skills", ".claude/skills"):
-                p = root / sr / "dair-academy-daily"
-                p.mkdir(parents=True)
-                (p / "SKILL.md").write_text("# dair-academy-daily\n")
-            fixture = root / "marketing" / "data" / "code_health"
-            fixture.mkdir(parents=True)
-            (fixture / "dair_academy_discipline.json").write_text(
-                json.dumps(
-                    {
-                        "daily_scrape_papers": True,
-                        "rank_by_wqtu_profit_roi": "x",
-                        "queue_implementable_steals": "y",
-                        "human_agents_md_not_llm_bloat": "z",
-                    }
-                )
-            )
-            (root / "marketing" / "data" / "dair_daily_learn.json").write_text("{}\n")
+            _scaffold_gate_tree(root, learn=None)
             report = evaluate(root)
             self.assertFalse(report["ready"])
-            self.assertTrue(any("artifact_" in b or "artifact_empty" in b for b in report["blockers"]))
+            self.assertTrue(
+                any("artifact_" in b or "artifact_empty" in b for b in report["blockers"])
+            )
 
     def test_wired_ready(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            (root / "docs").mkdir()
-            (root / "docs" / "DAIR_ACADEMY_DAILY.md").write_text(
-                "\n".join(
-                    [
-                        "# DAIR",
-                        "papers roi implement agents.md cron paid unlocks skipped",
-                        "",
-                    ]
-                ),
-                encoding="utf-8",
-            )
-            (root / "scripts").mkdir()
-            (root / "scripts" / "dair_academy_daily.py").write_text("#\n")
-            (root / "scripts" / "dair_academy_gate.py").write_text("#\n")
-            wf = root / ".github" / "workflows"
-            wf.mkdir(parents=True)
-            (wf / "dair-academy-daily.yml").write_text("name: x\n")
-            for sr in (".cursor/skills", ".claude/skills"):
-                p = root / sr / "dair-academy-daily"
-                p.mkdir(parents=True)
-                (p / "SKILL.md").write_text("# dair-academy-daily\n")
-            fixture = root / "marketing" / "data" / "code_health"
-            fixture.mkdir(parents=True)
-            (fixture / "dair_academy_discipline.json").write_text(
-                json.dumps(
-                    {
-                        "daily_scrape_papers": True,
-                        "rank_by_wqtu_profit_roi": "x",
-                        "queue_implementable_steals": "y",
-                        "human_agents_md_not_llm_bloat": "z",
-                    }
-                )
-            )
-            (root / "marketing" / "data" / "dair_daily_learn.json").write_text(
-                json.dumps({
+            _scaffold_gate_tree(
+                root,
+                learn={
                     "framework": "dair-academy-daily",
                     "scraped_at_utc": "2026-09-15T18:42:47Z",
                     "paper_count": 1,
                     "papers": [{"title": "Procedural Graphs"}],
                     "implement_queue": [],
-                })
-                + "\n"
+                },
             )
             report = evaluate(root)
             self.assertTrue(report["ready"], msg=json.dumps(report, indent=2))
