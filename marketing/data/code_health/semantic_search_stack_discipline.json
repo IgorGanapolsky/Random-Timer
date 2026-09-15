@@ -1,0 +1,17 @@
+{
+  "query_understanding": true,
+  "retrieve_then_rank": true,
+  "ranking_depth_controller": true,
+  "keyword_vs_semantic_routing": true,
+  "product_policy_eval": true,
+  "score_caching": true,
+  "explainability_snippets": true,
+  "distill_not_always_frontier": true,
+  "context_compression": true,
+  "budget": {
+    "gpu_exhaustive_saas": false,
+    "hard_monthly_usd_cap": 20
+  },
+  "source": "https://www.linkedin.com/blog/engineering/search/reimagining-linkedins-search-stack",
+  "updated_at_utc": "2026-09-15T22:47:40Z"
+}

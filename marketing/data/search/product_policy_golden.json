@@ -1,0 +1,28 @@
+{
+  "policy_id": "agent_repo_search_v1",
+  "scale": [0, 1, 2, 3, 4],
+  "kappa_target": 0.8,
+  "notes": "LinkedIn-style product-policy golden grades for agent/repo search relevance. Not LinkedIn production labels.",
+  "examples": [
+    {
+      "query": "paywall attempt success telemetry vs ledger",
+      "doc_id": "docs/OPERATIONAL_RELIABILITY.md",
+      "grade": 4,
+      "rationale": "Canonical proxy vs ground-truth labeling"
+    },
+    {
+      "query": "WQTU north star timer_completed",
+      "doc_id": "AGENTS.md",
+      "grade": 4,
+      "rationale": "Defines WQTU HogQL and business goal"
+    },
+    {
+      "query": "HydraFusion cascade cost sim",
+      "doc_id": "docs/HYDRAFUSION_ROUTING.md",
+      "grade": 3,
+      "rationale": "Routing/cost discipline; not product paywall"
+    }
+  ],
+  "source": "https://www.linkedin.com/blog/engineering/search/reimagining-linkedins-search-stack",
+  "updated_at_utc": "2026-09-15T22:47:40Z"
+}
