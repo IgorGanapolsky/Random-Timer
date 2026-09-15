@@ -6,7 +6,7 @@ Compound Engineering lite, Value Center lite, Workflow Economics lite,
 Agent Integrity lite, Maintainability Gap lite, Diff Delta lite, Looped Flows lite,
 DAIR Academy Daily lite, LLM Response Cache lite, AgentZip Memory lite, Apple PCC lite,
 HydraFusion Routing lite, Trust Reliability Loop lite, GPT-6 Astra Harness lite,
-and Semantic Search Stack lite. Does NOT require an
+Semantic Search Stack lite, and Multi-Teacher Distill lite. Does NOT require an
 active GSD phase to be ship_ready (that is phase-local).
 """
 
@@ -41,6 +41,7 @@ REQUIRED_DOCS = (
     "docs/TRUST_RELIABILITY_LOOP.md",
     "docs/GPT6_ASTRA_HARNESS.md",
     "docs/SEMANTIC_SEARCH_STACK.md",
+    "docs/MULTI_TEACHER_DISTILL.md",
     "AGENTS.md",
     "CLAUDE.md",
 )
@@ -66,6 +67,7 @@ REQUIRED_SCRIPTS = (
     "scripts/trust_reliability_loop_gate.py",
     "scripts/gpt6_astra_harness_gate.py",
     "scripts/semantic_search_stack_gate.py",
+    "scripts/multi_teacher_distill_gate.py",
 )
 
 BANNED_MARKERS = (
@@ -177,6 +179,12 @@ def evaluate(root: Path) -> dict[str, Any]:
     if not child["semantic_search_stack"].get("ready"):
         blockers.append("semantic_search_stack_not_ready")
 
+    child["multi_teacher_distill"] = _run_json(
+        root, "scripts/multi_teacher_distill_gate.py"
+    )
+    if not child["multi_teacher_distill"].get("ready"):
+        blockers.append("multi_teacher_distill_not_ready")
+
     child["speckit"] = _run_json(root, "scripts/speckit_gate.py")
     if child["speckit"].get("error"):
         blockers.append("speckit_gate_error")
@@ -224,6 +232,7 @@ def evaluate(root: Path) -> dict[str, Any]:
             "trust_reliability_loop_ready": child["trust_reliability_loop"].get("ready"),
             "gpt6_astra_harness_ready": child["gpt6_astra_harness"].get("ready"),
             "semantic_search_stack_ready": child["semantic_search_stack"].get("ready"),
+            "multi_teacher_distill_ready": child["multi_teacher_distill"].get("ready"),
             "speckit_implement_ready": child["speckit"].get("implement_ready"),
             "gsd_source": child["gsd"].get("source"),
             "gsd_ship_ready": child["gsd"].get("ship_ready"),
