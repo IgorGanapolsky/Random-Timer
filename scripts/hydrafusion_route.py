@@ -27,6 +27,30 @@ SOURCE_URL = (
     "project-hydrafusion-frontier-quality-via-multi-model-orchestration/"
 )
 
+INFOQ_SOURCE_URL = "https://www.infoq.com/news/2026/09/github-hydrafusion/"
+
+# InfoQ reported ~65–67% estimated cost reduction vs always-frontier (Opus 5).
+# Local proxy threshold for claiming "InfoQ-aligned savings" on Cascade sims.
+INFOQ_SAVINGS_PROXY = 0.60
+
+# Default relative costs (Quick draft vs frontier Deep/Opus-class units).
+DEFAULT_DRAFT_COST = 1.0
+DEFAULT_FRONTIER_COST = 10.0
+DEFAULT_GATE_COST = 0.2
+DEFAULT_CRITIC_COST = 1.5
+DEFAULT_REVISION_COST = 4.0
+DEFAULT_CASCADE_PASS_RATE = 0.75
+
+CAPABILITY_ALIASES = {
+    "reasoning": "multi_step_reasoning",
+    "multi_step_reasoning": "multi_step_reasoning",
+    "code_generation": "code_generation",
+    "debugging": "structured_debugging",
+    "structured_debugging": "structured_debugging",
+    "tool_use": "advanced_tool_use",
+    "advanced_tool_use": "advanced_tool_use",
+}
+
 # Category → model family (for isolated critique across families)
 CATEGORY_FAMILY: dict[str, str] = {
     "Quick": "gemini",
@@ -81,7 +105,183 @@ CASCADE_KEYWORDS = re.compile(
 def _normalize_caps(raw: Any) -> set[str]:
     if not raw:
         return set()
-    return {str(c).strip().lower() for c in raw if str(c).strip()}
+    normalized: set[str] = set()
+    for c in raw:
+        key = str(c).strip().lower()
+        if not key:
+            continue
+        normalized.add(CAPABILITY_ALIASES.get(key, key))
+        # Keep short aliases for existing route heuristics.
+        if key in {"reasoning", "debugging", "tool_use", "code_generation", "visual"}:
+            normalized.add(key)
+        if key in CAPABILITY_ALIASES:
+            short = {
+                "multi_step_reasoning": "reasoning",
+                "structured_debugging": "debugging",
+                "advanced_tool_use": "tool_use",
+            }.get(CAPABILITY_ALIASES[key])
+            if short:
+                normalized.add(short)
+    return normalized
+
+
+def estimate_cascade_cost(
+    *,
+    draft_cost: float,
+    frontier_cost: float,
+    gate_cost: float = DEFAULT_GATE_COST,
+    pass_rate: float = DEFAULT_CASCADE_PASS_RATE,
+) -> dict[str, Any]:
+    """Expected Cascade cost vs always-frontier (InfoQ economics proxy).
+
+    E[cost] = pass_rate * (draft + gate) + (1 - pass_rate) * (draft + gate + frontier)
+            = draft + gate + (1 - pass_rate) * frontier
+    """
+    if frontier_cost <= 0:
+        raise ValueError("frontier_cost must be > 0")
+    p = min(1.0, max(0.0, float(pass_rate)))
+    expected = float(draft_cost) + float(gate_cost) + (1.0 - p) * float(frontier_cost)
+    always = float(frontier_cost)
+    savings = 1.0 - (expected / always)
+    return {
+        "pattern": "cascade",
+        "source": INFOQ_SOURCE_URL,
+        "draft_cost": float(draft_cost),
+        "gate_cost": float(gate_cost),
+        "frontier_cost": always,
+        "pass_rate": p,
+        "expected_cost": round(expected, 6),
+        "always_frontier_cost": always,
+        "savings_pct": round(savings, 6),
+        "beats_always_frontier": expected < always,
+        "meets_infoq_savings_proxy": savings >= INFOQ_SAVINGS_PROXY,
+        "infoq_savings_proxy": INFOQ_SAVINGS_PROXY,
+        "legs_accounted": ["draft", "gate", "escalate"],
+        "complete_cost_accounting": True,
+        "label": "local_estimate_not_terminalbench",
+    }
+
+
+def estimate_critique_cost(
+    *,
+    draft_cost: float,
+    critic_cost: float,
+    revision_cost: float,
+    frontier_cost: float,
+) -> dict[str, Any]:
+    expected = float(draft_cost) + float(critic_cost) + float(revision_cost)
+    always = float(frontier_cost)
+    savings = 1.0 - (expected / always) if always > 0 else 0.0
+    return {
+        "pattern": "critique",
+        "source": INFOQ_SOURCE_URL,
+        "expected_cost": round(expected, 6),
+        "always_frontier_cost": always,
+        "savings_pct": round(savings, 6),
+        "beats_always_frontier": expected < always,
+        "legs_accounted": ["draft", "critique", "revision"],
+        "complete_cost_accounting": True,
+        "isolated_critique": True,
+        "label": "local_estimate_not_checkpointbench",
+    }
+
+
+def run_cascade(payload: dict[str, Any]) -> dict[str, Any]:
+    """Execute Cascade decision: draft → quality gate → accept or escalate."""
+    cancelled = bool(payload.get("cancelled"))
+    draft_cost = float(payload.get("draft_cost") or 0.0)
+    gate_cost = float(payload.get("gate_cost") or DEFAULT_GATE_COST)
+    escalate_cost = float(payload.get("escalate_cost") or DEFAULT_FRONTIER_COST)
+    gate = evaluate_quality_gate(dict(payload.get("gate_signals") or {}))
+
+    if cancelled:
+        return {
+            "pattern": "cascade",
+            "accepted": False,
+            "escalated": False,
+            "apply_patch": False,
+            "fail_safe": True,
+            "total_cost": round(draft_cost + gate_cost, 6),
+            "gate": gate,
+            "reason": "cancelled — fail-safe rejects apply",
+            "legs_accounted": ["draft", "gate"],
+        }
+
+    if gate["accepted"]:
+        return {
+            "pattern": "cascade",
+            "accepted": True,
+            "escalated": False,
+            "apply_patch": True,
+            "fail_safe": True,
+            "total_cost": round(draft_cost + gate_cost, 6),
+            "gate": gate,
+            "artifact": payload.get("draft_artifact"),
+            "legs_accounted": ["draft", "gate"],
+        }
+
+    return {
+        "pattern": "cascade",
+        "accepted": False,
+        "escalated": True,
+        "apply_patch": False,
+        "fail_safe": True,
+        "total_cost": round(draft_cost + gate_cost + escalate_cost, 6),
+        "gate": gate,
+        "legs_accounted": ["draft", "gate", "escalate"],
+    }
+
+
+def score_capability_signals(request: dict[str, Any]) -> dict[str, Any]:
+    """InfoQ capability signals → pattern recommendation."""
+    caps = _normalize_caps(request.get("capabilities"))
+    infoq_caps = {
+        "multi_step_reasoning",
+        "code_generation",
+        "structured_debugging",
+        "advanced_tool_use",
+    }
+    matched = sorted(caps & infoq_caps)
+    risk = str(request.get("risk") or "low").lower()
+    files = int(request.get("files_touched_estimate") or 0)
+    if risk == "high" or files >= 15:
+        recommended = "critique"
+    elif risk == "medium" or files >= 5 or len(matched) >= 2:
+        recommended = "cascade"
+    else:
+        recommended = "single"
+    return {
+        "capability_count": len(matched),
+        "matched_capabilities": matched,
+        "recommended_pattern": recommended,
+        "source": INFOQ_SOURCE_URL,
+    }
+
+
+def _default_cost_estimate(pattern: str) -> dict[str, Any]:
+    if pattern == "cascade":
+        return estimate_cascade_cost(
+            draft_cost=DEFAULT_DRAFT_COST,
+            frontier_cost=DEFAULT_FRONTIER_COST,
+            gate_cost=DEFAULT_GATE_COST,
+            pass_rate=DEFAULT_CASCADE_PASS_RATE,
+        )
+    if pattern == "critique":
+        return estimate_critique_cost(
+            draft_cost=DEFAULT_FRONTIER_COST * 0.8,
+            critic_cost=DEFAULT_CRITIC_COST,
+            revision_cost=DEFAULT_REVISION_COST,
+            frontier_cost=DEFAULT_FRONTIER_COST,
+        )
+    return {
+        "pattern": "single",
+        "expected_cost": DEFAULT_DRAFT_COST,
+        "always_frontier_cost": DEFAULT_FRONTIER_COST,
+        "savings_pct": round(1.0 - (DEFAULT_DRAFT_COST / DEFAULT_FRONTIER_COST), 6),
+        "beats_always_frontier": True,
+        "legs_accounted": ["draft"],
+        "complete_cost_accounting": True,
+    }
 
 
 def _leg(
@@ -231,6 +431,9 @@ def route_task(request: dict[str, Any]) -> dict[str, Any]:
             "Critique only for high-risk/store/security work within existing seat limits."
         ),
         "task_echo": task[:240],
+        "infoq_source": INFOQ_SOURCE_URL,
+        "capability_signals": score_capability_signals(request),
+        "cost_estimate": _default_cost_estimate(pattern),
     }
     errors = validate_plan(plan)
     if errors:
@@ -329,10 +532,44 @@ def main(argv: list[str] | None = None) -> int:
         dest="evaluate_gate",
         help="JSON signals for evaluate_quality_gate",
     )
+    parser.add_argument(
+        "--simulate-cost",
+        dest="simulate_cost",
+        help="JSON: pattern + draft/frontier/gate/pass_rate (or critique legs)",
+    )
+    parser.add_argument(
+        "--run-cascade",
+        dest="run_cascade_payload",
+        help="JSON: draft_cost, escalate_cost, gate_cost, gate_signals, cancelled?",
+    )
     args = parser.parse_args(argv)
 
     if args.evaluate_gate:
         print(json.dumps(evaluate_quality_gate(json.loads(args.evaluate_gate)), indent=2))
+        return 0
+
+    if args.simulate_cost:
+        payload = json.loads(args.simulate_cost)
+        pattern = str(payload.get("pattern") or "cascade").lower()
+        if pattern == "critique":
+            result = estimate_critique_cost(
+                draft_cost=float(payload.get("draft_cost") or DEFAULT_FRONTIER_COST * 0.8),
+                critic_cost=float(payload.get("critic_cost") or DEFAULT_CRITIC_COST),
+                revision_cost=float(payload.get("revision_cost") or DEFAULT_REVISION_COST),
+                frontier_cost=float(payload.get("frontier_cost") or DEFAULT_FRONTIER_COST),
+            )
+        else:
+            result = estimate_cascade_cost(
+                draft_cost=float(payload.get("draft_cost") or DEFAULT_DRAFT_COST),
+                frontier_cost=float(payload.get("frontier_cost") or DEFAULT_FRONTIER_COST),
+                gate_cost=float(payload.get("gate_cost") or DEFAULT_GATE_COST),
+                pass_rate=float(payload.get("pass_rate") or DEFAULT_CASCADE_PASS_RATE),
+            )
+        print(json.dumps(result, indent=2, sort_keys=True))
+        return 0
+
+    if args.run_cascade_payload:
+        print(json.dumps(run_cascade(json.loads(args.run_cascade_payload)), indent=2, sort_keys=True))
         return 0
 
     if args.json_payload:

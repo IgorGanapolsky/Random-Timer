@@ -27,6 +27,7 @@ def _scaffold(root: Path) -> None:
                 "fail-safe apply",
                 "validated routing",
                 "tool-less isolated critic",
+                "estimate_cascade_cost savings proxy",
                 "",
             ]
         ),
@@ -37,7 +38,21 @@ def _scaffold(root: Path) -> None:
     )
     (root / "scripts").mkdir()
     (root / "scripts" / "hydrafusion_routing_gate.py").write_text("#\n")
-    (root / "scripts" / "hydrafusion_route.py").write_text("#\n")
+    (root / "scripts" / "hydrafusion_route.py").write_text(
+        "\n".join(
+            [
+                "def estimate_cascade_cost():",
+                "    pass",
+                "def run_cascade():",
+                "    pass",
+                "def score_capability_signals():",
+                "    pass",
+                "INFOQ_SAVINGS_PROXY = 0.6",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
     for sr in (".cursor/skills", ".claude/skills"):
         p = root / sr / "hydrafusion-routing-lite"
         p.mkdir(parents=True)
@@ -56,6 +71,14 @@ def _scaffold(root: Path) -> None:
                 "fail_safe_apply": "z",
                 "validated_routing": "w",
                 "budget": {"subscribe_hydrafusion": False},
+            }
+        )
+    )
+    (fixture / "hydrafusion_cascade_benchmark.json").write_text(
+        json.dumps(
+            {
+                "label": "infoq_reported_proxy_not_repo_measured",
+                "local_cascade_proxy": {"meets_infoq_savings_proxy": True},
             }
         )
     )
@@ -147,6 +170,42 @@ class ClaimTests(unittest.TestCase):
         )
         self.assertTrue(d.ok)
         self.assertEqual(d.action, "allow_accounted_savings")
+
+    def test_cascade_roi_below_proxy_blocked(self) -> None:
+        d = evaluate_routing_claim(
+            {
+                "action": "claim_cascade_roi",
+                "legs_accounted": ["draft", "gate", "escalate"],
+                "expected_cost": 6.0,
+                "savings_pct": 0.4,
+            }
+        )
+        self.assertFalse(d.ok)
+        self.assertEqual(d.action, "block_cascade_roi_below_infoq_proxy")
+
+    def test_cascade_roi_allowed(self) -> None:
+        d = evaluate_routing_claim(
+            {
+                "action": "claim_cascade_roi",
+                "legs_accounted": ["draft", "gate", "escalate"],
+                "expected_cost": 3.7,
+                "savings_pct": 0.63,
+                "label": "local_estimate_not_terminalbench",
+            }
+        )
+        self.assertTrue(d.ok)
+        self.assertEqual(d.action, "allow_cascade_roi")
+
+    def test_cancelled_cascade_apply_blocked(self) -> None:
+        d = evaluate_routing_claim(
+            {
+                "action": "run_cascade",
+                "cancelled": True,
+                "apply_patch": True,
+            }
+        )
+        self.assertFalse(d.ok)
+        self.assertEqual(d.action, "block_cancelled_cascade_apply")
 
     def test_select_pattern_action(self) -> None:
         d = evaluate_routing_claim(

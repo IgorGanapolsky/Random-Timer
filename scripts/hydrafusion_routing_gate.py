@@ -148,7 +148,7 @@ def evaluate_routing_claim(claim: Mapping[str, object]) -> Decision:
             reason="bounded execution requires timeout_seconds > 0",
         )
 
-    if action in {"claim_savings", "project_savings"}:
+    if action in {"claim_savings", "project_savings", "claim_cascade_roi"}:
         legs = claim.get("legs_accounted") or claim.get("accounted_legs") or []
         if not isinstance(legs, list) or not legs:
             return Decision(
@@ -163,16 +163,63 @@ def evaluate_routing_claim(claim: Mapping[str, object]) -> Decision:
                 ok=False,
                 reason="legs must be in draft|critique|revision|escalate|retry|fallback|gate",
             )
-        if claim.get("total_cost_units") is None:
+        if claim.get("total_cost_units") is None and claim.get("expected_cost") is None:
             return Decision(
                 action="block_missing_total_cost",
                 ok=False,
-                reason="record total_cost_units across all workflow legs",
+                reason="record total_cost_units or expected_cost across all workflow legs",
+            )
+        if action == "claim_cascade_roi" or claim.get("claim_infoq_aligned") is True:
+            try:
+                savings = float(claim.get("savings_pct"))  # type: ignore[arg-type]
+            except (TypeError, ValueError):
+                return Decision(
+                    action="block_cascade_roi_missing_savings",
+                    ok=False,
+                    reason="InfoQ-aligned Cascade ROI requires numeric savings_pct",
+                )
+            if savings < 0.60:
+                return Decision(
+                    action="block_cascade_roi_below_infoq_proxy",
+                    ok=False,
+                    reason="InfoQ proxy requires savings_pct >= 0.60 vs always-frontier (local estimate)",
+                )
+            if claim.get("label") == "terminalbench_measured" and claim.get(
+                "measured_in_repo"
+            ) is not True:
+                return Decision(
+                    action="block_mislabelled_terminalbench",
+                    ok=False,
+                    reason="do not claim TerminalBench measured results — InfoQ numbers are external proxies",
+                )
+            return Decision(
+                action="allow_cascade_roi",
+                ok=True,
+                reason="Cascade ROI claim meets InfoQ savings proxy with accounted legs",
             )
         return Decision(
             action="allow_accounted_savings",
             ok=True,
             reason="savings claim has complete leg accounting",
+        )
+
+    if action in {"run_cascade", "execute_cascade"}:
+        if claim.get("cancelled") is True and claim.get("apply_patch") is True:
+            return Decision(
+                action="block_cancelled_cascade_apply",
+                ok=False,
+                reason="fail-safe: cancelled cascade must not apply_patch",
+            )
+        if claim.get("gate_accepted") is False and claim.get("escalated") is not True:
+            return Decision(
+                action="block_cascade_skip_escalate",
+                ok=False,
+                reason="Cascade must escalate when quality gate rejects",
+            )
+        return Decision(
+            action="allow_cascade_execution",
+            ok=True,
+            reason="Cascade execution respects gate / fail-safe",
         )
 
     if action in {
@@ -265,6 +312,16 @@ def evaluate(repo: Path) -> dict[str, Any]:
         blockers.append("missing_scripts/hydrafusion_routing_gate.py")
     if not (repo / "scripts" / "hydrafusion_route.py").is_file():
         blockers.append("missing_scripts/hydrafusion_route.py")
+    else:
+        route_src = (repo / "scripts" / "hydrafusion_route.py").read_text(encoding="utf-8")
+        for needle in (
+            "estimate_cascade_cost",
+            "run_cascade",
+            "score_capability_signals",
+            "INFOQ_SAVINGS_PROXY",
+        ):
+            if needle not in route_src:
+                blockers.append(f"hydrafusion_route_missing:{needle}")
     blockers.extend(require_dual_skills(repo, "hydrafusion-routing-lite"))
     blockers.extend(
         require_docs_needles(
@@ -278,6 +335,8 @@ def evaluate(repo: Path) -> dict[str, Any]:
                 "fail-safe",
                 "validated routing",
                 "tool-less",
+                "estimate_cascade_cost",
+                "savings",
             ),
         )
     )
@@ -304,6 +363,25 @@ def evaluate(repo: Path) -> dict[str, Any]:
                 or budget.get("subscribe_hydrafusion") is not False
             ):
                 blockers.append("fixture_missing:budget.subscribe_hydrafusion=false")
+
+    bench = (
+        repo / "marketing" / "data" / "code_health" / "hydrafusion_cascade_benchmark.json"
+    )
+    if not bench.is_file():
+        blockers.append(
+            "missing_fixture:marketing/data/code_health/hydrafusion_cascade_benchmark.json"
+        )
+    else:
+        try:
+            bench_data = json.loads(bench.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            blockers.append(f"benchmark_invalid_json:{exc}")
+        else:
+            if bench_data.get("label") != "infoq_reported_proxy_not_repo_measured":
+                blockers.append("benchmark_missing:label=infoq_reported_proxy_not_repo_measured")
+            local = bench_data.get("local_cascade_proxy") or {}
+            if not isinstance(local, dict) or local.get("meets_infoq_savings_proxy") is not True:
+                blockers.append("benchmark_missing:local_cascade_proxy.meets_infoq_savings_proxy")
 
     matching = repo / ".claude" / "rules" / "agent-model-matching.md"
     if not matching.is_file():

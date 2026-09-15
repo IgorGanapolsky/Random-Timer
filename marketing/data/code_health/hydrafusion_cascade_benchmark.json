@@ -1,0 +1,27 @@
+{
+  "label": "infoq_reported_proxy_not_repo_measured",
+  "source": "https://www.infoq.com/news/2026/09/github-hydrafusion/",
+  "github_blog": "https://github.blog/ai-and-ml/github-copilot/project-hydrafusion-frontier-quality-via-multi-model-orchestration/",
+  "infoq_reported": {
+    "terminalbench_2_1": {
+      "quality_delta_pp_vs_opus_5": 4.9,
+      "estimated_cost_reduction_pct": 0.67
+    },
+    "checkpointbench": {
+      "mean_session_score_delta_pp_vs_opus_5": -0.1,
+      "estimated_cost_reduction_pct": 0.65
+    },
+    "note": "External InfoQ/GitHub reported figures — not Random Timer measured TerminalBench runs"
+  },
+  "local_cascade_proxy": {
+    "draft_cost": 1.0,
+    "gate_cost": 0.2,
+    "frontier_cost": 10.0,
+    "pass_rate": 0.75,
+    "expected_cost": 3.7,
+    "savings_pct": 0.63,
+    "meets_infoq_savings_proxy": true,
+    "command": "python3 scripts/hydrafusion_route.py --simulate-cost '{\"pattern\":\"cascade\",\"draft_cost\":1,\"frontier_cost\":10,\"gate_cost\":0.2,\"pass_rate\":0.75}'"
+  },
+  "updated_at_utc": "2026-09-15T22:20:07Z"
+}

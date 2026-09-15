@@ -49,7 +49,12 @@ Default routing for this repo (also emitted by `hydrafusion_route.py`):
 
 ```bash
 python3 scripts/hydrafusion_routing_gate.py --json
+python3 scripts/hydrafusion_route.py --task "Implement paywall fix" --risk medium --files 8
+python3 scripts/hydrafusion_route.py --simulate-cost '{"pattern":"cascade","draft_cost":1,"frontier_cost":10,"gate_cost":0.2,"pass_rate":0.75}'
+python3 scripts/hydrafusion_route.py --run-cascade '{"draft_cost":1,"escalate_cost":10,"gate_cost":0.2,"gate_signals":{"tests_passed":true,"evidence_present":true,"secrets_leaked":false,"patch_validated":true}}'
 ```
+
+`estimate_cascade_cost` is the local savings proxy (not TerminalBench). Default Cascade at 75% gate pass rate yields ~63% expected cost cut vs always-frontier — above the InfoQ ~60% proxy floor. Fixture: `marketing/data/code_health/hydrafusion_cascade_benchmark.json` (label=`infoq_reported_proxy_not_repo_measured`).
 
 ## Explicitly rejected
 
