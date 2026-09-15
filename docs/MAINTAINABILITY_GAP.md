@@ -14,7 +14,7 @@ GitClear’s Maintainability Gap (623M changes, 2023–2026): heavy AI users gai
 
 | Signal | Meaning here |
 |--------|----------------|
-| `reject_loc_as_roi` | Lines / PR volume ≠ WQTU / cycle time / quality |
+| `reject_loc_as_roi` | Lines of code / PR volume ≠ WQTU / cycle time / quality |
 | `prefer_refactor_over_copy` | Extend existing gates/helpers before pasting twins |
 | `tests_refactor_are_the_work` | TDD + refactor are the mission, not optional |
 | `forklift_not_racecar` | Use AI for large safe lifts, not speed theater |
