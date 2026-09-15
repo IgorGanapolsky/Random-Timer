@@ -3,7 +3,7 @@
 
 Verifies docs + scripts for OpenGSD, Spec Kit, Superpowers, BMAD-lite,
 Compound Engineering lite, Value Center lite, Workflow Economics lite,
-Agent Integrity lite, and Maintainability Gap lite. Does NOT require an
+Agent Integrity lite, Maintainability Gap lite, and Diff Delta lite. Does NOT require an
 active GSD phase to be ship_ready (that is phase-local).
 """
 
@@ -28,6 +28,7 @@ REQUIRED_DOCS = (
     "docs/WORKFLOW_ECONOMICS.md",
     "docs/AGENT_INTEGRITY.md",
     "docs/MAINTAINABILITY_GAP.md",
+    "docs/DIFF_DELTA.md",
     "AGENTS.md",
     "CLAUDE.md",
 )
@@ -43,6 +44,7 @@ REQUIRED_SCRIPTS = (
     "scripts/workflow_economics_gate.py",
     "scripts/agent_integrity_gate.py",
     "scripts/maintainability_gap_gate.py",
+    "scripts/diff_delta_gate.py",
 )
 
 BANNED_MARKERS = (
@@ -110,6 +112,10 @@ def evaluate(root: Path) -> dict[str, Any]:
     if not child["maintainability_gap"].get("ready"):
         blockers.append("maintainability_gap_not_ready")
 
+    child["diff_delta"] = _run_json(root, "scripts/diff_delta_gate.py")
+    if not child["diff_delta"].get("ready"):
+        blockers.append("diff_delta_not_ready")
+
     child["speckit"] = _run_json(root, "scripts/speckit_gate.py")
     if child["speckit"].get("error"):
         blockers.append("speckit_gate_error")
@@ -147,6 +153,7 @@ def evaluate(root: Path) -> dict[str, Any]:
             "workflow_economics_ready": child["workflow_economics"].get("ready"),
             "agent_integrity_ready": child["agent_integrity"].get("ready"),
             "maintainability_gap_ready": child["maintainability_gap"].get("ready"),
+            "diff_delta_ready": child["diff_delta"].get("ready"),
             "speckit_implement_ready": child["speckit"].get("implement_ready"),
             "gsd_source": child["gsd"].get("source"),
             "gsd_ship_ready": child["gsd"].get("ship_ready"),
