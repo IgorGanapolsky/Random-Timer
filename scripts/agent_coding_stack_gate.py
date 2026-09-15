@@ -2,8 +2,9 @@
 """Presence gate for the layered agent coding stack (SSOT).
 
 Verifies docs + scripts for OpenGSD, Spec Kit, Superpowers, BMAD-lite,
-Compound Engineering lite, Value Center lite, and Workflow Economics lite.
-Does NOT require an active GSD phase to be ship_ready (that is phase-local).
+Compound Engineering lite, Value Center lite, Workflow Economics lite,
+and Agent Integrity lite. Does NOT require an active GSD phase to be
+ship_ready (that is phase-local).
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ REQUIRED_DOCS = (
     "docs/PSTACK.md",
     "docs/VALUE_CENTER.md",
     "docs/WORKFLOW_ECONOMICS.md",
+    "docs/AGENT_INTEGRITY.md",
     "AGENTS.md",
     "CLAUDE.md",
 )
@@ -38,6 +40,7 @@ REQUIRED_SCRIPTS = (
     "scripts/pstack_gate.py",
     "scripts/value_center_gate.py",
     "scripts/workflow_economics_gate.py",
+    "scripts/agent_integrity_gate.py",
 )
 
 BANNED_MARKERS = (
@@ -97,6 +100,10 @@ def evaluate(root: Path) -> dict[str, Any]:
     if not child["workflow_economics"].get("ready"):
         blockers.append("workflow_economics_not_ready")
 
+    child["agent_integrity"] = _run_json(root, "scripts/agent_integrity_gate.py")
+    if not child["agent_integrity"].get("ready"):
+        blockers.append("agent_integrity_not_ready")
+
     child["speckit"] = _run_json(root, "scripts/speckit_gate.py")
     if child["speckit"].get("error"):
         blockers.append("speckit_gate_error")
@@ -132,6 +139,7 @@ def evaluate(root: Path) -> dict[str, Any]:
             "pstack_ready": child["pstack"].get("ready"),
             "value_center_ready": child["value_center"].get("ready"),
             "workflow_economics_ready": child["workflow_economics"].get("ready"),
+            "agent_integrity_ready": child["agent_integrity"].get("ready"),
             "speckit_implement_ready": child["speckit"].get("implement_ready"),
             "gsd_source": child["gsd"].get("source"),
             "gsd_ship_ready": child["gsd"].get("ship_ready"),

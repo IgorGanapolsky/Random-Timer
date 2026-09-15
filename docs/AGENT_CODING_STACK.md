@@ -21,6 +21,7 @@ Canonical recommendation this file encodes (successor-aware):
 | Principle-steered rigor / anti-slop | **pstack lite** (poteto-mode) | `docs/PSTACK.md`, `python3 scripts/pstack_gate.py --json` |
 | Value-center / agency+coherence | **Value Center lite** (Rohrer VSM) | `docs/VALUE_CENTER.md`, `python3 scripts/value_center_gate.py --json` |
 | Escape AI pilot purgatory | **Workflow Economics lite** | `docs/WORKFLOW_ECONOMICS.md`, `python3 scripts/workflow_economics_gate.py --json` |
+| Human integrity standard for agents | **Agent Integrity lite** (Terra / CTech) | `docs/AGENT_INTEGRITY.md`, `python3 scripts/agent_integrity_gate.py --json` |
 | Execution runtime (model-separable) | **Cursor / Claude Code / Codex** (+ optional OpenCode) | Host tools; OpenCode CLI may exist locally |
 | Hawk metrics / lifecycle ROI | PlayerZero **method** only | `docs/AGENT_COMPOUNDING_ROI.md` |
 
@@ -73,6 +74,7 @@ python3 scripts/agent_coding_stack_gate.py --json
 - `marketing/data/value_center_adoption.json`
 - `marketing/data/spec_governance_adoption.json`
 - `marketing/data/workflow_economics_adoption.json`
+- `marketing/data/agent_integrity_adoption.json`
 
 ## pstack lite
 
@@ -85,3 +87,7 @@ Agency + coherence (InfoQ Rohrer VSM): see `docs/VALUE_CENTER.md` and `python3 s
 ## Workflow Economics lite
 
 Escape AI pilot purgatory (completion loop + economic metrics): see `docs/WORKFLOW_ECONOMICS.md` and `python3 scripts/workflow_economics_gate.py --json`.
+
+## Agent Integrity lite
+
+Human is the standard agents are held to (Terra / CTech): see `docs/AGENT_INTEGRITY.md` and `python3 scripts/agent_integrity_gate.py --json`.
