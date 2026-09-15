@@ -1,0 +1,19 @@
+{
+  "name": "agentzip_memory_discipline",
+  "share_template_not_full_forks": true,
+  "compress_during_llm_wait": "schedule heavy compress/dedupe in LLM idle windows",
+  "cap_fanout_before_oom": "bound concurrent sandboxes/worktrees to measured RAM headroom",
+  "measure_redundancy_before_scale": "never claim × memory wins without redundancy_pct",
+  "baseline": {
+    "paper_max_memory_reduction_x": 8.7,
+    "paper_linux_baseline_x": 2.1,
+    "paper_slowdown_with_prefetch_x": 1.4,
+    "paper_redundancy_range_pct": "76-96",
+    "source": "https://arxiv.org/abs/2609.11294",
+    "thread": "https://x.com/omarsar0/status/2098531286319341932"
+  },
+  "budget": {
+    "subscribe_agentzip": false,
+    "reason": "hard monthly cap — worktree fanout caps + shared templates only"
+  }
+}

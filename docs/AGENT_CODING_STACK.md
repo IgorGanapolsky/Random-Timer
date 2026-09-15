@@ -27,6 +27,7 @@ Canonical recommendation this file encodes (successor-aware):
 | Recurrent reasoning depth | **Looped Flows lite** (arxiv 2609.11801) | `docs/LOOPED_FLOWS.md`, `python3 scripts/looped_flows_gate.py --json` |
 | Daily DAIR learn scrape | **DAIR Academy Daily lite** | `docs/DAIR_ACADEMY_DAILY.md`, `python3 scripts/dair_academy_gate.py --json` |
 | Skip unchanged LLM calls | **LLM Response Cache lite** (TNS) | `docs/LLM_RESPONSE_CACHE.md`, `python3 scripts/llm_response_cache_gate.py --json` |
+| Bound sandbox memory fanout | **AgentZip Memory lite** (arXiv 2609.11294) | `docs/AGENTZIP_MEMORY.md`, `python3 scripts/agentzip_memory_gate.py --json` |
 | Execution runtime (model-separable) | **Cursor / Claude Code / Codex** (+ optional OpenCode) | Host tools; OpenCode CLI may exist locally |
 | Hawk metrics / lifecycle ROI | PlayerZero **method** only | `docs/AGENT_COMPOUNDING_ROI.md` |
 
@@ -85,6 +86,7 @@ python3 scripts/agent_coding_stack_gate.py --json
 - `marketing/data/looped_flows_adoption.json`
 - `marketing/data/dair_academy_adoption.json`
 - `marketing/data/llm_response_cache_adoption.json`
+- `marketing/data/agentzip_memory_adoption.json`
 
 ## pstack lite
 
@@ -121,3 +123,7 @@ Daily scrape→rank→implement from DAIR Academy papers: see `docs/DAIR_ACADEMY
 ## LLM Response Cache lite
 
 Fingerprint inputs and skip unchanged inference (not prompt-cache discounts): see `docs/LLM_RESPONSE_CACHE.md` and `python3 scripts/llm_response_cache_gate.py --json`.
+
+## AgentZip Memory lite
+
+Cap high-fanout sandbox redundancy (template share + LLM-idle compress): see `docs/AGENTZIP_MEMORY.md` and `python3 scripts/agentzip_memory_gate.py --json`.
