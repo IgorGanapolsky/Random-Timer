@@ -247,3 +247,7 @@ cd native-ios && xcodebuild -scheme RandomTimer test   # Run tests
 ## AGENTS.md signal (DAIR / ETH AGENTbench)
 
 Human-authored `AGENTS.md` / `CLAUDE.md` help coding agents (~+4%); LLM-generated context files hurt (~−2%) and all context files raise cost (~+20%). Keep these contracts **human, lean, high-signal** — never auto-generate bloated twins. Source: DAIR Academy resource + arXiv 2602.11988.
+
+## LLM response cache (TNS)
+
+Before re-paying for an LLM answer, fingerprint query + context + model settings + source version + access scope; skip the call on a valid exact hit. Measure hit rate before claiming savings. Never cache PII/creative/realtime. See `docs/LLM_RESPONSE_CACHE.md`.

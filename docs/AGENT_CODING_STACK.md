@@ -26,6 +26,7 @@ Canonical recommendation this file encodes (successor-aware):
 | Durable AI ROI / Diff Delta | **Diff Delta lite** (GitClear.com) | `docs/DIFF_DELTA.md`, `python3 scripts/diff_delta_gate.py --json` |
 | Recurrent reasoning depth | **Looped Flows lite** (arxiv 2609.11801) | `docs/LOOPED_FLOWS.md`, `python3 scripts/looped_flows_gate.py --json` |
 | Daily DAIR learn scrape | **DAIR Academy Daily lite** | `docs/DAIR_ACADEMY_DAILY.md`, `python3 scripts/dair_academy_gate.py --json` |
+| Skip unchanged LLM calls | **LLM Response Cache lite** (TNS) | `docs/LLM_RESPONSE_CACHE.md`, `python3 scripts/llm_response_cache_gate.py --json` |
 | Execution runtime (model-separable) | **Cursor / Claude Code / Codex** (+ optional OpenCode) | Host tools; OpenCode CLI may exist locally |
 | Hawk metrics / lifecycle ROI | PlayerZero **method** only | `docs/AGENT_COMPOUNDING_ROI.md` |
 
@@ -83,6 +84,7 @@ python3 scripts/agent_coding_stack_gate.py --json
 - `marketing/data/diff_delta_adoption.json`
 - `marketing/data/looped_flows_adoption.json`
 - `marketing/data/dair_academy_adoption.json`
+- `marketing/data/llm_response_cache_adoption.json`
 
 ## pstack lite
 
@@ -115,3 +117,7 @@ Recurrent verify/refine loops without parameter bloat: see `docs/LOOPED_FLOWS.md
 ## DAIR Academy Daily lite
 
 Daily scrape→rank→implement from DAIR Academy papers: see `docs/DAIR_ACADEMY_DAILY.md` and `python3 scripts/dair_academy_gate.py --json`.
+
+## LLM Response Cache lite
+
+Fingerprint inputs and skip unchanged inference (not prompt-cache discounts): see `docs/LLM_RESPONSE_CACHE.md` and `python3 scripts/llm_response_cache_gate.py --json`.

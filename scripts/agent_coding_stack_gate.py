@@ -3,7 +3,8 @@
 
 Verifies docs + scripts for OpenGSD, Spec Kit, Superpowers, BMAD-lite,
 Compound Engineering lite, Value Center lite, Workflow Economics lite,
-Agent Integrity lite, Maintainability Gap lite, Diff Delta lite, Looped Flows lite, and DAIR Academy Daily lite. Does NOT require an
+Agent Integrity lite, Maintainability Gap lite, Diff Delta lite, Looped Flows lite,
+DAIR Academy Daily lite, and LLM Response Cache lite. Does NOT require an
 active GSD phase to be ship_ready (that is phase-local).
 """
 
@@ -31,6 +32,7 @@ REQUIRED_DOCS = (
     "docs/DIFF_DELTA.md",
     "docs/LOOPED_FLOWS.md",
     "docs/DAIR_ACADEMY_DAILY.md",
+    "docs/LLM_RESPONSE_CACHE.md",
     "AGENTS.md",
     "CLAUDE.md",
 )
@@ -49,6 +51,7 @@ REQUIRED_SCRIPTS = (
     "scripts/diff_delta_gate.py",
     "scripts/looped_flows_gate.py",
     "scripts/dair_academy_gate.py",
+    "scripts/llm_response_cache_gate.py",
 )
 
 BANNED_MARKERS = (
@@ -128,6 +131,10 @@ def evaluate(root: Path) -> dict[str, Any]:
     if not child["dair_academy"].get("ready"):
         blockers.append("dair_academy_not_ready")
 
+    child["llm_response_cache"] = _run_json(root, "scripts/llm_response_cache_gate.py")
+    if not child["llm_response_cache"].get("ready"):
+        blockers.append("llm_response_cache_not_ready")
+
     child["speckit"] = _run_json(root, "scripts/speckit_gate.py")
     if child["speckit"].get("error"):
         blockers.append("speckit_gate_error")
@@ -168,6 +175,7 @@ def evaluate(root: Path) -> dict[str, Any]:
             "diff_delta_ready": child["diff_delta"].get("ready"),
             "looped_flows_ready": child["looped_flows"].get("ready"),
             "dair_academy_ready": child["dair_academy"].get("ready"),
+            "llm_response_cache_ready": child["llm_response_cache"].get("ready"),
             "speckit_implement_ready": child["speckit"].get("implement_ready"),
             "gsd_source": child["gsd"].get("source"),
             "gsd_ship_ready": child["gsd"].get("ship_ready"),
