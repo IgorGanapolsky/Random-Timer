@@ -59,3 +59,9 @@ Five-element SPEC + readiness: see `docs/BMAD.md` and `python3 scripts/bmad_read
 ## Compound Engineering lite
 
 After Spec Kit implement/converge, capture learnings in `docs/solutions/` — see `docs/COMPOUND_ENGINEERING.md`.
+
+
+## Spec governance (when SDD pays off)
+
+InfoQ targeting + attributable drift (not more recall): see `docs/SPEC_GOVERNANCE.md`
+and `python3 scripts/spec_governance_gate.py --json`.

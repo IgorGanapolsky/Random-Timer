@@ -14,6 +14,7 @@ Canonical recommendation this file encodes (successor-aware):
 |------|----------------|----------|
 | Solo / long-running features | **OpenGSD (gsd-core)** | `docs/GSD_OPENGSD.md`, `python3 scripts/gsd_phase_gate.py --json` |
 | Auditable feature specs | **GitHub Spec Kit** | `docs/SPEC_KIT.md`, `python3 scripts/speckit_gate.py --json` |
+| When SDD pays off (hard work) | **Spec governance lite** | `docs/SPEC_GOVERNANCE.md`, `python3 scripts/spec_governance_gate.py --json` |
 | Highest SE rigor (TDD/worktrees/review) | **Superpowers** | `docs/SUPERPOWERS.md`, `python3 scripts/superpowers_gate.py --json` |
 | Product-scale discovery→QA | **BMAD-lite** (not full install) | `docs/BMAD.md`, `python3 scripts/bmad_readiness_gate.py --json` |
 | Capture repeated corrections | **Compound Engineering lite** | `docs/COMPOUND_ENGINEERING.md`, `python3 scripts/compound_gate.py --json` |
@@ -69,6 +70,7 @@ python3 scripts/agent_coding_stack_gate.py --json
 - `marketing/data/compound_engineering_adoption.json`
 - `marketing/data/agent_coding_stack_adoption.json`
 - `marketing/data/value_center_adoption.json`
+- `marketing/data/spec_governance_adoption.json`
 
 ## pstack lite
 

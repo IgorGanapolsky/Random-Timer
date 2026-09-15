@@ -1,0 +1,20 @@
+{
+  "framework": "spec-governance-lite",
+  "source": "https://www.infoq.com/articles/when-spec-driven-development-pays-off/",
+  "adopted_at_utc": "2026-09-15T15:46:56Z",
+  "stolen": [
+    "verification-is-the-bottleneck framing",
+    "targeting rule: hard multi-constraint only",
+    "attribution over recall",
+    "staged approved baseline then fresh generate",
+    "five control points + human Accountable RACI"
+  ],
+  "skipped": [
+    "full study instrumentation",
+    "mandating SDD for every chore",
+    "paid governance SaaS"
+  ],
+  "gate": "python3 scripts/spec_governance_gate.py --json",
+  "doc": "docs/SPEC_GOVERNANCE.md",
+  "budget_usd_month": 0
+}
