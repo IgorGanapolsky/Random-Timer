@@ -23,6 +23,7 @@ Canonical recommendation this file encodes (successor-aware):
 | Escape AI pilot purgatory | **Workflow Economics lite** | `docs/WORKFLOW_ECONOMICS.md`, `python3 scripts/workflow_economics_gate.py --json` |
 | Human integrity standard for agents | **Agent Integrity lite** (Terra / CTech) | `docs/AGENT_INTEGRITY.md`, `python3 scripts/agent_integrity_gate.py --json` |
 | AI output vs maintainability | **Maintainability Gap lite** (GitClear / TNS) | `docs/MAINTAINABILITY_GAP.md`, `python3 scripts/maintainability_gap_gate.py --json` |
+| Durable AI ROI / Diff Delta | **Diff Delta lite** (GitClear.com) | `docs/DIFF_DELTA.md`, `python3 scripts/diff_delta_gate.py --json` |
 | Execution runtime (model-separable) | **Cursor / Claude Code / Codex** (+ optional OpenCode) | Host tools; OpenCode CLI may exist locally |
 | Hawk metrics / lifecycle ROI | PlayerZero **method** only | `docs/AGENT_COMPOUNDING_ROI.md` |
 
@@ -77,6 +78,7 @@ python3 scripts/agent_coding_stack_gate.py --json
 - `marketing/data/workflow_economics_adoption.json`
 - `marketing/data/agent_integrity_adoption.json`
 - `marketing/data/maintainability_gap_adoption.json`
+- `marketing/data/diff_delta_adoption.json`
 
 ## pstack lite
 
@@ -97,3 +99,7 @@ Human is the standard agents are held to (Terra / CTech): see `docs/AGENT_INTEGR
 ## Maintainability Gap lite
 
 Counter AI copy-paste sprawl (+25% output, +81% duplication): see `docs/MAINTAINABILITY_GAP.md` and `python3 scripts/maintainability_gap_gate.py --json`.
+
+## Diff Delta lite
+
+Score durable Diff Delta / production yield (not tokens): see `docs/DIFF_DELTA.md` and `python3 scripts/diff_delta_gate.py --json`.

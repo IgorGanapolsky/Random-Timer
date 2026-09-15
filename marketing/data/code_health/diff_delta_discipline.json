@@ -1,0 +1,17 @@
+{
+  "name": "diff_delta_discipline",
+  "score_durable_diff_delta": true,
+  "yield_to_production_not_tokens": "generated→accepted→committed→merged→day_7/30/90; only post-merge survival counts as ROI",
+  "flag_ai_hotspot_dirs": "directories with elevated AI % + defect Δ + duplication Δ vs baseline",
+  "same_yardstick_human_llm": "Diff Delta for both cohorts — no apples-to-oranges",
+  "baseline": {
+    "industry_dup_block_multiplier": 8,
+    "industry_ai_churn_multiplier": 9,
+    "industry_ai_volume_multiplier_range": "4-10x",
+    "source": "https://www.gitclear.com/"
+  },
+  "budget": {
+    "subscribe_gitclear": false,
+    "reason": "$20/mo hard cap — encode Diff Delta discipline + Sonar/CI proxies"
+  }
+}
