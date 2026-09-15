@@ -14,7 +14,7 @@ Operating brief from [The New Stack — Why an old caching trick is your secret 
 
 | Signal | Meaning here |
 |--------|----------------|
-| `fingerprint_exact_match_first` | SHA-256 of normalized query + ctx (model, settings, source version, access scope) |
+| `fingerprint_exact_match_first` | SHA-256 of query + ctx (model, settings, source version, access scope); preserve case/internal whitespace |
 | `measure_hit_rate_before_savings` | Never claim % savings until hit rate is measured |
 | `skip_pii_creative_realtime` | Do not cache personal/account, creative, or live-moving values |
 | `shadow_then_promote` | Log would-be hits in shadow mode; validate before write-back |

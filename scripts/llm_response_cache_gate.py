@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import sys
 from pathlib import Path
 from typing import Any, Mapping
@@ -45,18 +46,32 @@ HEALTH_SIGNALS = (
 )
 
 NO_CACHE_CATEGORIES = frozenset(
-    {"pii", "account", "personal", "creative", "realtime", "live", "stock", "inventory"}
+    {
+        "pii",
+        "account",
+        "account-specific",
+        "personal",
+        "creative",
+        "realtime",
+        "live",
+        "live-moving",
+        "stock",
+        "inventory",
+    }
+)
+CACHEABLE_CATEGORIES = frozenset(
+    {"batch", "ci", "boilerplate", "policy", "docs", "summarization", "public"}
 )
 
 
 def fingerprint(query: str, ctx: Mapping[str, object]) -> str:
-    """Exact-match key: normalized query + ordered ctx fields that change answers."""
+    """Exact-match key: preserve case/internal whitespace; only strip ends."""
     payload = {
-        "query": " ".join(str(query or "").split()).strip().lower(),
-        "model": norm(ctx.get("model")),
+        "query": str(query or "").strip(),
+        "model": str(ctx.get("model") or "").strip(),
         "settings": ctx.get("settings") or {},
-        "source_version": norm(ctx.get("source_version")),
-        "access_scope": norm(ctx.get("access_scope")),
+        "source_version": str(ctx.get("source_version") or "").strip(),
+        "access_scope": str(ctx.get("access_scope") or "").strip(),
         "documents": ctx.get("documents") or [],
     }
     blob = json.dumps(payload, sort_keys=True, separators=(",", ":"))
@@ -75,6 +90,20 @@ def evaluate_cache_claim(claim: Mapping[str, object]) -> Decision:
             reason="skip PII/account, creative, and realtime answers — do not cache",
         )
 
+    if mode == "shadow":
+        return Decision(
+            action="allow_shadow_observe",
+            ok=True,
+            reason="shadow mode logs would-be hits without changing behavior",
+        )
+
+    if action in {"exact_match_lookup", "promote_validated_hit"} and category not in CACHEABLE_CATEGORIES:
+        return Decision(
+            action="block_unknown_cache_category",
+            ok=False,
+            reason="declare category in batch|ci|boilerplate|policy|docs|summarization|public",
+        )
+
     if action in {"claim_savings", "project_savings"} and claim.get("hit_rate_pct") is None:
         return Decision(
             action="block_unmeasured_savings",
@@ -83,12 +112,19 @@ def evaluate_cache_claim(claim: Mapping[str, object]) -> Decision:
         )
 
     if action in {"claim_savings", "project_savings"}:
-        hit = float(claim.get("hit_rate_pct") or 0)
-        if hit <= 0:
+        try:
+            hit = float(claim.get("hit_rate_pct"))
+        except (TypeError, ValueError):
+            return Decision(
+                action="block_malformed_hit_rate",
+                ok=False,
+                reason="hit_rate_pct must be a finite number",
+            )
+        if not math.isfinite(hit) or hit <= 0:
             return Decision(
                 action="block_unmeasured_savings",
                 ok=False,
-                reason="hit_rate_pct must be > 0 after measurement",
+                reason="hit_rate_pct must be a finite number > 0 after measurement",
             )
 
     if mode == "prompt_cache" and bool(claim.get("count_as_full_skip")):
@@ -98,19 +134,12 @@ def evaluate_cache_claim(claim: Mapping[str, object]) -> Decision:
             reason="prompt caching reduces prompt rates; it is not a full response skip",
         )
 
-    if mode == "shadow":
-        return Decision(
-            action="allow_shadow_observe",
-            ok=True,
-            reason="shadow mode logs would-be hits without changing behavior",
-        )
-
     if action in {"exact_match_lookup", "promote_validated_hit", "claim_savings"}:
-        if not bool(claim.get("validated", True)):
+        if claim.get("validated") is not True:
             return Decision(
                 action="block_unvalidated_writeback",
                 ok=False,
-                reason="validate responses before write-back to avoid cache poison",
+                reason="require validated=true before write-back to avoid cache poison",
             )
         return Decision(
             action="allow_response_cache",

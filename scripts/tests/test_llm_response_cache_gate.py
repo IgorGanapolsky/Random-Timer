@@ -67,9 +67,18 @@ class FingerprintTests(unittest.TestCase):
             "access_scope": "public",
         }
         a = fingerprint("What is WQTU?", ctx)
-        b = fingerprint("  what   is   wqtu? ", ctx)
+        b = fingerprint("What is WQTU?", ctx)
         self.assertEqual(a, b)
         self.assertEqual(len(a), 64)
+
+    def test_case_and_whitespace_preserved(self) -> None:
+        ctx = {"model": "flash", "settings": {}, "source_version": "v1", "access_scope": "public"}
+        a = fingerprint("Foo", ctx)
+        b = fingerprint("foo", ctx)
+        c = fingerprint("a  b", ctx)
+        d = fingerprint("a b", ctx)
+        self.assertNotEqual(a, b)
+        self.assertNotEqual(c, d)
 
     def test_scope_splits_keys(self) -> None:
         base = {"model": "flash", "settings": {}, "source_version": "v1"}
@@ -84,14 +93,30 @@ class ClaimTests(unittest.TestCase):
         self.assertFalse(d.ok)
         self.assertEqual(d.action, "block_no_cache_category")
 
+    def test_unknown_category_fail_closed(self) -> None:
+        d = evaluate_cache_claim({"action": "exact_match_lookup", "validated": True})
+        self.assertFalse(d.ok)
+        self.assertEqual(d.action, "block_unknown_cache_category")
+
     def test_unmeasured_savings_blocked(self) -> None:
         d = evaluate_cache_claim({"action": "claim_savings"})
         self.assertFalse(d.ok)
         self.assertEqual(d.action, "block_unmeasured_savings")
 
+    def test_malformed_hit_rate_blocked(self) -> None:
+        d = evaluate_cache_claim({"action": "claim_savings", "hit_rate_pct": "unknown"})
+        self.assertFalse(d.ok)
+        self.assertEqual(d.action, "block_malformed_hit_rate")
+
     def test_prompt_cache_not_full_skip(self) -> None:
         d = evaluate_cache_claim(
-            {"mode": "prompt_cache", "count_as_full_skip": True, "action": "claim_savings", "hit_rate_pct": 50}
+            {
+                "mode": "prompt_cache",
+                "count_as_full_skip": True,
+                "action": "claim_savings",
+                "hit_rate_pct": 50,
+                "validated": True,
+            }
         )
         self.assertFalse(d.ok)
         self.assertEqual(d.action, "block_prompt_cache_as_response_skip")
@@ -101,11 +126,24 @@ class ClaimTests(unittest.TestCase):
         self.assertTrue(d.ok)
         self.assertEqual(d.action, "allow_shadow_observe")
 
+    def test_promote_requires_explicit_validated(self) -> None:
+        d = evaluate_cache_claim(
+            {"action": "promote_validated_hit", "category": "batch"}
+        )
+        self.assertFalse(d.ok)
+        self.assertEqual(d.action, "block_unvalidated_writeback")
+
     def test_measured_exact_allowed(self) -> None:
         d = evaluate_cache_claim(
-            {"action": "claim_savings", "hit_rate_pct": 40, "validated": True}
+            {
+                "action": "claim_savings",
+                "hit_rate_pct": 40,
+                "validated": True,
+                "category": "batch",
+            }
         )
         self.assertTrue(d.ok)
+
 
 
 class PresenceTests(unittest.TestCase):
