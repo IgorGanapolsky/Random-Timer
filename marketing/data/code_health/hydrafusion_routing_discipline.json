@@ -1,0 +1,19 @@
+{
+  "name": "hydrafusion_routing_discipline",
+  "complete_cost_accounting": true,
+  "bounded_execution": "timeouts + cancellation on every workflow leg",
+  "isolated_critique": "critic is tool-less / read-only (Rubber Duck)",
+  "fail_safe_apply": "reject patches if validation fails or cancelled",
+  "validated_routing": "pre-check model availability before spend",
+  "patterns": ["single", "cascade", "critique"],
+  "baseline": {
+    "infoq_terminalbench_cost_reduction_pct": 67,
+    "infoq_checkpointbench_cost_reduction_pct": 65,
+    "note": "InfoQ figures are HydraFusion research preview — measure our own cascade hit rate before claiming savings",
+    "source": "https://www.infoq.com/news/2026/09/github-hydrafusion/"
+  },
+  "budget": {
+    "subscribe_hydrafusion": false,
+    "reason": "hard monthly cap — steal Single/Cascade/Critique locally via agent-model-matching"
+  }
+}

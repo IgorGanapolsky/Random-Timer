@@ -1,0 +1,25 @@
+{
+  "framework": "hydrafusion-routing-lite",
+  "adopted_at_utc": "2026-09-15T20:56:42Z",
+  "source": "https://www.infoq.com/news/2026/09/github-hydrafusion/",
+  "doc": "docs/HYDRAFUSION_ROUTING.md",
+  "gate": "python3 scripts/hydrafusion_routing_gate.py --json",
+  "skill": "hydrafusion-routing-lite",
+  "fixture": "marketing/data/code_health/hydrafusion_routing_discipline.json",
+  "pairs_with": [
+    "scripts/hydrafusion_route.py",
+    "docs/HYDRAFUSION_ORCHESTRATION.md",
+    ".claude/rules/agent-model-matching.md",
+    "docs/LLM_RESPONSE_CACHE.md",
+    "docs/WORKFLOW_ECONOMICS.md"
+  ],
+  "infoq": "https://www.infoq.com/news/2026/09/github-hydrafusion/",
+  "github_blog": "https://github.blog/ai-and-ml/github-copilot/project-hydrafusion-frontier-quality-via-multi-model-orchestration/",
+  "rejected": [
+    "HydraFusion / Copilot experimental SaaS under hard monthly cap",
+    "always-frontier without cascade/critique",
+    "tooling critics",
+    "unvalidated patch apply",
+    "savings claims without leg accounting"
+  ]
+}
