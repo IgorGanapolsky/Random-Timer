@@ -162,4 +162,4 @@ Query understanding → retrieve → depth-controlled rank → product-policy ev
 
 ## Multi-Teacher Distill lite
 
-Pluggable teachers → offline soft-label/embedding cache (per-shard) → compact student loops (~8X vs full teacher re-run; no GPU training SaaS): see `docs/MULTI_TEACHER_DISTILL.md` and `python3 scripts/multi_teacher_distill_gate.py --json`.
+Pluggable teachers → offline soft-label/embedding cache (per-shard) → compact student loops (~8X via compound gains; online while exploring → offline when stable; prune+compress; NDCG evidence; no GPU training SaaS / no default FP8 on small models): see `docs/MULTI_TEACHER_DISTILL.md` and `python3 scripts/multi_teacher_distill_gate.py --json`.

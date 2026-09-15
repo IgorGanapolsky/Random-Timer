@@ -1,7 +1,9 @@
 {
   "framework": "multi-teacher-distill-lite",
   "adopted_at_utc": "2026-09-15T23:02:29Z",
+  "deepened_at_utc": "2026-09-15T23:15:59Z",
   "source": "https://www.linkedin.com/blog/engineering/infrastructure/the-training-infrastructure-behind-ai-powered-job-search-eight-x-faster-multi-teacher-distillation",
+  "infoq_source": "https://www.infoq.com/news/2026/09/linkedin-ai-multi-teacher/",
   "doc": "docs/MULTI_TEACHER_DISTILL.md",
   "gate": "python3 scripts/multi_teacher_distill_gate.py --json",
   "skill": "multi-teacher-distill-lite",
@@ -17,6 +19,8 @@
     "full teacher re-run on every student iteration",
     "serving multi-teacher fleets at query time",
     "hardcoded single-teacher assumptions",
-    "all-or-nothing cache invalidation"
+    "all-or-nothing cache invalidation",
+    "default FP8 for small students without measured win",
+    "distill quality claims without NDCG evidence"
   ]
 }

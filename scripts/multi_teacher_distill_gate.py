@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 """Multi-Teacher Distill lite — LinkedIn 8X faster distillation discipline.
 
-Source:
+Sources:
   https://www.linkedin.com/blog/engineering/infrastructure/the-training-infrastructure-behind-ai-powered-job-search-eight-x-faster-multi-teacher-distillation
+  https://www.infoq.com/news/2026/09/linkedin-ai-multi-teacher/
 
 LinkedIn thesis: multi-specialized teachers (relevance / engagement / embeddings)
 feed a compact student SLM under a hard serving latency budget. Biggest win is
 **offline distillation** — cache teacher soft labels + embeddings keyed by model
 version and data fingerprint (per-shard), then iterate the student without
-re-running teachers. Online path co-locates teachers; unified framework shares
-plumbing. ~45h → <5h (~8X) with no quality loss.
+re-running teachers. Online path co-locates teachers (SGLang-style async serving);
+unified framework shares plumbing. ~45h → <5h (~8X) with no quality loss.
+
+InfoQ digest adds: online while teachers change → offline when stable + volume
+rises; compound moderate gains (not one trick); FP8 no win under ~8B; structured
+pruning + context compression for serving throughput; NDCG evidence before claims.
 
 High-ROI steals for Random Timer ($20/mo hard cap — no GPU training SaaS):
   - Prefer student iteration over re-running expensive teachers/frontiers
@@ -18,6 +23,8 @@ High-ROI steals for Random Timer ($20/mo hard cap — no GPU training SaaS):
   - Distill into compact artifacts (skills, gates, fixtures) — do not serve
     multi-teacher fleets at query time
   - Stream/chunk context; do not stage the whole corpus every run
+  - Switch online→offline by teacher stability; stack moderate local gains
+  - Prune + compress for serving; demand ranking-quality evidence (e.g. NDCG)
 """
 
 from __future__ import annotations
@@ -44,6 +51,7 @@ SOURCE = (
     "the-training-infrastructure-behind-ai-powered-job-search-"
     "eight-x-faster-multi-teacher-distillation"
 )
+INFOQ_SOURCE = "https://www.infoq.com/news/2026/09/linkedin-ai-multi-teacher/"
 
 HEALTH_SIGNALS = (
     "multi_teacher_pluggable",
@@ -54,6 +62,12 @@ HEALTH_SIGNALS = (
     "stream_not_full_stage",
     "hard_plus_soft_labels",
     "compact_student_for_serving",
+    "async_teacher_serving",
+    "teacher_stability_mode_switch",
+    "compound_moderate_gains",
+    "reject_fp8_default_small",
+    "prune_and_compress_serving",
+    "ranking_quality_evidence",
 )
 
 TEACHER_ROLES = frozenset(
@@ -122,6 +136,33 @@ def estimate_distill_speedup(
     }
 
 
+def select_phase_mode(
+    *,
+    teachers_stable: bool,
+    query_volume_high: bool = False,
+) -> str:
+    """InfoQ guidance: online while exploring teachers; offline once stable + volume rises."""
+    if teachers_stable and query_volume_high:
+        return "offline"
+    if teachers_stable:
+        return "offline"
+    return "online"
+
+
+def stack_compound_speedups(gains: list[float] | tuple[float, ...] | None) -> dict[str, Any]:
+    """InfoQ: 8X is stacked moderate gains (LiGer / multi-node / FSDP2 / GPU gen), not one trick."""
+    factors = [float(g) for g in (gains or []) if float(g) > 0]
+    product = 1.0
+    for g in factors:
+        product *= g
+    return {
+        "factors": factors,
+        "compound_speedup_x": round(product, 2),
+        "is_compound": len(factors) >= 2,
+        "source": INFOQ_SOURCE,
+    }
+
+
 def evaluate_distill_claim(claim: Mapping[str, object]) -> Decision:
     action = norm(claim.get("action"))
 
@@ -162,6 +203,24 @@ def evaluate_distill_claim(claim: Mapping[str, object]) -> Decision:
             reason="teachers must be pluggable components (relevance|engagement|embedding|policy|…)",
         )
 
+    if action in {
+        "default_fp8_small",
+        "always_fp8",
+        "force_fp8_under_8b",
+    }:
+        return Decision(
+            action="block_default_fp8_small",
+            ok=False,
+            reason="InfoQ: FP8 casting overhead outweighed savings under ~8B — do not default to FP8",
+        )
+
+    if action in {"frontier_llm_every_rank_request", "always_frontier_rank_inference"}:
+        return Decision(
+            action="block_frontier_per_request",
+            ok=False,
+            reason="InfoQ: avoid frontier-LLM inference for every ranking request — distill to compact student",
+        )
+
     if action in {"select_mode", "choose_distill_mode"}:
         mode = select_distill_mode(
             teachers_changed=bool(claim.get("teachers_changed")),
@@ -173,6 +232,62 @@ def evaluate_distill_claim(claim: Mapping[str, object]) -> Decision:
             action=f"allow_mode_{mode}",
             ok=True,
             reason=f"selected distill mode: {mode}",
+        )
+
+    if action in {"select_phase", "phase_mode"}:
+        mode = select_phase_mode(
+            teachers_stable=bool(claim.get("teachers_stable")),
+            query_volume_high=bool(claim.get("query_volume_high")),
+        )
+        return Decision(
+            action=f"allow_phase_{mode}",
+            ok=True,
+            reason=f"InfoQ phase mode: {mode} (online while exploring; offline when stable)",
+        )
+
+    if action in {"stack_gains", "compound_speedups"}:
+        gains = claim.get("gains") or []
+        if not isinstance(gains, list) or len(gains) < 2:
+            return Decision(
+                action="block_single_trick_speedup",
+                ok=False,
+                reason="InfoQ: 8X is compound moderate gains — declare >=2 stacked factors",
+            )
+        report = stack_compound_speedups(gains)
+        return Decision(
+            action="allow_compound_speedup",
+            ok=True,
+            reason=f"compound speedup {report['compound_speedup_x']}X from {len(report['factors'])} factors",
+        )
+
+    if action in {"claim_ranking_quality", "claim_ndcg", "ship_distilled_ranker"}:
+        if claim.get("ranking_quality_evidence") is not True and claim.get(
+            "ndcg_reported"
+        ) is not True:
+            return Decision(
+                action="block_quality_without_ndcg",
+                ok=False,
+                reason="InfoQ: report ranking quality evidence (e.g. NDCG@k) before claiming distill wins",
+            )
+        return Decision(
+            action="allow_quality_backed_claim",
+            ok=True,
+            reason="ranking quality evidence present",
+        )
+
+    if action in {"serve_with_prune_compress", "optimize_student_serving"}:
+        if claim.get("structured_pruning") is not True and claim.get(
+            "context_compression"
+        ) is not True:
+            return Decision(
+                action="block_serving_without_prune_or_compress",
+                ok=False,
+                reason="InfoQ: apply structured pruning and/or context compression for student serving throughput",
+            )
+        return Decision(
+            action="allow_prune_compress_serving",
+            ok=True,
+            reason="prune and/or compress enabled for serving",
         )
 
     if action in {"run_offline_distill", "train_student_from_cache"}:
@@ -254,8 +369,9 @@ def evaluate_distill_claim(claim: Mapping[str, object]) -> Decision:
         action="block_unknown_distill_action",
         ok=False,
         reason=(
-            "declare action: select_mode|run_offline_distill|register_teacher|"
-            "claim_speedup"
+            "declare action: select_mode|select_phase|run_offline_distill|"
+            "register_teacher|claim_speedup|stack_gains|claim_ranking_quality|"
+            "serve_with_prune_compress"
         ),
     )
 
@@ -282,6 +398,14 @@ def evaluate(repo: Path) -> dict[str, Any]:
                 "embedding",
                 "8x",
                 "stream",
+                "sglang",
+                "async",
+                "stable",
+                "compound",
+                "fp8",
+                "pruning",
+                "compression",
+                "ndcg",
             ),
         )
     )
@@ -317,6 +441,7 @@ def evaluate(repo: Path) -> dict[str, Any]:
     return {
         "framework": "multi-teacher-distill-lite",
         "source": SOURCE,
+        "infoq_source": INFOQ_SOURCE,
         "ready": ready,
         "blockers": blockers,
         "health_signals": list(HEALTH_SIGNALS),
