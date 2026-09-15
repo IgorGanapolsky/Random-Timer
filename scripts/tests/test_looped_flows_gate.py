@@ -10,6 +10,7 @@ from pathlib import Path
 from scripts.looped_flows_gate import (
     HEALTH_SIGNALS,
     evaluate,
+    evaluate_claim,
     evaluate_loop_plan,
     evaluate_training_posture,
 )
@@ -63,6 +64,35 @@ class LoopPlanTests(unittest.TestCase):
         )
         self.assertFalse(d.ok)
         self.assertEqual(d.action, "block_untied_loops")
+
+
+    def test_string_false_flags_blocked(self) -> None:
+        d = evaluate_loop_plan(
+            {
+                "strategy": "recurrent",
+                "loops": 3,
+                "local_objectives": "false",
+                "early_sets_up_later": True,
+                "adaptive_grid": True,
+            }
+        )
+        self.assertFalse(d.ok)
+        self.assertEqual(d.action, "block_non_boolean_flags")
+
+    def test_claim_runs_training_posture(self) -> None:
+        d = evaluate_claim(
+            {
+                "strategy": "recurrent",
+                "loops": 3,
+                "local_objectives": True,
+                "early_sets_up_later": True,
+                "adaptive_grid": True,
+                "gradient_span": "last_one",
+                "shared_noise": False,
+            }
+        )
+        self.assertFalse(d.ok)
+        self.assertEqual(d.action, "block_last_step_only")
 
     def test_chained_recurrent_plan_allowed(self) -> None:
         d = evaluate_loop_plan(

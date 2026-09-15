@@ -49,6 +49,16 @@ HEALTH_SIGNALS = (
     "adaptive_compute_grid",
 )
 
+
+def _as_strict_bool(value: object, field: str) -> bool | None:
+    """Accept only real JSON booleans; reject truthy strings like \"false\"."""
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return None
+    raise TypeError(f"{field} must be a JSON boolean, got {type(value).__name__}")
+
+
 PARAM_STRATEGIES = frozenset(
     {"add_parameters", "bigger_model", "more_tools", "scale_params", "upgrade_model"}
 )
@@ -96,21 +106,28 @@ def evaluate_loop_plan(plan: Mapping[str, object]) -> Decision:
             reason="recurrent reasoning needs loops >= 2 (finer grid when harder)",
         )
 
-    if not bool(plan.get("local_objectives")):
+    try:
+        local_obj = _as_strict_bool(plan.get("local_objectives"), "local_objectives")
+        early = _as_strict_bool(plan.get("early_sets_up_later"), "early_sets_up_later")
+        adaptive = _as_strict_bool(plan.get("adaptive_grid"), "adaptive_grid")
+    except TypeError as exc:
+        return Decision(action="block_non_boolean_flags", ok=False, reason=str(exc))
+
+    if not local_obj:
         return Decision(
             action="block_untied_loops",
             ok=False,
             reason="each loop needs a local objective tied to the next (shared context)",
         )
 
-    if not bool(plan.get("early_sets_up_later")):
+    if not early:
         return Decision(
             action="block_last_step_only_plan",
             ok=False,
             reason="early steps must set up later ones — not last-check-only gradients",
         )
 
-    if not bool(plan.get("adaptive_grid")):
+    if not adaptive:
         return Decision(
             action="block_fixed_shallow_grid",
             ok=False,
@@ -204,11 +221,23 @@ def evaluate(repo: Path) -> dict[str, Any]:
     }
 
 
+def evaluate_claim(claim: Mapping[str, object]) -> Decision:
+    """Loop plan first; if training-posture keys present, also validate those."""
+    loop_decision = evaluate_loop_plan(claim)
+    if not loop_decision.ok:
+        return loop_decision
+    if any(k in claim for k in ("gradient_span", "shared_noise", "decreasing_noise")):
+        posture = evaluate_training_posture(claim)
+        if not posture.ok:
+            return posture
+    return loop_decision
+
+
 def main(argv: list[str] | None = None) -> int:
     return run_presence_cli(
         description=__doc__ or "looped-flows-lite",
         evaluate=evaluate,
-        claim_evaluator=evaluate_loop_plan,
+        claim_evaluator=evaluate_claim,
         argv=argv,
     )
 
