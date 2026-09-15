@@ -1,0 +1,20 @@
+{
+  "framework": "value-center-vsm-lite",
+  "source": "https://www.infoq.com/news/2026/09/autonomous-software-teams/",
+  "adopted_at_utc": "2026-09-15T15:29:39Z",
+  "stolen": [
+    "Viable Systems Model five questions",
+    "products → value centers",
+    "autonomy → agency + coherence",
+    "nested + networked coordination",
+    "essential vs accidental dependency classification"
+  ],
+  "skipped": [
+    "org reorg / tribe redesign",
+    "paid InfoQ webinars or SaaS governance products"
+  ],
+  "gate": "python3 scripts/value_center_gate.py --json",
+  "doc": "docs/VALUE_CENTER.md",
+  "north_star": "WQTU + $100/day after-tax",
+  "budget_usd_month": 0
+}
