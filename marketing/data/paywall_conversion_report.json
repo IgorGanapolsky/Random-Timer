@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-14T21:01:48+00:00",
+  "generated_at": "2026-09-15T00:55:51+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -177,8 +177,8 @@
     },
     {
       "setting_name": "voice_callouts_enabled",
-      "changes": 618,
-      "users": 51
+      "changes": 621,
+      "users": 52
     },
     {
       "setting_name": "repeat_enabled",
@@ -192,8 +192,8 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 224,
-      "users": 80
+      "changes": 226,
+      "users": 81
     },
     {
       "setting_name": "vibration_enabled",
