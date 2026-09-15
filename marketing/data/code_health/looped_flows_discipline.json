@@ -1,0 +1,15 @@
+{
+  "name": "looped_flows_discipline",
+  "reason_by_recurrence_not_params": true,
+  "early_steps_set_up_later": "each verify/refine loop carries shared evidence so the next step is set up",
+  "local_objectives_chain": "local denoising-style checks with shared context across steps",
+  "adaptive_compute_grid": "more loops on harder failures; finer grid not bigger model first",
+  "baseline": {
+    "paper": "Thinking with Looped Flows",
+    "arxiv": "2609.11801",
+    "source": "https://arxiv.org/abs/2609.11801",
+    "thread": "https://x.com/omarsar0/status/2098807354343260366",
+    "arc_agi_1_pct": 58.8,
+    "arc_agi_2_pct": 12.2
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "framework": "looped-flows-lite",
+  "adopted_at_utc": "2026-09-15T18:20:53Z",
+  "source": "https://arxiv.org/abs/2609.11801",
+  "thread": "https://x.com/omarsar0/status/2098807354343260366",
+  "doc": "docs/LOOPED_FLOWS.md",
+  "gate": "python3 scripts/looped_flows_gate.py --json",
+  "skill": "looped-flows-lite",
+  "fixture": "marketing/data/code_health/looped_flows_discipline.json",
+  "rejected": [
+    "bigger model as first move",
+    "last-step-only credit assignment",
+    "single-shot agent turns without local verify loops"
+  ],
+  "related": [
+    "docs/DIFF_DELTA.md",
+    "docs/MAINTAINABILITY_GAP.md"
+  ]
+}
