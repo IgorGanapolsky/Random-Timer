@@ -1,0 +1,16 @@
+{
+  "multi_teacher_pluggable": true,
+  "offline_teacher_cache": true,
+  "per_shard_invalidation": true,
+  "student_iterate_without_teachers": true,
+  "unified_online_offline": true,
+  "stream_not_full_stage": true,
+  "hard_plus_soft_labels": true,
+  "compact_student_for_serving": true,
+  "budget": {
+    "gpu_training_saas": false,
+    "hard_monthly_usd_cap": 20
+  },
+  "source": "https://www.linkedin.com/blog/engineering/infrastructure/the-training-infrastructure-behind-ai-powered-job-search-eight-x-faster-multi-teacher-distillation",
+  "updated_at_utc": "2026-09-15T23:02:29Z"
+}
