@@ -88,6 +88,28 @@ class ClaimTests(unittest.TestCase):
         )
         self.assertTrue(d.ok)
 
+    def test_fractional_fanout_blocked(self) -> None:
+        d = evaluate_fanout_claim(
+            {
+                "action": "spawn_parallel",
+                "concurrent_sandboxes": 2.9,
+                "memory_budget_ok": True,
+                "validated": True,
+            }
+        )
+        self.assertFalse(d.ok)
+        self.assertEqual(d.action, "block_malformed_fanout")
+
+    def test_project_memory_win_allowed(self) -> None:
+        d = evaluate_fanout_claim(
+            {
+                "action": "project_memory_win",
+                "redundancy_pct": 80,
+                "validated": True,
+            }
+        )
+        self.assertTrue(d.ok)
+
     def test_measured_claim_allowed(self) -> None:
         d = evaluate_fanout_claim(
             {
