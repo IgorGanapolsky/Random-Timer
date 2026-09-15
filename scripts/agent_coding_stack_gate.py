@@ -2,7 +2,7 @@
 """Presence gate for the layered agent coding stack (SSOT).
 
 Verifies docs + scripts for OpenGSD, Spec Kit, Superpowers, BMAD-lite,
-and Compound Engineering lite. Does NOT require an active GSD phase to be
+Compound Engineering lite, and Value Center lite. Does NOT require an active GSD phase to be
 ship_ready (that is phase-local).
 """
 
@@ -23,6 +23,7 @@ REQUIRED_DOCS = (
     "docs/BMAD.md",
     "docs/COMPOUND_ENGINEERING.md",
     "docs/PSTACK.md",
+    "docs/VALUE_CENTER.md",
     "AGENTS.md",
     "CLAUDE.md",
 )
@@ -34,6 +35,7 @@ REQUIRED_SCRIPTS = (
     "scripts/bmad_readiness_gate.py",
     "scripts/compound_gate.py",
     "scripts/pstack_gate.py",
+    "scripts/value_center_gate.py",
 )
 
 BANNED_MARKERS = (
@@ -85,6 +87,10 @@ def evaluate(root: Path) -> dict[str, Any]:
     if not child["pstack"].get("ready"):
         blockers.append("pstack_not_ready")
 
+    child["value_center"] = _run_json(root, "scripts/value_center_gate.py")
+    if not child["value_center"].get("ready"):
+        blockers.append("value_center_not_ready")
+
     child["speckit"] = _run_json(root, "scripts/speckit_gate.py")
     if child["speckit"].get("error"):
         blockers.append("speckit_gate_error")
@@ -118,6 +124,7 @@ def evaluate(root: Path) -> dict[str, Any]:
             "bmad_ready": child["bmad"].get("ready"),
             "compound_ready": child["compound"].get("ready"),
             "pstack_ready": child["pstack"].get("ready"),
+            "value_center_ready": child["value_center"].get("ready"),
             "speckit_implement_ready": child["speckit"].get("implement_ready"),
             "gsd_source": child["gsd"].get("source"),
             "gsd_ship_ready": child["gsd"].get("ship_ready"),

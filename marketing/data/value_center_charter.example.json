@@ -1,0 +1,20 @@
+{
+  "charter": {
+    "name": "random-timer value center",
+    "value": "Grow WQTU and paywall attempt→success toward $100/day after-tax",
+    "mode": "agency_and_coherence",
+    "north_star": "WQTU",
+    "coordination": "PR gates + internal-signoff SHA binding + production-signoff"
+  },
+  "vsm": {
+    "what_value": "WQTU (>=3 timer_completed / 7d) and paid conversion path",
+    "how_coordinate": "GitHub Actions env signoffs + required CI checks",
+    "how_fit_together": "Ship only changes that strengthen training loop + monetization integrity",
+    "whats_out_there": "App Review lag, Play CDN lag, $20/mo spend cap",
+    "who_are_we": "CTO value center for Random Tactical Timer"
+  },
+  "dependencies": [
+    "Play Billing catalog for Pro unlock",
+    "Full BMAD Method plugin install for one SPEC"
+  ]
+}
