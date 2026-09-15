@@ -1,0 +1,21 @@
+{
+  "framework": "workflow-economics-lite",
+  "source": "https://music.youtube.com/watch?v=oyTK-7_VrVM",
+  "adopted_at_utc": "2026-09-15T16:06:28Z",
+  "stolen": [
+    "completion loop trigger→context→decision→action→verification→audit",
+    "one owner + baseline + economic metric + system of record",
+    "human approval only at material risk",
+    "weekly economic metrics over demo interest",
+    "30-day one-workflow play"
+  ],
+  "skipped": [
+    "enterprise chatbot as first deploy",
+    "model shopping as primary ROI lever",
+    "paid workflow orchestration SaaS"
+  ],
+  "reference_workflow": "marketing/data/workflows/native_release_completion.json",
+  "gate": "python3 scripts/workflow_economics_gate.py --json",
+  "doc": "docs/WORKFLOW_ECONOMICS.md",
+  "budget_usd_month": 0
+}

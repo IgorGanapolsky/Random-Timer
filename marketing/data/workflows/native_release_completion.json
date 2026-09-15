@@ -1,0 +1,26 @@
+{
+  "name": "native_release_completion",
+  "kind": "operational",
+  "owner": "cto",
+  "user_group": "release-ops",
+  "baseline": {
+    "metric": "cycle_time_hours",
+    "value": 48,
+    "window": "pre-automation manual store steps"
+  },
+  "metric": "cycle_time_hours",
+  "system_of_record": "github_actions+stores",
+  "stages": {
+    "trigger": "workflow_dispatch on release/v* after internal-signoff SHA statuses",
+    "context_retrieval": "version metadata, release notes, signoff commit statuses",
+    "decision": "production-signoff environment approval",
+    "action": "Play production upload + ASC attach/submit",
+    "verification": "Publisher API + ASC WAITING_FOR_REVIEW/VALID read-back",
+    "audit_trail": "Actions run URL + GitHub Release tag + store listing reports"
+  },
+  "approval_policy": "human_at_production_signoff_only",
+  "weekly_review": {
+    "metric": "cycle_time_hours",
+    "notes": "Measure dispatch→verify-releases success; public CDN lag is advisory only"
+  }
+}
