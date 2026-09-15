@@ -40,6 +40,18 @@ class LoopPlanTests(unittest.TestCase):
         self.assertFalse(d.ok)
         self.assertEqual(d.action, "block_params_over_recurrence")
 
+    def test_upgrade_model_after_recurrent_failure_allowed(self) -> None:
+        d = evaluate_loop_plan(
+            {
+                "strategy": "upgrade_model",
+                "loops_completed": 2,
+                "escalation_after_recurrent": True,
+                "claim": "Cascade escalate to Deep after Quick loops rejected",
+            }
+        )
+        self.assertTrue(d.ok)
+        self.assertEqual(d.action, "allow_escalation_after_loops")
+
     def test_single_shot_no_local_objectives_blocked(self) -> None:
         d = evaluate_loop_plan(
             {

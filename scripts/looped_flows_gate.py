@@ -14,7 +14,7 @@ Inference integrates a probability flow: finer time grid = more compute; differe
 initial noise can yield different valid answers on multi-solution tasks.
 
 High-ROI steals for Random Timer agents (operational analogy — we do not train NNs):
-  - Prefer more verify/refine loops over “bigger model / more tools”
+  - Prefer more verify/refine loops first; escalate model only after recurrent loops fail
   - Design early steps so later steps inherit useful state (not last-check-only)
   - Each loop has a local objective chained to the next (shared context)
   - Spend more compute (finer grid) on harder failures; allow multi-path answers
@@ -58,12 +58,28 @@ def evaluate_loop_plan(plan: Mapping[str, object]) -> Decision:
     strategy = norm(plan.get("strategy"))
     text = f"{norm(plan.get('claim'))} {strategy}"
     loops = int(plan.get("loops") or 0)
+    loops_completed = int(plan.get("loops_completed") or 0)
+    escalate = bool(plan.get("escalation_after_recurrent"))
 
-    if strategy in PARAM_STRATEGIES or "larger model" in text or "bigger model" in text:
+    wants_params = (
+        strategy in PARAM_STRATEGIES
+        or "larger model" in text
+        or "bigger model" in text
+        or strategy == "upgrade_model"
+    )
+    if wants_params:
+        # Bigger model is allowed only AFTER recurrent verify loops already failed —
+        # not as the first move (matches AGENTS.md Cascade: Quick → Deep after reject).
+        if escalate and loops_completed >= 2:
+            return Decision(
+                action="allow_escalation_after_loops",
+                ok=True,
+                reason="model escalation after >=2 verified recurrent loops failed",
+            )
         return Decision(
             action="block_params_over_recurrence",
             ok=False,
-            reason="prefer recurrent verify/refine loops over adding parameters/tools",
+            reason="prefer recurrent verify/refine loops first; escalate only after loops_completed>=2",
         )
 
     if strategy not in {"recurrent", "looped", "looped_flow"}:

@@ -35,7 +35,7 @@ python3 scripts/looped_flows_gate.py --json
 
 ## Explicitly rejected
 
-- “Just use a larger model” as the first move on a hard bug
+- “Just use a larger model” as the first move on a hard bug (escalation OK after ≥2 failed recurrent loops)
 - Single-shot agent turns with no intermediate verify loops
 - Optimizing only the final check while early steps stay unvalidated
 - Untied parallel loops that do not share context / noise
