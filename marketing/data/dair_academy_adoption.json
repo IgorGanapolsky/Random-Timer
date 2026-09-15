@@ -1,0 +1,15 @@
+{
+  "framework": "dair-academy-daily",
+  "adopted_at_utc": "2026-09-15T18:42:47Z",
+  "source": "https://academy.dair.ai/dashboard",
+  "papers": "https://academy.dair.ai/papers",
+  "doc": "docs/DAIR_ACADEMY_DAILY.md",
+  "gate": "python3 scripts/dair_academy_gate.py --json",
+  "scraper": "python3 scripts/dair_academy_daily.py --json",
+  "workflow": ".github/workflows/dair-academy-daily.yml",
+  "skill": "dair-academy-daily",
+  "rejected": [
+    "paid Academy unlocks for daily scrape",
+    "LLM-generated AGENTS.md bloat"
+  ]
+}

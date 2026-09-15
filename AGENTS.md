@@ -243,3 +243,7 @@ cd native-android && ./gradlew lint                    # Lint check
 cd native-ios && xcodebuild -scheme RandomTimer build  # Build
 cd native-ios && xcodebuild -scheme RandomTimer test   # Run tests
 ```
+
+## AGENTS.md signal (DAIR / ETH AGENTbench)
+
+Human-authored `AGENTS.md` / `CLAUDE.md` help coding agents (~+4%); LLM-generated context files hurt (~−2%) and all context files raise cost (~+20%). Keep these contracts **human, lean, high-signal** — never auto-generate bloated twins. Source: DAIR Academy resource + arXiv 2602.11988.

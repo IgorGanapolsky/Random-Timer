@@ -1,0 +1,7 @@
+[
+  {
+    "title": "Does AGENTS.md Actually Help Coding Agents?",
+    "url": "https://academy.dair.ai/dashboard/resources/agents-md-evaluation",
+    "summary": "ETH Zurich AGENTbench: human-written AGENTS.md/CLAUDE.md context files help about 4 percent; LLM-generated context files hurt about 2 percent; all context files add roughly 20 percent cost. Keep human AGENTS.md lean."
+  }
+]

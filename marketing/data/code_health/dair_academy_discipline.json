@@ -1,0 +1,16 @@
+{
+  "name": "dair_academy_discipline",
+  "daily_scrape_papers": true,
+  "rank_by_wqtu_profit_roi": "score papers for WQTU/paywall/agent durability ROI",
+  "queue_implementable_steals": "emit implement_queue with layer hints for TDD PRs",
+  "human_agents_md_not_llm_bloat": "ETH AGENTbench: human AGENTS.md helps; LLM-generated hurts",
+  "sources": {
+    "dashboard": "https://academy.dair.ai/dashboard",
+    "papers": "https://academy.dair.ai/papers",
+    "agents_md_study": "https://academy.dair.ai/dashboard/resources/agents-md-evaluation"
+  },
+  "tier": {
+    "paid_unlocks": false,
+    "reason": "free papers feed + free dashboard session suffice"
+  }
+}
