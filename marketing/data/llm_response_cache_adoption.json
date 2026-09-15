@@ -1,0 +1,19 @@
+{
+  "framework": "llm-response-cache-lite",
+  "adopted_at_utc": "2026-09-15T19:17:32Z",
+  "source": "https://thenewstack.io/llm-response-caching-costs/",
+  "doc": "docs/LLM_RESPONSE_CACHE.md",
+  "gate": "python3 scripts/llm_response_cache_gate.py --json",
+  "skill": "llm-response-cache-lite",
+  "fixture": "marketing/data/code_health/llm_response_cache_discipline.json",
+  "rejected": [
+    "unmeasured savings projections",
+    "caching PII/creative/realtime",
+    "treating prompt-cache discounts as full skips",
+    "managed Redis/vector SaaS under hard monthly cap"
+  ],
+  "related": [
+    "docs/WORKFLOW_ECONOMICS.md",
+    "docs/DIFF_DELTA.md"
+  ]
+}

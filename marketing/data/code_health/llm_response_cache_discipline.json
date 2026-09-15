@@ -1,0 +1,16 @@
+{
+  "name": "llm_response_cache_discipline",
+  "fingerprint_exact_match_first": true,
+  "measure_hit_rate_before_savings": "never project % savings until hit_rate_pct is measured",
+  "skip_pii_creative_realtime": "block PII/account, creative, and live-moving values",
+  "shadow_then_promote": "shadow-log would-be hits; validate before write-back",
+  "baseline": {
+    "illustrative_hybrid_hit_rate_pct": 60,
+    "note": "TNS math is illustrative — measure our own hit rate first",
+    "source": "https://thenewstack.io/llm-response-caching-costs/"
+  },
+  "budget": {
+    "subscribe_managed_cache": false,
+    "reason": "hard monthly cap — in-process/file exact-match store only"
+  }
+}
