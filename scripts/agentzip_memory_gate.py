@@ -90,12 +90,19 @@ def evaluate_fanout_claim(claim: Mapping[str, object]) -> Decision:
     concurrent = claim.get("concurrent_sandboxes")
     if concurrent is not None:
         try:
-            n = int(concurrent)
+            as_float = float(concurrent)
+            n = int(as_float)
         except (TypeError, ValueError):
             return Decision(
                 action="block_malformed_fanout",
                 ok=False,
                 reason="concurrent_sandboxes must be an integer",
+            )
+        if as_float != n:
+            return Decision(
+                action="block_malformed_fanout",
+                ok=False,
+                reason="concurrent_sandboxes must be a whole integer (no fractions)",
             )
         budget = claim.get("memory_budget_ok")
         if n > 1 and budget is not True:
@@ -112,14 +119,14 @@ def evaluate_fanout_claim(claim: Mapping[str, object]) -> Decision:
             reason="prefer shared template + deltas; full forks amplify redundant pages",
         )
 
-    if action in {"spawn_parallel", "compress_on_llm_wait", "claim_memory_reduction"}:
+    if action in {"spawn_parallel", "compress_on_llm_wait", "claim_memory_reduction", "project_memory_win"}:
         if action == "compress_on_llm_wait" and not bool(claim.get("during_llm_idle")):
             return Decision(
                 action="block_compress_on_critical_path",
                 ok=False,
                 reason="run expensive compression during LLM wait, not on the hot path",
             )
-        if action in {"spawn_parallel", "claim_memory_reduction"} and claim.get("validated") is not True:
+        if action in {"spawn_parallel", "claim_memory_reduction", "project_memory_win"} and claim.get("validated") is not True:
             return Decision(
                 action="block_unvalidated_fanout",
                 ok=False,
