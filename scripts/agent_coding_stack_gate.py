@@ -5,7 +5,7 @@ Verifies docs + scripts for OpenGSD, Spec Kit, Superpowers, BMAD-lite,
 Compound Engineering lite, Value Center lite, Workflow Economics lite,
 Agent Integrity lite, Maintainability Gap lite, Diff Delta lite, Looped Flows lite,
 DAIR Academy Daily lite, LLM Response Cache lite, AgentZip Memory lite, Apple PCC lite,
-and HydraFusion Routing lite. Does NOT require an
+HydraFusion Routing lite, and Trust Reliability Loop lite. Does NOT require an
 active GSD phase to be ship_ready (that is phase-local).
 """
 
@@ -37,6 +37,7 @@ REQUIRED_DOCS = (
     "docs/AGENTZIP_MEMORY.md",
     "docs/APPLE_PRIVATE_CLOUD_COMPUTE.md",
     "docs/HYDRAFUSION_ROUTING.md",
+    "docs/TRUST_RELIABILITY_LOOP.md",
     "AGENTS.md",
     "CLAUDE.md",
 )
@@ -59,6 +60,7 @@ REQUIRED_SCRIPTS = (
     "scripts/agentzip_memory_gate.py",
     "scripts/apple_pcc_gate.py",
     "scripts/hydrafusion_routing_gate.py",
+    "scripts/trust_reliability_loop_gate.py",
 )
 
 BANNED_MARKERS = (
@@ -154,6 +156,12 @@ def evaluate(root: Path) -> dict[str, Any]:
     if not child["hydrafusion_routing"].get("ready"):
         blockers.append("hydrafusion_routing_not_ready")
 
+    child["trust_reliability_loop"] = _run_json(
+        root, "scripts/trust_reliability_loop_gate.py"
+    )
+    if not child["trust_reliability_loop"].get("ready"):
+        blockers.append("trust_reliability_loop_not_ready")
+
     child["speckit"] = _run_json(root, "scripts/speckit_gate.py")
     if child["speckit"].get("error"):
         blockers.append("speckit_gate_error")
@@ -198,6 +206,7 @@ def evaluate(root: Path) -> dict[str, Any]:
             "agentzip_memory_ready": child["agentzip_memory"].get("ready"),
             "apple_pcc_ready": child["apple_pcc"].get("ready"),
             "hydrafusion_routing_ready": child["hydrafusion_routing"].get("ready"),
+            "trust_reliability_loop_ready": child["trust_reliability_loop"].get("ready"),
             "speckit_implement_ready": child["speckit"].get("implement_ready"),
             "gsd_source": child["gsd"].get("source"),
             "gsd_ship_ready": child["gsd"].get("ship_ready"),

@@ -30,6 +30,7 @@ Canonical recommendation this file encodes (successor-aware):
 | Bound sandbox memory fanout | **AgentZip Memory lite** (arXiv 2609.11294) | `docs/AGENTZIP_MEMORY.md`, `python3 scripts/agentzip_memory_gate.py --json` |
 | Zero-cost Apple Intelligence tips | **Apple PCC lite** (Private Cloud Compute) | `docs/APPLE_PRIVATE_CLOUD_COMPUTE.md`, `python3 scripts/apple_pcc_gate.py --json` |
 | Multi-model routing (cost/quality) | **HydraFusion Routing lite** (InfoQ / Copilot research) | `docs/HYDRAFUSION_ROUTING.md`, `python3 scripts/hydrafusion_routing_gate.py --json` |
+| Scope / eval / trust / margins | **Trust Reliability Loop lite** (always-on assistant economics) | `docs/TRUST_RELIABILITY_LOOP.md`, `python3 scripts/trust_reliability_loop_gate.py --json` |
 | Execution runtime (model-separable) | **Cursor / Claude Code / Codex** (+ optional OpenCode) | Host tools; OpenCode CLI may exist locally |
 | Hawk metrics / lifecycle ROI | PlayerZero **method** only | `docs/AGENT_COMPOUNDING_ROI.md` |
 
@@ -91,6 +92,7 @@ python3 scripts/agent_coding_stack_gate.py --json
 - `marketing/data/agentzip_memory_adoption.json`
 - `marketing/data/apple_pcc_adoption.json`
 - `marketing/data/hydrafusion_routing_adoption.json`
+- `marketing/data/trust_reliability_loop_adoption.json`
 
 ## pstack lite
 
@@ -139,3 +141,7 @@ Zero-cost Apple Foundation Models under SBP (&lt;2M first-time downloads) via Pr
 ## HydraFusion Routing lite
 
 Single / Cascade / Critique multi-model routing with cost accounting (no HydraFusion SaaS): see `docs/HYDRAFUSION_ROUTING.md` and `python3 scripts/hydrafusion_routing_gate.py --json`.
+
+## Trust Reliability Loop lite
+
+Tighter scope, eval-first precision, tiered inference, recommend-first trust, cost-per-retained (not more autonomy): see `docs/TRUST_RELIABILITY_LOOP.md` and `python3 scripts/trust_reliability_loop_gate.py --json`.

@@ -1,0 +1,17 @@
+{
+  "narrow_workflow_scope": true,
+  "eval_first_logging": true,
+  "tiered_inference": true,
+  "recommend_first": true,
+  "progressive_autonomy": true,
+  "explicit_editable_memory": true,
+  "alert_precision_over_coverage": true,
+  "cost_per_retained": true,
+  "event_driven": true,
+  "budget": {
+    "continuous_always_on_reasoning": false,
+    "hard_monthly_usd_cap": 20
+  },
+  "source": "https://music.youtube.com/watch?v=Xa1jm2VWEHk",
+  "updated_at_utc": "2026-09-15T22:02:53Z"
+}
