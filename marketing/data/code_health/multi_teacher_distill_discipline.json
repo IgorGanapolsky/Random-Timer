@@ -7,10 +7,17 @@
   "stream_not_full_stage": true,
   "hard_plus_soft_labels": true,
   "compact_student_for_serving": true,
+  "async_teacher_serving": true,
+  "teacher_stability_mode_switch": true,
+  "compound_moderate_gains": true,
+  "reject_fp8_default_small": true,
+  "prune_and_compress_serving": true,
+  "ranking_quality_evidence": true,
   "budget": {
     "gpu_training_saas": false,
     "hard_monthly_usd_cap": 20
   },
   "source": "https://www.linkedin.com/blog/engineering/infrastructure/the-training-infrastructure-behind-ai-powered-job-search-eight-x-faster-multi-teacher-distillation",
-  "updated_at_utc": "2026-09-15T23:02:29Z"
+  "infoq_source": "https://www.infoq.com/news/2026/09/linkedin-ai-multi-teacher/",
+  "updated_at_utc": "2026-09-15T23:15:59Z"
 }

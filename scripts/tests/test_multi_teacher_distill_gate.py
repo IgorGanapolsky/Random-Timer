@@ -14,6 +14,8 @@ from scripts.multi_teacher_distill_gate import (
     evaluate_distill_claim,
     plan_teacher_cache,
     select_distill_mode,
+    select_phase_mode,
+    stack_compound_speedups,
 )
 
 
@@ -31,6 +33,12 @@ def _scaffold(root: Path) -> None:
                 "soft label and embedding signals",
                 "8x faster amortized",
                 "stream not full stage",
+                "sglang async teacher serving",
+                "stable teachers switch offline",
+                "compound moderate gains",
+                "fp8 rejected for small models",
+                "structured pruning and compression",
+                "ndcg ranking quality evidence",
                 "",
             ]
         ),
@@ -55,6 +63,12 @@ def _scaffold(root: Path) -> None:
                 "stream_not_full_stage": True,
                 "hard_plus_soft_labels": True,
                 "compact_student_for_serving": True,
+                "async_teacher_serving": True,
+                "teacher_stability_mode_switch": True,
+                "compound_moderate_gains": True,
+                "reject_fp8_default_small": True,
+                "prune_and_compress_serving": True,
+                "ranking_quality_evidence": True,
                 "budget": {"gpu_training_saas": False},
             }
         )
@@ -63,7 +77,7 @@ def _scaffold(root: Path) -> None:
 
 class SignalTests(unittest.TestCase):
     def test_health_signals(self) -> None:
-        self.assertGreaterEqual(len(HEALTH_SIGNALS), 7)
+        self.assertGreaterEqual(len(HEALTH_SIGNALS), 12)
 
 
 class ModeTests(unittest.TestCase):
@@ -100,6 +114,18 @@ class ModeTests(unittest.TestCase):
             "offline",
         )
 
+    def test_infoq_phase_online_while_exploring(self) -> None:
+        self.assertEqual(
+            select_phase_mode(teachers_stable=False, query_volume_high=False),
+            "online",
+        )
+
+    def test_infoq_phase_offline_when_stable(self) -> None:
+        self.assertEqual(
+            select_phase_mode(teachers_stable=True, query_volume_high=True),
+            "offline",
+        )
+
 
 class CacheTests(unittest.TestCase):
     def test_cache_key_and_per_shard(self) -> None:
@@ -124,6 +150,11 @@ class SpeedupTests(unittest.TestCase):
         )
         self.assertTrue(report["meets_8x_target"])
         self.assertGreaterEqual(report["speedup_x"], 8.0)
+
+    def test_compound_stack(self) -> None:
+        report = stack_compound_speedups([2.0, 1.2, 1.3, 1.3])
+        self.assertTrue(report["is_compound"])
+        self.assertGreaterEqual(report["compound_speedup_x"], 4.0)
 
 
 class ClaimTests(unittest.TestCase):
@@ -171,6 +202,39 @@ class ClaimTests(unittest.TestCase):
         self.assertTrue(d.ok)
         self.assertEqual(d.action, "allow_pluggable_teacher")
 
+    def test_fp8_default_blocked(self) -> None:
+        d = evaluate_distill_claim({"action": "default_fp8_small"})
+        self.assertFalse(d.ok)
+        self.assertEqual(d.action, "block_default_fp8_small")
+
+    def test_ndcg_required_for_quality_claim(self) -> None:
+        d = evaluate_distill_claim({"action": "claim_ndcg"})
+        self.assertFalse(d.ok)
+        self.assertEqual(d.action, "block_quality_without_ndcg")
+
+    def test_ndcg_backed_claim_allowed(self) -> None:
+        d = evaluate_distill_claim(
+            {"action": "claim_ranking_quality", "ndcg_reported": True}
+        )
+        self.assertTrue(d.ok)
+        self.assertEqual(d.action, "allow_quality_backed_claim")
+
+    def test_prune_compress_serving_allowed(self) -> None:
+        d = evaluate_distill_claim(
+            {
+                "action": "serve_with_prune_compress",
+                "structured_pruning": True,
+                "context_compression": True,
+            }
+        )
+        self.assertTrue(d.ok)
+        self.assertEqual(d.action, "allow_prune_compress_serving")
+
+    def test_compound_gains_require_stack(self) -> None:
+        d = evaluate_distill_claim({"action": "stack_gains", "gains": [2.0]})
+        self.assertFalse(d.ok)
+        self.assertEqual(d.action, "block_single_trick_speedup")
+
 
 class PresenceTests(unittest.TestCase):
     def test_evaluate_ready(self) -> None:
@@ -180,6 +244,7 @@ class PresenceTests(unittest.TestCase):
             report = evaluate(root)
             self.assertTrue(report["ready"], report["blockers"])
             self.assertEqual(report["framework"], "multi-teacher-distill-lite")
+            self.assertIn("infoq.com", report["infoq_source"])
 
 
 if __name__ == "__main__":
