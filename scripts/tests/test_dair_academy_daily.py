@@ -88,6 +88,40 @@ class GatePresenceTests(unittest.TestCase):
             self.assertFalse(report["ready"])
             self.assertIn("missing_docs/DAIR_ACADEMY_DAILY.md", report["blockers"])
 
+    def test_empty_artifact_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "docs").mkdir()
+            (root / "docs" / "DAIR_ACADEMY_DAILY.md").write_text(
+                "papers roi implement agents.md cron paid\n", encoding="utf-8"
+            )
+            (root / "scripts").mkdir()
+            (root / "scripts" / "dair_academy_daily.py").write_text("#\n")
+            (root / "scripts" / "dair_academy_gate.py").write_text("#\n")
+            wf = root / ".github" / "workflows"
+            wf.mkdir(parents=True)
+            (wf / "dair-academy-daily.yml").write_text("name: x\n")
+            for sr in (".cursor/skills", ".claude/skills"):
+                p = root / sr / "dair-academy-daily"
+                p.mkdir(parents=True)
+                (p / "SKILL.md").write_text("# dair-academy-daily\n")
+            fixture = root / "marketing" / "data" / "code_health"
+            fixture.mkdir(parents=True)
+            (fixture / "dair_academy_discipline.json").write_text(
+                json.dumps(
+                    {
+                        "daily_scrape_papers": True,
+                        "rank_by_wqtu_profit_roi": "x",
+                        "queue_implementable_steals": "y",
+                        "human_agents_md_not_llm_bloat": "z",
+                    }
+                )
+            )
+            (root / "marketing" / "data" / "dair_daily_learn.json").write_text("{}\n")
+            report = evaluate(root)
+            self.assertFalse(report["ready"])
+            self.assertTrue(any("artifact_" in b or "artifact_empty" in b for b in report["blockers"]))
+
     def test_wired_ready(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -124,7 +158,16 @@ class GatePresenceTests(unittest.TestCase):
                     }
                 )
             )
-            (root / "marketing" / "data" / "dair_daily_learn.json").write_text("{}\n")
+            (root / "marketing" / "data" / "dair_daily_learn.json").write_text(
+                json.dumps({
+                    "framework": "dair-academy-daily",
+                    "scraped_at_utc": "2026-09-15T18:42:47Z",
+                    "paper_count": 1,
+                    "papers": [{"title": "Procedural Graphs"}],
+                    "implement_queue": [],
+                })
+                + "\n"
+            )
             report = evaluate(root)
             self.assertTrue(report["ready"], msg=json.dumps(report, indent=2))
 

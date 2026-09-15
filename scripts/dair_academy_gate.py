@@ -64,16 +64,57 @@ def evaluate_learn_claim(claim: Mapping[str, object]) -> Decision:
     )
 
 
+
+def _check_fixture(repo: Path) -> list[str]:
+    blockers: list[str] = []
+    fixture = repo / "marketing" / "data" / "code_health" / "dair_academy_discipline.json"
+    if not fixture.is_file():
+        return ["missing_fixture:marketing/data/code_health/dair_academy_discipline.json"]
+    try:
+        charter = json.loads(fixture.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return [f"fixture_invalid_json:{exc}"]
+    for signal in HEALTH_SIGNALS:
+        if not charter.get(signal):
+            blockers.append(f"fixture_missing:{signal}")
+    return blockers
+
+
+def _check_artifact(repo: Path) -> list[str]:
+    artifact = repo / "marketing" / "data" / "dair_daily_learn.json"
+    if not artifact.is_file():
+        return ["missing_artifact:marketing/data/dair_daily_learn.json"]
+    try:
+        payload = json.loads(artifact.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return [f"artifact_invalid_json:{exc}"]
+    if not isinstance(payload, dict):
+        return ["artifact_not_object"]
+    blockers: list[str] = []
+    if payload.get("framework") != "dair-academy-daily":
+        blockers.append("artifact_missing:framework")
+    if not payload.get("scraped_at_utc"):
+        blockers.append("artifact_missing:scraped_at_utc")
+    if int(payload.get("paper_count") or 0) < 1:
+        blockers.append("artifact_empty_scrape")
+    if not isinstance(payload.get("papers"), list) or not payload.get("papers"):
+        blockers.append("artifact_missing:papers")
+    if "implement_queue" not in payload or not isinstance(payload.get("implement_queue"), list):
+        blockers.append("artifact_missing:implement_queue")
+    return blockers
+
+
 def evaluate(repo: Path) -> dict[str, Any]:
     blockers: list[str] = []
-    if not (repo / "docs" / "DAIR_ACADEMY_DAILY.md").is_file():
-        blockers.append("missing_docs/DAIR_ACADEMY_DAILY.md")
-    if not (repo / "scripts" / "dair_academy_daily.py").is_file():
-        blockers.append("missing_scripts/dair_academy_daily.py")
-    if not (repo / "scripts" / "dair_academy_gate.py").is_file():
-        blockers.append("missing_scripts/dair_academy_gate.py")
-    if not (repo / ".github" / "workflows" / "dair-academy-daily.yml").is_file():
-        blockers.append("missing_workflow:dair-academy-daily.yml")
+    required = (
+        ("docs/DAIR_ACADEMY_DAILY.md", "missing_docs/DAIR_ACADEMY_DAILY.md"),
+        ("scripts/dair_academy_daily.py", "missing_scripts/dair_academy_daily.py"),
+        ("scripts/dair_academy_gate.py", "missing_scripts/dair_academy_gate.py"),
+        (".github/workflows/dair-academy-daily.yml", "missing_workflow:dair-academy-daily.yml"),
+    )
+    for rel, code in required:
+        if not (repo / rel).is_file():
+            blockers.append(code)
     blockers.extend(require_dual_skills(repo, "dair-academy-daily"))
     blockers.extend(
         require_docs_needles(
@@ -81,22 +122,8 @@ def evaluate(repo: Path) -> dict[str, Any]:
             ("papers", "roi", "implement", "agents.md", "cron", "paid"),
         )
     )
-    fixture = repo / "marketing" / "data" / "code_health" / "dair_academy_discipline.json"
-    if not fixture.is_file():
-        blockers.append("missing_fixture:marketing/data/code_health/dair_academy_discipline.json")
-    else:
-        try:
-            charter = json.loads(fixture.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as exc:
-            blockers.append(f"fixture_invalid_json:{exc}")
-        else:
-            for signal in HEALTH_SIGNALS:
-                if not charter.get(signal):
-                    blockers.append(f"fixture_missing:{signal}")
-    artifact = repo / "marketing" / "data" / "dair_daily_learn.json"
-    if not artifact.is_file():
-        blockers.append("missing_artifact:marketing/data/dair_daily_learn.json")
-
+    blockers.extend(_check_fixture(repo))
+    blockers.extend(_check_artifact(repo))
     ready = len(blockers) == 0
     return {
         "framework": "dair-academy-daily",

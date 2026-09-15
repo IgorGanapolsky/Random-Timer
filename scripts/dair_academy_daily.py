@@ -221,6 +221,20 @@ def build_report(
     }
 
 
+
+def _under_repo(repo: Path, candidate: Path | None) -> Path | None:
+    """Resolve candidate and require it stays inside repo (Sonar path-injection)."""
+    if candidate is None:
+        return None
+    resolved = candidate.expanduser().resolve()
+    root = repo.resolve()
+    try:
+        resolved.relative_to(root)
+    except ValueError as exc:
+        raise ValueError(f"path escapes repo root: {candidate}") from exc
+    return resolved
+
+
 def write_artifact(report: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -237,20 +251,22 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     repo = args.repo.resolve()
-    artifact = args.artifact or (repo / "marketing" / "data" / "dair_daily_learn.json")
+    default_artifact = repo / "marketing" / "data" / "dair_daily_learn.json"
+    artifact = _under_repo(repo, args.artifact) if args.artifact else default_artifact
+    papers_path = _under_repo(repo, args.papers_html)
+    week_path = _under_repo(repo, args.week_html)
+    extra_path = _under_repo(repo, args.extra_json)
 
     papers_html = (
-        args.papers_html.read_text(encoding="utf-8")
-        if args.papers_html and args.papers_html.is_file()
+        papers_path.read_text(encoding="utf-8")
+        if papers_path and papers_path.is_file()
         else fetch_html(PAPERS_URL)
     )
-    week_html = None
-    if args.week_html and args.week_html.is_file():
-        week_html = args.week_html.read_text(encoding="utf-8")
+    week_html = week_path.read_text(encoding="utf-8") if week_path and week_path.is_file() else None
 
     extras: list[dict[str, str]] = []
-    if args.extra_json and args.extra_json.is_file():
-        extras = json.loads(args.extra_json.read_text(encoding="utf-8"))
+    if extra_path and extra_path.is_file():
+        extras = json.loads(extra_path.read_text(encoding="utf-8"))
 
     report = build_report(papers_html=papers_html, week_html=week_html, extras=extras)
     write_artifact(report, artifact)
