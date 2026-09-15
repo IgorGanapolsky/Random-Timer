@@ -1,0 +1,190 @@
+#!/usr/bin/env python3
+"""Maintainability gap lite — GitClear / The New Stack duplication signal.
+
+Source:
+  https://thenewstack.io/ai-coding-duplication-rose/
+
+GitClear Maintainability Gap (623M changes, 2023–2026): heavy AI users ~+25%
+velocity vs self; block duplication +81%; moved-code (refactor) share collapsed
+from ~21% (2022) to ~3.8% (2026). Before AI, refactor beat copy-paste ~2:1;
+now copy-paste is ~5× likelier.
+
+High-ROI steals for Random Timer:
+  - LOC / PR count / “10x” are not ROI
+  - Prefer refactor/reuse over copy-paste
+  - Tests + refactoring are the mission, not a side quest
+  - Use AI as a forklift (large safe lifts), not a racing car
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+from typing import Any, Mapping
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from scripts.lite_gate_common import (
+    Decision,
+    norm,
+    require_docs_needles,
+    require_dual_skills,
+    run_presence_cli,
+)
+
+SOURCE = "https://thenewstack.io/ai-coding-duplication-rose/"
+
+HEALTH_SIGNALS = (
+    "reject_loc_as_roi",
+    "prefer_refactor_over_copy",
+    "tests_refactor_are_the_work",
+    "forklift_not_racecar",
+)
+
+VANITY_OUTPUT_METRICS = frozenset(
+    {
+        "lines_of_code",
+        "loc",
+        "pr_count",
+        "prs",
+        "features_shipped",
+        "tokens",
+        "commits",
+    }
+)
+
+TENX_MARKERS = ("10x", "10×", "ten x", "ten times")
+SIDE_QUEST_MARKERS = frozenset({"side_quest", "later", "optional", "skip", "deferred"})
+
+
+def evaluate_change_claim(claim: Mapping[str, object]) -> Decision:
+    metric = norm(claim.get("metric"))
+    text = f"{norm(claim.get('claim'))} {metric}"
+    practice = norm(claim.get("practice"))
+
+    if metric in VANITY_OUTPUT_METRICS or any(m in text for m in TENX_MARKERS):
+        return Decision(
+            action="block_output_vanity_roi",
+            ok=False,
+            reason="LOC/PR/10x output is not maintainability or business ROI",
+        )
+
+    if practice in {"copy_paste", "duplicate", "clone"}:
+        if not bool(claim.get("searched_existing")):
+            return Decision(
+                action="block_copy_without_reuse_search",
+                ok=False,
+                reason="search existing helpers/gates before pasting a twin",
+            )
+        return Decision(
+            action="allow_justified_copy",
+            ok=False,
+            reason="prefer refactor; justified copy still needs extract follow-up — treat as debt",
+        )
+
+    if practice in {"refactor_move", "extract", "reuse"}:
+        if not bool(claim.get("tests_updated")):
+            return Decision(
+                action="block_refactor_without_tests",
+                ok=False,
+                reason="refactoring requires tests (the mission, not a side quest)",
+            )
+        return Decision(
+            action="allow_maintainable_change",
+            ok=True,
+            reason="refactor/reuse with tests beats copy-paste sprawl",
+        )
+
+    return Decision(
+        action="block_unknown_practice",
+        ok=False,
+        reason="declare practice: refactor_move|extract|reuse|copy_paste",
+    )
+
+
+def evaluate_practice_posture(posture: Mapping[str, object]) -> Decision:
+    tests = norm(posture.get("tests"))
+    refactor = norm(posture.get("refactor"))
+    if tests in SIDE_QUEST_MARKERS or refactor in SIDE_QUEST_MARKERS:
+        return Decision(
+            action="block_side_quest_practices",
+            ok=False,
+            reason="tests and refactoring are the work, not permission-gated side quests",
+        )
+    if tests not in {"required", "mandatory", "mission"} or refactor not in {
+        "required",
+        "mandatory",
+        "mission",
+    }:
+        return Decision(
+            action="block_weak_practice_posture",
+            ok=False,
+            reason="set tests and refactor to required/mission",
+        )
+    return Decision(
+        action="allow_mission_practices",
+        ok=True,
+        reason="technical discipline is non-optional for software that must last",
+    )
+
+
+def evaluate(repo: Path) -> dict[str, Any]:
+    blockers: list[str] = []
+    if not (repo / "docs" / "MAINTAINABILITY_GAP.md").is_file():
+        blockers.append("missing_docs/MAINTAINABILITY_GAP.md")
+    if not (repo / "scripts" / "maintainability_gap_gate.py").is_file():
+        blockers.append("missing_scripts/maintainability_gap_gate.py")
+    blockers.extend(require_dual_skills(repo, "maintainability-gap-lite"))
+    blockers.extend(
+        require_docs_needles(
+            repo / "docs" / "MAINTAINABILITY_GAP.md",
+            ("duplication", "refactor", "side quest", "forklift", "lines of code"),
+        )
+    )
+
+    fixture = repo / "marketing" / "data" / "code_health" / "agent_layer_discipline.json"
+    if not fixture.is_file():
+        blockers.append("missing_fixture:marketing/data/code_health/agent_layer_discipline.json")
+    else:
+        try:
+            charter = json.loads(fixture.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            blockers.append(f"fixture_invalid_json:{exc}")
+        else:
+            for signal in HEALTH_SIGNALS:
+                if not charter.get(signal):
+                    blockers.append(f"fixture_missing:{signal}")
+            baseline = charter.get("baseline") or {}
+            if not isinstance(baseline, dict) or baseline.get("industry_dup_rise_pct") is None:
+                blockers.append("fixture_missing:baseline")
+
+    ready = len(blockers) == 0
+    return {
+        "framework": "maintainability-gap-lite",
+        "source": SOURCE,
+        "ready": ready,
+        "blockers": blockers,
+        "health_signals": list(HEALTH_SIGNALS),
+        "industry_snapshot": {
+            "velocity_gain_pct_heavy_ai": 25,
+            "block_duplication_rise_pct": 81,
+            "moved_code_share_2026_pct": 3.8,
+        },
+        "anti_pattern": "ai_copy_paste_sprawl",
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
+    return run_presence_cli(
+        description=__doc__ or "maintainability-gap-lite",
+        evaluate=evaluate,
+        claim_evaluator=evaluate_change_claim,
+        argv=argv,
+    )
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,21 @@
+{
+  "framework": "maintainability-gap-lite",
+  "source": "https://thenewstack.io/ai-coding-duplication-rose/",
+  "adopted_at_utc": "2026-09-15T16:53:36Z",
+  "stolen": [
+    "25% velocity ≠ 10x; duplication +81% is the maintenance bill",
+    "moved-code/refactor share collapse as health signal",
+    "tests+refactor are the mission not a side quest",
+    "reject LOC/PR/10x as ROI",
+    "AI as forklift not racing car"
+  ],
+  "skipped": [
+    "paid GitClear subscription",
+    "full historical duplication telemetry pipeline",
+    "LOC dashboards as success metrics"
+  ],
+  "reference_fixture": "marketing/data/code_health/agent_layer_discipline.json",
+  "gate": "python3 scripts/maintainability_gap_gate.py --json",
+  "doc": "docs/MAINTAINABILITY_GAP.md",
+  "budget_usd_month": 0
+}

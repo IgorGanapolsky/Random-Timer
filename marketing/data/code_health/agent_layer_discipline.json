@@ -1,0 +1,13 @@
+{
+  "name": "agent_layer_discipline",
+  "reject_loc_as_roi": true,
+  "prefer_refactor_over_copy": "extend existing gate+skill+fixture+SSOT pattern; do not paste twin gates",
+  "tests_refactor_are_the_work": "TDD gate tests + stack wire required before merge",
+  "forklift_not_racecar": "AI for coordinated layer lifts across docs/skills/gates, not LOC races",
+  "baseline": {
+    "industry_dup_rise_pct": 81,
+    "industry_velocity_gain_pct": 25,
+    "moved_code_share_2026_pct": 3.8,
+    "source": "https://thenewstack.io/ai-coding-duplication-rose/"
+  }
+}
