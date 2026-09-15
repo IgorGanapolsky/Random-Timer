@@ -42,6 +42,7 @@ def test_evaluate_ready_when_docs_and_children_ok(tmp_path: Path) -> None:
         "scripts/apple_pcc_gate.py": {"ready": True},
         "scripts/hydrafusion_routing_gate.py": {"ready": True},
         "scripts/trust_reliability_loop_gate.py": {"ready": True},
+        "scripts/gpt6_astra_harness_gate.py": {"ready": True},
         "scripts/speckit_gate.py": {"constitution": {"ok": True}, "implement_ready": True},
         "scripts/gsd_phase_gate.py": {"source": "open-gsd/gsd-core", "ship_ready": False},
     }
@@ -66,6 +67,7 @@ def test_evaluate_ready_when_docs_and_children_ok(tmp_path: Path) -> None:
     assert report["children"]["apple_pcc_ready"] is True
     assert report["children"]["hydrafusion_routing_ready"] is True
     assert report["children"]["trust_reliability_loop_ready"] is True
+    assert report["children"]["gpt6_astra_harness_ready"] is True
 
 
 def test_evaluate_blocks_missing_ssot_ban(tmp_path: Path) -> None:
