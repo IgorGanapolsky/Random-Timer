@@ -2,7 +2,7 @@
 
 Operating brief from [elvis @omarsar0 on X](https://x.com/omarsar0/status/2098531286319341932) summarizing HKUST **AgentZip** ([arXiv 2609.11294](https://arxiv.org/abs/2609.11294); DAIR chat: [academy.dair.ai papers](https://academy.dair.ai/papers)):
 
-> Parallel agent sandboxes for RL/evals share templates and related trajectories. Measured **76–96%** pages with template-relative or cross-sandbox redundancy. Compressing against the template **and** sibling sandboxes drops sandbox-owned memory by up to **8.7×** (vs ~2.1× Linux). Run expensive compression while waiting on the LLM; prefetch on restore. Aggressive compression alone ~3.1× slowdown; scheduling + prefetch → ~**1.40×**.
+> Parallel agent sandboxes for RL/evals share templates and related trajectories. Measured **76–96%** pages with template-relative or cross-sandbox redundancy. Compressing against the template **and** sibling sandboxes drops sandbox-owned memory by up to **8.7×** (vs ~2.1× Linux). Run expensive compression during **LLM wait**; prefetch on restore. Aggressive compression alone ~3.1× slowdown; scheduling + prefetch → ~**1.40×**.
 
 ## Anti-pattern
 
