@@ -7,7 +7,10 @@ alwaysApply: true
 
 Before spawning expensive subagents or multi-file edits, prefer the least-complex
 workflow that should clear the quality bar — inspired by GitHub Project HydraFusion
-(https://github.blog/ai-and-ml/github-copilot/project-hydrafusion-frontier-quality-via-multi-model-orchestration/).
+(https://github.blog/ai-and-ml/github-copilot/project-hydrafusion-frontier-quality-via-multi-model-orchestration/)
+and the InfoQ digest (https://www.infoq.com/news/2026/09/github-hydrafusion/).
+
+Presence: `python3 scripts/hydrafusion_routing_gate.py --json` · brief: `docs/HYDRAFUSION_ROUTING.md`
 
 ### Patterns
 

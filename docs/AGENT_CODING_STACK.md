@@ -29,6 +29,7 @@ Canonical recommendation this file encodes (successor-aware):
 | Skip unchanged LLM calls | **LLM Response Cache lite** (TNS) | `docs/LLM_RESPONSE_CACHE.md`, `python3 scripts/llm_response_cache_gate.py --json` |
 | Bound sandbox memory fanout | **AgentZip Memory lite** (arXiv 2609.11294) | `docs/AGENTZIP_MEMORY.md`, `python3 scripts/agentzip_memory_gate.py --json` |
 | Zero-cost Apple Intelligence tips | **Apple PCC lite** (Private Cloud Compute) | `docs/APPLE_PRIVATE_CLOUD_COMPUTE.md`, `python3 scripts/apple_pcc_gate.py --json` |
+| Multi-model routing (cost/quality) | **HydraFusion Routing lite** (InfoQ / Copilot research) | `docs/HYDRAFUSION_ROUTING.md`, `python3 scripts/hydrafusion_routing_gate.py --json` |
 | Execution runtime (model-separable) | **Cursor / Claude Code / Codex** (+ optional OpenCode) | Host tools; OpenCode CLI may exist locally |
 | Hawk metrics / lifecycle ROI | PlayerZero **method** only | `docs/AGENT_COMPOUNDING_ROI.md` |
 
@@ -89,6 +90,7 @@ python3 scripts/agent_coding_stack_gate.py --json
 - `marketing/data/llm_response_cache_adoption.json`
 - `marketing/data/agentzip_memory_adoption.json`
 - `marketing/data/apple_pcc_adoption.json`
+- `marketing/data/hydrafusion_routing_adoption.json`
 
 ## pstack lite
 
@@ -133,3 +135,7 @@ Cap high-fanout sandbox redundancy (template share + LLM-idle compress): see `do
 ## Apple PCC lite
 
 Zero-cost Apple Foundation Models under SBP (&lt;2M first-time downloads) via Private Cloud Compute / on-device FM: see `docs/APPLE_PRIVATE_CLOUD_COMPUTE.md` and `python3 scripts/apple_pcc_gate.py --json`.
+
+## HydraFusion Routing lite
+
+Single / Cascade / Critique multi-model routing with cost accounting (no HydraFusion SaaS): see `docs/HYDRAFUSION_ROUTING.md` and `python3 scripts/hydrafusion_routing_gate.py --json`.
