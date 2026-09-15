@@ -1,0 +1,24 @@
+{
+  "framework": "apple-pcc-lite",
+  "adopted_at_utc": "2026-09-15T20:01:55Z",
+  "source": "https://developer.apple.com/private-cloud-compute/",
+  "doc": "docs/APPLE_PRIVATE_CLOUD_COMPUTE.md",
+  "gate": "python3 scripts/apple_pcc_gate.py --json",
+  "skill": "apple-pcc-lite",
+  "fixture": "marketing/data/code_health/apple_pcc_discipline.json",
+  "ios": {
+    "coach": "native-ios/RandomTimer/Sources/Services/AppleIntelligenceCoach.swift",
+    "service": "native-ios/RandomTimer/Sources/Services/AppleIntelligenceCoachService.swift",
+    "entitlement": "com.apple.developer.private-cloud-compute",
+    "pcc_runtime_status": "not_in_ios_26_5_sdk_on_device_fm_shipped"
+  },
+  "rejected": [
+    "paid cloud LLM tips while SBP + under 2M eligible",
+    "claiming PCC live without SDK API",
+    "treating PostHog install proxies as App Store first-time downloads"
+  ],
+  "related": [
+    "docs/LLM_RESPONSE_CACHE.md",
+    "docs/OPERATIONAL_RELIABILITY.md"
+  ]
+}

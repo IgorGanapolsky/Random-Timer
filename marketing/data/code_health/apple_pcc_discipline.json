@@ -1,0 +1,15 @@
+{
+  "name": "apple_pcc_discipline",
+  "sbp_download_cap_tracked": true,
+  "entitlement_declared_in_repo": true,
+  "prefer_pcc_then_on_device_then_static": "PCC when SDK+runtime, else SystemLanguageModel, else static tip",
+  "zero_cloud_api_cost_under_cap": "no paid LLM SaaS for post-session tips under $20/mo hard cap",
+  "no_claim_pcc_runtime_without_sdk": "PrivateCloudComputeLanguageModel absent in Xcode 26.5 / iOS 26.5 SDK",
+  "sdk_has_pcc_api_ios_26_5": false,
+  "eligibility_proxy_note": "store_downloads.json PostHog downloads_30d is install proxy — App Store Connect Analytics is first-time download ground truth",
+  "source": "https://developer.apple.com/private-cloud-compute/",
+  "budget": {
+    "subscribe_paid_llm_tips": false,
+    "reason": "SBP + far under 2M first-time downloads → Apple PCC/on-device path"
+  }
+}

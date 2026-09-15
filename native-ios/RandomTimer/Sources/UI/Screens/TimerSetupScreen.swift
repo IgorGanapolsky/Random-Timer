@@ -24,6 +24,7 @@ struct TimerSetupScreen: View {
     @AppStorage("timer_range_free_max") private var storedFreeMaxSeconds = TimerConfig.maxSecondsFree
     @AppStorage("timer_range_extended_min") private var storedExtendedMinSeconds = TimerConfig.minimumFloorSeconds
     @AppStorage("timer_range_extended_max") private var storedExtendedMaxSeconds = TimerConfig.maxSecondsPro
+    @AppStorage("apple_intelligence_last_tip") private var coachingTipText = ""
 
     // Read directly from timerManager.config to avoid animation issues
     private var config: TimerConfig { timerManager.config }
@@ -31,6 +32,21 @@ struct TimerSetupScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+
+                if !coachingTipText.isEmpty {
+                    GlassCard {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label("Coach tip", systemImage: "sparkles")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(.textPrimary)
+                            Text(coachingTipText)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    .accessibilityIdentifier("apple_intelligence_coach_tip")
+                }
 
                 // 1. Timer Range Card
                 GlassCard {
