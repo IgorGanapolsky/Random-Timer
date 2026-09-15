@@ -20,9 +20,21 @@ from __future__ import annotations
 
 import argparse
 import json
-from dataclasses import asdict, dataclass
+import sys
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Mapping
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from scripts.lite_gate_common import (
+    Decision,
+    norm,
+    require_docs_needles,
+    require_dual_skills,
+)
 
 SOURCE = "https://thenewstack.io/ai-coding-duplication-rose/"
 
@@ -45,31 +57,14 @@ VANITY_OUTPUT_METRICS = frozenset(
     }
 )
 
-TENX_MARKERS = (
-    "10x",
-    "10×",
-    "ten x",
-    "ten times",
-)
-
+TENX_MARKERS = ("10x", "10×", "ten x", "ten times")
 SIDE_QUEST_MARKERS = frozenset({"side_quest", "later", "optional", "skip", "deferred"})
 
 
-@dataclass(frozen=True)
-class Decision:
-    action: str
-    ok: bool
-    reason: str
-
-
-def _norm(value: object) -> str:
-    return str(value or "").strip().lower()
-
-
 def evaluate_change_claim(claim: Mapping[str, object]) -> Decision:
-    metric = _norm(claim.get("metric"))
-    text = f"{_norm(claim.get('claim'))} {metric}"
-    practice = _norm(claim.get("practice"))
+    metric = norm(claim.get("metric"))
+    text = f"{norm(claim.get('claim'))} {metric}"
+    practice = norm(claim.get("practice"))
 
     if metric in VANITY_OUTPUT_METRICS or any(m in text for m in TENX_MARKERS):
         return Decision(
@@ -85,26 +80,23 @@ def evaluate_change_claim(claim: Mapping[str, object]) -> Decision:
                 ok=False,
                 reason="search existing helpers/gates before pasting a twin",
             )
-
-    if practice in {"refactor_move", "extract", "reuse"} and not bool(claim.get("tests_updated")):
-        return Decision(
-            action="block_refactor_without_tests",
-            ok=False,
-            reason="refactoring requires tests (the mission, not a side quest)",
-        )
-
-    if practice in {"refactor_move", "extract", "reuse"} and bool(claim.get("tests_updated")):
-        return Decision(
-            action="allow_maintainable_change",
-            ok=True,
-            reason="refactor/reuse with tests beats copy-paste sprawl",
-        )
-
-    if practice in {"copy_paste", "duplicate", "clone"} and bool(claim.get("searched_existing")):
         return Decision(
             action="allow_justified_copy",
             ok=False,
             reason="prefer refactor; justified copy still needs extract follow-up — treat as debt",
+        )
+
+    if practice in {"refactor_move", "extract", "reuse"}:
+        if not bool(claim.get("tests_updated")):
+            return Decision(
+                action="block_refactor_without_tests",
+                ok=False,
+                reason="refactoring requires tests (the mission, not a side quest)",
+            )
+        return Decision(
+            action="allow_maintainable_change",
+            ok=True,
+            reason="refactor/reuse with tests beats copy-paste sprawl",
         )
 
     return Decision(
@@ -115,8 +107,8 @@ def evaluate_change_claim(claim: Mapping[str, object]) -> Decision:
 
 
 def evaluate_practice_posture(posture: Mapping[str, object]) -> Decision:
-    tests = _norm(posture.get("tests"))
-    refactor = _norm(posture.get("refactor"))
+    tests = norm(posture.get("tests"))
+    refactor = norm(posture.get("refactor"))
     if tests in SIDE_QUEST_MARKERS or refactor in SIDE_QUEST_MARKERS:
         return Decision(
             action="block_side_quest_practices",
@@ -140,33 +132,19 @@ def evaluate_practice_posture(posture: Mapping[str, object]) -> Decision:
     )
 
 
-def _skill_ok(root: Path, name: str) -> bool:
-    path = root / name / "SKILL.md"
-    return path.is_file() and path.stat().st_size > 0
-
-
 def evaluate(repo: Path) -> dict[str, Any]:
     blockers: list[str] = []
     if not (repo / "docs" / "MAINTAINABILITY_GAP.md").is_file():
         blockers.append("missing_docs/MAINTAINABILITY_GAP.md")
     if not (repo / "scripts" / "maintainability_gap_gate.py").is_file():
         blockers.append("missing_scripts/maintainability_gap_gate.py")
-    for skill_root_rel in (".cursor/skills", ".claude/skills"):
-        if not _skill_ok(repo / skill_root_rel, "maintainability-gap-lite"):
-            blockers.append(f"missing:{skill_root_rel}/maintainability-gap-lite")
-
-    docs = repo / "docs" / "MAINTAINABILITY_GAP.md"
-    if docs.is_file():
-        text = docs.read_text(encoding="utf-8").lower()
-        for needle in (
-            "duplication",
-            "refactor",
-            "side quest",
-            "forklift",
-            "lines of code",
-        ):
-            if needle not in text:
-                blockers.append(f"docs_missing:{needle.replace(' ', '_')}")
+    blockers.extend(require_dual_skills(repo, "maintainability-gap-lite"))
+    blockers.extend(
+        require_docs_needles(
+            repo / "docs" / "MAINTAINABILITY_GAP.md",
+            ("duplication", "refactor", "side quest", "forklift", "lines of code"),
+        )
+    )
 
     fixture = repo / "marketing" / "data" / "code_health" / "agent_layer_discipline.json"
     if not fixture.is_file():
