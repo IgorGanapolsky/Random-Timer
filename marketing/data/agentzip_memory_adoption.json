@@ -1,0 +1,20 @@
+{
+  "framework": "agentzip-memory-lite",
+  "adopted_at_utc": "2026-09-15T19:42:01Z",
+  "source": "https://arxiv.org/abs/2609.11294",
+  "thread": "https://x.com/omarsar0/status/2098531286319341932",
+  "doc": "docs/AGENTZIP_MEMORY.md",
+  "gate": "python3 scripts/agentzip_memory_gate.py --json",
+  "skill": "agentzip-memory-lite",
+  "fixture": "marketing/data/code_health/agentzip_memory_discipline.json",
+  "rejected": [
+    "unbounded sandbox fanout without memory_budget_ok",
+    "unmeasured × memory claims",
+    "AgentZip / sandbox-compression SaaS under hard monthly cap"
+  ],
+  "related": [
+    "docs/LLM_RESPONSE_CACHE.md",
+    "docs/DIFF_DELTA.md",
+    "docs/DAIR_ACADEMY_DAILY.md"
+  ]
+}

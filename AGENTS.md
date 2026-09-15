@@ -251,3 +251,7 @@ Human-authored `AGENTS.md` / `CLAUDE.md` help coding agents (~+4%); LLM-generate
 ## LLM response cache (TNS)
 
 Before re-paying for an LLM answer, fingerprint query + context + model settings + source version + access scope; skip the call on a valid exact hit. Measure hit rate before claiming savings. Never cache PII/creative/realtime. See `docs/LLM_RESPONSE_CACHE.md`.
+
+## AgentZip memory (arXiv 2609.11294)
+
+High-fanout agent sandboxes share template pages (76–96% redundancy in the paper). Cap concurrent worktrees, prefer shared templates over full forks, and schedule heavy compress during LLM wait. Measure redundancy before claiming × memory wins. See `docs/AGENTZIP_MEMORY.md`.
