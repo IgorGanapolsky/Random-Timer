@@ -1,0 +1,21 @@
+{
+  "framework": "agent-integrity-lite",
+  "source": "https://www.calcalistech.com/ctechnews/article/km507avs3",
+  "adopted_at_utc": "2026-09-15T16:21:58Z",
+  "stolen": [
+    "human as the standard agents are held to",
+    "velocity without integrity is a fail",
+    "bidirectional research↔product muscle memory",
+    "formalize tacit expert instincts into agent workflows",
+    "never declare absolute expert-judgment capture"
+  ],
+  "skipped": [
+    "offensive security / pentest product scope",
+    "competing with agents on raw speed",
+    "paid Terra Platform or similar SaaS"
+  ],
+  "reference_fixture": "marketing/data/integrity/native_release_integrity.json",
+  "gate": "python3 scripts/agent_integrity_gate.py --json",
+  "doc": "docs/AGENT_INTEGRITY.md",
+  "budget_usd_month": 0
+}
