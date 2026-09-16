@@ -37,6 +37,7 @@ Canonical recommendation this file encodes (successor-aware):
 | Local multi-node inference routing | **NVIDIA PAIR Local Router lite** ([Personal-AI-Router](https://github.com/NVIDIA/Personal-AI-Router)) | `docs/NVIDIA_PAIR_LOCAL_ROUTER.md`, `python3 scripts/nvidia_pair_local_router_gate.py --json` |
 | Voice / live agent dual-mode | **Gemini 3.8 Live Extended Thinking lite** (Google blog) | `docs/GEMINI_38_LIVE_EXTENDED_THINKING.md`, `python3 scripts/gemini_38_live_extended_thinking_gate.py --json` |
 | Code review budget | **Greptile free-only** | `docs/GREPTILE_FREE_ONLY.md`, `python3 scripts/greptile_free_only_gate.py --json` |
+| AI adoption as operating-model change | **AI Operating Model lite** | `docs/AI_OPERATING_MODEL.md`, `python3 scripts/ai_operating_model_gate.py --json` |
 | Execution runtime (model-separable) | **Cursor / Claude Code / Codex** (+ optional OpenCode) | Host tools; OpenCode CLI may exist locally |
 | Hawk metrics / lifecycle ROI | PlayerZero **method** only | `docs/AGENT_COMPOUNDING_ROI.md` |
 
@@ -105,6 +106,7 @@ python3 scripts/agent_coding_stack_gate.py --json
 - `marketing/data/nvidia_pair_local_router_adoption.json`
 - `marketing/data/gemini_38_live_extended_thinking_adoption.json`
 - `marketing/data/greptile_free_only_adoption.json`
+- `marketing/data/ai_operating_model_adoption.json`
 
 ## pstack lite
 
@@ -181,3 +183,7 @@ Dual-mode Live vs Extended Thinking (early ack, progress narration, background t
 ## Greptile free-only
 
 Never pay for Greptile; disable reviews on private and under-50-star public repos; label filter `needs-greptile-review` on free-eligible repos only: see `docs/GREPTILE_FREE_ONLY.md` and `python3 scripts/greptile_free_only_gate.py --json`.
+
+## AI Operating Model lite
+
+Treat AI adoption as an operating-model change (one owned workflow, AI-native SOP, enablement before licenses, weekly ritual, outcome ROI — not tool/seat rollout): see `docs/AI_OPERATING_MODEL.md` and `python3 scripts/ai_operating_model_gate.py --json`.
