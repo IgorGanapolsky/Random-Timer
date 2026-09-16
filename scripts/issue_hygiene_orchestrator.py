@@ -28,6 +28,15 @@ RELEASE_WATCH_RE = re.compile(r"^Release watch:\s*v?(\d+\.\d+\.\d+)\s*$", re.I)
 PR_INCIDENT_RE = re.compile(r"^PR Incident:\s*#(\d+)\b", re.I)
 CI_GATE_RE = re.compile(r"CI base gates red", re.I)
 STALE_IN_FLIGHT_DAYS = 14
+ASC_IN_REVIEW_STATES = frozenset(
+    {
+        "WAITING_FOR_REVIEW",
+        "IN_REVIEW",
+        "PENDING_DEVELOPER_RELEASE",
+        "PENDING_APPLE_RELEASE",
+        "PROCESSING_FOR_APP_STORE",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -52,6 +61,15 @@ def parse_pr_incident_number(title: str) -> int | None:
     return int(match.group(1)) if match else None
 
 
+def asc_state_is_not_submitted(asc_state: str | None) -> bool:
+    if asc_state is None:
+        return True
+    normalized = asc_state.strip().upper()
+    if normalized in {"", "UNKNOWN", "NOT_FOUND"}:
+        return True
+    return normalized not in ASC_IN_REVIEW_STATES
+
+
 def decide_release_watch(
     *,
     title: str,
@@ -59,20 +77,21 @@ def decide_release_watch(
     live_play: str | None,
     created_at: str | None = None,
     now: datetime | None = None,
+    asc_state: str | None = None,
 ) -> Decision:
     version = parse_release_watch_version(title)
     if not version:
         return Decision("keep", "not_release_watch")
 
     live_candidates = [v for v in (live_ios, live_play) if v]
-    if live_candidates:
-        max_live = max(live_candidates, key=parse_semver)
-        if parse_semver(version) < parse_semver(max_live):
-            return Decision(
-                "close",
-                "superseded",
-                f"Autonomous hygiene: v{version} superseded by live store version v{max_live}. Closing release-watch.",
-            )
+    max_live = max(live_candidates, key=parse_semver) if live_candidates else None
+
+    if max_live and parse_semver(version) < parse_semver(max_live):
+        return Decision(
+            "close",
+            "superseded",
+            f"Autonomous hygiene: v{version} superseded by live store version v{max_live}. Closing release-watch.",
+        )
 
     if live_ios and live_play and live_ios == version and live_play == version:
         return Decision(
@@ -81,8 +100,21 @@ def decide_release_watch(
             f"Autonomous hygiene: v{version} is LIVE on iOS and Play. Closing release-watch.",
         )
 
-    # Abandoned in-flight watches (newer than live but stuck for weeks).
-    if live_candidates and parse_semver(version) > parse_semver(max(live_candidates, key=parse_semver)):
+    if live_play == version and (live_ios is None or parse_semver(live_ios) < parse_semver(version)):
+        return Decision(
+            "close",
+            "android_only_complete",
+            f"Autonomous hygiene: v{version} is LIVE on Play; iOS is older or unknown. Closing Android-only release-watch.",
+        )
+
+    if max_live and parse_semver(version) > parse_semver(max_live):
+        if asc_state_is_not_submitted(asc_state):
+            return Decision(
+                "close",
+                "not_submitted",
+                f"Autonomous hygiene: v{version} is ahead of live v{max_live} with no ASC submission (state={asc_state or 'UNKNOWN'}). Closing premature release-watch.",
+            )
+
         if created_at:
             created = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
             current = now or datetime.now(timezone.utc)
@@ -196,6 +228,7 @@ def plan_actions(
     live_play: str | None,
     pr_states: dict[int, str],
     voice_ok: bool,
+    asc_states: dict[str, str] | None = None,
 ) -> list[dict[str, Any]]:
     planned: list[dict[str, Any]] = []
     for issue in issues:
@@ -205,11 +238,14 @@ def plan_actions(
 
         decision: Decision | None = None
         if "release-watch" in labels or title.lower().startswith("release watch:"):
+            watch_version = parse_release_watch_version(title)
+            asc_state = asc_states.get(watch_version) if asc_states and watch_version else None
             decision = decide_release_watch(
                 title=title,
                 live_ios=live_ios,
                 live_play=live_play,
                 created_at=issue.get("createdAt"),
+                asc_state=asc_state,
             )
         elif "pr-state-machine" in labels or title.lower().startswith("pr incident:"):
             pr_number = parse_pr_incident_number(title)
@@ -272,7 +308,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--skip-play", action="store_true")
     parser.add_argument("--live-ios", default="")
     parser.add_argument("--live-play", default="")
+    parser.add_argument(
+        "--asc-states",
+        default="",
+        help='JSON object mapping marketing version to ASC state, e.g. \'{"1.3.60":"WAITING_FOR_REVIEW"}\'',
+    )
     args = parser.parse_args(argv)
+
+    asc_states: dict[str, str] = {}
+    if args.asc_states.strip():
+        parsed = json.loads(args.asc_states)
+        if not isinstance(parsed, dict):
+            raise SystemExit("--asc-states must be a JSON object")
+        asc_states = {str(k): str(v) for k, v in parsed.items()}
 
     issues = _gh_json(
         [
@@ -320,11 +368,13 @@ def main(argv: list[str] | None = None) -> int:
         live_play=live_play,
         pr_states=pr_states,
         voice_ok=voice_ok,
+        asc_states=asc_states or None,
     )
 
     result: dict[str, Any] = {
         "live_ios": live_ios,
         "live_play": live_play,
+        "asc_states": asc_states,
         "voice_contracts_passing": voice_ok,
         "open_issues_scanned": len(issues),
         "plan": plan,

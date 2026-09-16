@@ -44,15 +44,49 @@ def test_release_watch_closes_when_both_stores_live() -> None:
     assert decision.reason == "both_live"
 
 
-def test_release_watch_keeps_in_flight_newer_than_live() -> None:
+def test_release_watch_keeps_in_flight_newer_than_live_when_submitted() -> None:
     decision = decide_release_watch(
-        title="Release watch: v1.3.58",
-        live_ios="1.3.56",
-        live_play="1.3.56",
+        title="Release watch: v1.3.60",
+        live_ios="1.3.59",
+        live_play="1.3.59",
+        asc_state="WAITING_FOR_REVIEW",
         created_at="2026-09-01T00:00:00Z",
         now=__import__("datetime").datetime(2026, 9, 6, tzinfo=__import__("datetime").timezone.utc),
     )
     assert decision.action == "keep"
+    assert decision.reason == "in_flight"
+
+
+def test_release_watch_closes_android_only_complete() -> None:
+    decision = decide_release_watch(
+        title="Release watch: v1.3.59",
+        live_ios="1.3.58",
+        live_play="1.3.59",
+    )
+    assert decision.action == "close"
+    assert decision.reason == "android_only_complete"
+
+
+def test_release_watch_closes_not_submitted_when_asc_unknown() -> None:
+    decision = decide_release_watch(
+        title="Release watch: v1.3.61",
+        live_ios="1.3.59",
+        live_play="1.3.59",
+        asc_state="UNKNOWN",
+    )
+    assert decision.action == "close"
+    assert decision.reason == "not_submitted"
+
+
+def test_release_watch_closes_not_submitted_when_asc_missing() -> None:
+    decision = decide_release_watch(
+        title="Release watch: v1.3.61",
+        live_ios="1.3.59",
+        live_play="1.3.59",
+        asc_state=None,
+    )
+    assert decision.action == "close"
+    assert decision.reason == "not_submitted"
 
 
 def test_release_watch_closes_stale_in_flight() -> None:
@@ -60,6 +94,7 @@ def test_release_watch_closes_stale_in_flight() -> None:
         title="Release watch: v1.3.58",
         live_ios="1.3.56",
         live_play="1.3.56",
+        asc_state="WAITING_FOR_REVIEW",
         created_at="2026-07-01T00:00:00Z",
         now=__import__("datetime").datetime(2026, 9, 6, tzinfo=__import__("datetime").timezone.utc),
     )

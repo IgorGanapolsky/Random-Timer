@@ -67,6 +67,22 @@ class StorePublishAutomationContracts(unittest.TestCase):
             ),
         )
 
+    def test_store_release_watcher_skips_premature_release_watch_create(self):
+        watcher = (ROOT / ".github/workflows/store-release-watcher.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("skip_create", watcher)
+        self.assertIn("workflow_dispatch_input", watcher)
+        self.assertIn("Skipping premature release-watch create", watcher)
+
+    def test_store_release_watcher_passes_asc_states_to_hygiene(self):
+        watcher = (ROOT / ".github/workflows/store-release-watcher.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("Collect ASC states for open release-watch issues", watcher)
+        self.assertIn("asc_poll_version_state.py", watcher)
+        self.assertIn("--asc-states", watcher)
+
     def test_autonomous_operations_documents_after_approval(self):
         doc = (ROOT / "docs/AUTONOMOUS_OPERATIONS.md").read_text(encoding="utf-8")
         self.assertIn("AFTER_APPROVAL", doc)

@@ -92,9 +92,9 @@ jobs:
           fi
           # Fallback: query public App Store via iTunes lookup when ASC API is unavailable.
           # iTunes lookup only returns the LIVE version, so if version matches target we report READY_FOR_SALE.
+          ITUNES_JSON="$(curl -sS "https://itunes.apple.com/lookup?id=6758355312&country=us" || echo '{}')"
+          LIVE_VERSION="$(echo "$ITUNES_JSON" | python -c 'import json,sys; d=json.loads(sys.stdin.read() or "{}"); r=(d.get("results") or [{}])[0]; print(r.get("version",""))' 2>/dev/null || true)"
           if [ "$STATE" = "UNKNOWN" ]; then
-            ITUNES_JSON="$(curl -sS "https://itunes.apple.com/lookup?id=6758355312&country=us" || echo '{}')"
-            LIVE_VERSION="$(echo "$ITUNES_JSON" | python -c 'import json,sys; d=json.loads(sys.stdin.read() or "{}"); r=(d.get("results") or [{}])[0]; print(r.get("version",""))' 2>/dev/null || true)"
             if [ "$LIVE_VERSION" = "$TARGET_VERSION" ]; then
               STATE="READY_FOR_SALE"
               echo "ASC API unavailable. iTunes lookup confirms v$TARGET_VERSION is live → state=READY_FOR_SALE"
@@ -103,7 +103,8 @@ jobs:
             fi
           fi
           echo "state=$STATE" >> "$GITHUB_OUTPUT"
-          echo "iOS App Store state for $TARGET_VERSION: $STATE"
+          echo "live_ios_version=$LIVE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "iOS App Store state for $TARGET_VERSION: $STATE (iTunes live v${LIVE_VERSION:-?})"
 
       - name: Set ASC releaseType to AFTER_APPROVAL while in review
         if: steps.asc.outputs.state == 'WAITING_FOR_REVIEW' || steps.asc.outputs.state == 'IN_REVIEW'
@@ -155,11 +156,44 @@ jobs:
         id: issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYTHONPATH: ${{ github.workspace }}
           TARGET_VERSION: ${{ steps.version.outputs.target_version }}
+          ASC_STATE: ${{ steps.asc.outputs.state }}
+          LIVE_IOS: ${{ steps.asc.outputs.live_ios_version }}
+          PLAY_STATUS: ${{ steps.play.outputs.status }}
+          RESOLVE_REASON: ${{ steps.version.outputs.resolve_reason }}
         run: |
           set -euo pipefail
           TITLE="${ISSUE_TITLE_PREFIX}${TARGET_VERSION}"
           NUM="$(gh issue list --state open --search "\"$TITLE\" in:title" --json number,title --jq ".[] | select(.title==\"$TITLE\") | .number" | head -1)"
+          SKIP_CREATE=false
+          if [ -z "$NUM" ]; then
+            LIVE_PLAY_VER="$(echo "${{ steps.play.outputs.displayed }}" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)"
+            export LIVE_PLAY="$LIVE_PLAY_VER"
+            AHEAD_OF_LIVE="$(python - <<'PY'
+          import os
+          from scripts.issue_hygiene_orchestrator import parse_semver
+
+          target = os.environ["TARGET_VERSION"]
+          live = [v for v in (os.environ.get("LIVE_IOS") or "", os.environ.get("LIVE_PLAY") or "") if v]
+          if not live:
+              print("false")
+          else:
+              max_live = max(live, key=parse_semver)
+              print(str(parse_semver(target) > parse_semver(max_live)).lower())
+          PY
+          )"
+            if [ "$RESOLVE_REASON" != "workflow_dispatch_input" ] && { [ "$ASC_STATE" = "UNKNOWN" ] || [ "$ASC_STATE" = "NOT_FOUND" ]; } && [ "$AHEAD_OF_LIVE" = "true" ]; then
+              SKIP_CREATE=true
+              echo "Skipping premature release-watch create for v${TARGET_VERSION} (ASC=${ASC_STATE}, ahead of live)."
+            fi
+          fi
+          if [ -z "$NUM" ] && [ "$SKIP_CREATE" = "true" ]; then
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            echo "skip_create=true" >> "$GITHUB_OUTPUT"
+            echo "number=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           if [ -z "$NUM" ]; then
             BODY="Tracking store publish for **v${TARGET_VERSION}**. Auto-updated every 6h by \`store-release-watcher.yml\`."
             NUM="$(gh issue create --title "$TITLE" --body "$BODY" --label release-watch 2>/dev/null | awk -F/ '{print $NF}' || true)"
@@ -170,10 +204,11 @@ jobs:
           else
             echo "created=false" >> "$GITHUB_OUTPUT"
           fi
+          echo "skip_create=false" >> "$GITHUB_OUTPUT"
           echo "number=$NUM" >> "$GITHUB_OUTPUT"
 
       - name: Comment releaseType patch on watcher issue
-        if: steps.asc_release_type.outputs.release_type_changed == 'true'
+        if: steps.issue.outputs.number != '' && steps.asc_release_type.outputs.release_type_changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUM: ${{ steps.issue.outputs.number }}
@@ -202,7 +237,7 @@ jobs:
           echo "iOS auto-release result: $RELEASE_JSON"
 
       - name: Comment iOS auto-release on watcher issue
-        if: steps.asc.outputs.state == 'PENDING_DEVELOPER_RELEASE' && steps.ios_release.outputs.release_json != ''
+        if: steps.issue.outputs.number != '' && steps.asc.outputs.state == 'PENDING_DEVELOPER_RELEASE' && steps.ios_release.outputs.release_json != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUM: ${{ steps.issue.outputs.number }}
@@ -216,6 +251,7 @@ jobs:
           gh issue comment "$ISSUE_NUM" --body-file /tmp/release-comment.md
 
       - name: Detect state change and notify
+        if: steps.issue.outputs.number != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUM: ${{ steps.issue.outputs.number }}
@@ -249,7 +285,7 @@ jobs:
           fi
 
       - name: Close watcher if both stores live
-        if: steps.asc.outputs.state == 'READY_FOR_SALE' && steps.play.outputs.status == 'LIVE'
+        if: steps.issue.outputs.number != '' && steps.asc.outputs.state == 'READY_FOR_SALE' && steps.play.outputs.status == 'LIVE'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUM: ${{ steps.issue.outputs.number }}
@@ -258,9 +294,91 @@ jobs:
           gh issue comment "$ISSUE_NUM" --body "✅ v${TARGET_VERSION} is LIVE on both stores. Closing watcher."
           gh issue close "$ISSUE_NUM" --reason completed
 
+      - name: Collect ASC states for open release-watch issues
+        if: always()
+        id: asc_states
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          PYTHONPATH: ${{ github.workspace }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_VERSION: ${{ steps.version.outputs.target_version }}
+          TARGET_ASC_STATE: ${{ steps.asc.outputs.state }}
+        run: |
+          set -euo pipefail
+          STATES="$(python - <<'PY'
+          import json
+          import os
+          import re
+          import subprocess
+          import sys
+
+          states: dict[str, str] = {}
+          target = os.environ.get("TARGET_VERSION") or ""
+          target_state = os.environ.get("TARGET_ASC_STATE") or "UNKNOWN"
+          if target:
+              states[target] = target_state
+
+          proc = subprocess.run(
+              [
+                  "gh",
+                  "issue",
+                  "list",
+                  "--state",
+                  "open",
+                  "--label",
+                  "release-watch",
+                  "--limit",
+                  "100",
+                  "--json",
+                  "title",
+              ],
+              check=False,
+              capture_output=True,
+              text=True,
+          )
+          titles = []
+          if proc.returncode == 0 and proc.stdout.strip():
+              for row in json.loads(proc.stdout):
+                  titles.append(row.get("title") or "")
+
+          version_re = re.compile(r"^Release watch:\s*v?(\d+\.\d+\.\d+)\s*$", re.I)
+          for title in titles:
+              match = version_re.match(title.strip())
+              if not match:
+                  continue
+              version = match.group(1)
+              if version in states:
+                  continue
+              poll = subprocess.run(
+                  [sys.executable, "scripts/asc/asc_poll_version_state.py", "--version", version, "--json"],
+                  check=False,
+                  capture_output=True,
+                  text=True,
+              )
+              state = "UNKNOWN"
+              if poll.returncode == 0 and poll.stdout.strip():
+                  try:
+                      state = str(json.loads(poll.stdout).get("state") or "UNKNOWN")
+                  except json.JSONDecodeError:
+                      state = "UNKNOWN"
+              states[version] = state
+
+          print(json.dumps(states))
+          PY
+          )"
+          echo "json=$STATES" >> "$GITHUB_OUTPUT"
+
       - name: Autonomous issue hygiene (superseded / stale watches)
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ASC_STATES_JSON: ${{ steps.asc_states.outputs.json }}
         run: |
-          python3 scripts/issue_hygiene_orchestrator.py --apply --repo "$GITHUB_REPOSITORY" || true
+          set -euo pipefail
+          ARGS=(python3 scripts/issue_hygiene_orchestrator.py --apply --repo "$GITHUB_REPOSITORY")
+          if [ -n "${ASC_STATES_JSON:-}" ] && [ "$ASC_STATES_JSON" != "{}" ]; then
+            ARGS+=(--asc-states "$ASC_STATES_JSON")
+          fi
+          "${ARGS[@]}" || true
