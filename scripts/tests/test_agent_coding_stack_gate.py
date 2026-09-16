@@ -49,6 +49,8 @@ def test_evaluate_ready_when_docs_and_children_ok(tmp_path: Path) -> None:
         "scripts/gemini_38_live_extended_thinking_gate.py": {"ready": True},
         "scripts/greptile_free_only_gate.py": {"ready": True},
         "scripts/ai_operating_model_gate.py": {"ready": True},
+        "scripts/agent_access_governance_gate.py": {"ready": True},
+        "scripts/llm_observability_gate.py": {"ready": True},
         "scripts/speckit_gate.py": {"constitution": {"ok": True}, "implement_ready": True},
         "scripts/gsd_phase_gate.py": {"source": "open-gsd/gsd-core", "ship_ready": False},
     }
@@ -80,6 +82,8 @@ def test_evaluate_ready_when_docs_and_children_ok(tmp_path: Path) -> None:
     assert report["children"]["gemini_38_live_extended_thinking_ready"] is True
     assert report["children"]["greptile_free_only_ready"] is True
     assert report["children"]["ai_operating_model_ready"] is True
+    assert report["children"]["agent_access_governance_ready"] is True
+    assert report["children"]["llm_observability_ready"] is True
 
 
 def test_evaluate_blocks_missing_ssot_ban(tmp_path: Path) -> None:

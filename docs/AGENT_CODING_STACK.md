@@ -38,6 +38,8 @@ Canonical recommendation this file encodes (successor-aware):
 | Voice / live agent dual-mode | **Gemini 3.8 Live Extended Thinking lite** (Google blog) | `docs/GEMINI_38_LIVE_EXTENDED_THINKING.md`, `python3 scripts/gemini_38_live_extended_thinking_gate.py --json` |
 | Code review budget | **Greptile free-only** | `docs/GREPTILE_FREE_ONLY.md`, `python3 scripts/greptile_free_only_gate.py --json` |
 | AI adoption as operating-model change | **AI Operating Model lite** | `docs/AI_OPERATING_MODEL.md`, `python3 scripts/ai_operating_model_gate.py --json` |
+| Governed agent permissions | **Agent Access Governance lite** | `docs/AGENT_ACCESS_GOVERNANCE.md`, `python3 scripts/agent_access_governance_gate.py --json` |
+| LLM/agent monitor-optimize-secure | **LLM Observability lite** (Datadog practices) | `docs/LLM_OBSERVABILITY.md`, `python3 scripts/llm_observability_gate.py --json` |
 | Execution runtime (model-separable) | **Cursor / Claude Code / Codex** (+ optional OpenCode) | Host tools; OpenCode CLI may exist locally |
 | Hawk metrics / lifecycle ROI | PlayerZero **method** only | `docs/AGENT_COMPOUNDING_ROI.md` |
 
@@ -107,6 +109,8 @@ python3 scripts/agent_coding_stack_gate.py --json
 - `marketing/data/gemini_38_live_extended_thinking_adoption.json`
 - `marketing/data/greptile_free_only_adoption.json`
 - `marketing/data/ai_operating_model_adoption.json`
+- `marketing/data/agent_access_governance_adoption.json`
+- `marketing/data/llm_observability_adoption.json`
 
 ## pstack lite
 
@@ -187,3 +191,11 @@ Never pay for Greptile; disable reviews on private and under-50-star public repo
 ## AI Operating Model lite
 
 Treat AI adoption as an operating-model change (one owned workflow, AI-native SOP, enablement before licenses, weekly ritual, outcome ROI — not tool/seat rollout): see `docs/AI_OPERATING_MODEL.md` and `python3 scripts/ai_operating_model_gate.py --json`.
+
+## Agent Access Governance lite
+
+Least privilege, MCP/tool policy, approval gates for risky ops, immutable audit, maturity model — sell risk-reduction/enablement not generic AI security (no paid governance SaaS default): see `docs/AGENT_ACCESS_GOVERNANCE.md` and `python3 scripts/agent_access_governance_gate.py --json`.
+
+## LLM Observability lite
+
+Datadog practices stolen locally: ops errors/latency/tokens, prompt-injection/PII, quality evals, e2e traces, cost alerts — prefer PostHog/local; no paid Datadog default: see `docs/LLM_OBSERVABILITY.md` and `python3 scripts/llm_observability_gate.py --json`.

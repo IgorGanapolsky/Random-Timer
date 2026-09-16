@@ -1,0 +1,7 @@
+{
+  "framework": "llm-observability-lite",
+  "adopted": true,
+  "thesis": "ops_security_quality_trace_cost_without_paid_datadog_default",
+  "source": "https://lp.datadoghq.com/rs/875-UVY-685/images/eBook-LLMObservabilityBestPractices.pdf?version=1",
+  "updated_at_utc": "2026-09-16T05:11:05Z"
+}

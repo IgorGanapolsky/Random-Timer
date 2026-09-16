@@ -1,0 +1,17 @@
+{
+  "least_privilege_agent_scopes": true,
+  "role_attribute_policy_controls": true,
+  "agent_mcp_api_inventory": true,
+  "tool_call_policy_enforcement": true,
+  "approval_gates_risky_ops": true,
+  "immutable_audit_logs": true,
+  "governance_maturity_model": true,
+  "risk_reduction_not_generic_ai_security": true,
+  "budget_gated_governance_saas": true,
+  "budget": {
+    "default_to_paid_governance_saas": false,
+    "hard_monthly_usd_cap": 20
+  },
+  "source": "https://music.youtube.com/watch?v=II_xGPfDb6I",
+  "updated_at_utc": "2026-09-16T05:11:05Z"
+}
