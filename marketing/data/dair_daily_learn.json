@@ -31,30 +31,11 @@
       "roi_hits": [
         "design docs",
         "eval",
-        "agent",
         "graph"
       ],
-      "roi_score": 16,
+      "roi_score": 13,
       "title": "Ai Native Design Docs",
       "url": "https://academy.dair.ai/papers/ai-native-design-docs-2026-09-07-september-13-4",
-      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
-    },
-    {
-      "implement_hints": [
-        {
-          "layer": "agent-governance",
-          "pattern": "cheat|governance|swarm",
-          "steal": "Shared agent channels need sanctioning/validation against reward hacking"
-        }
-      ],
-      "roi_hits": [
-        "cheat",
-        "eval",
-        "agent"
-      ],
-      "roi_score": 13,
-      "title": "Research Swarm Cheating",
-      "url": "https://academy.dair.ai/papers/research-swarm-cheating-2026-09-07-september-13-8",
       "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
     },
     {
@@ -72,6 +53,23 @@
       "roi_score": 10,
       "title": "Co Evolving Harnesses And Models",
       "url": "https://academy.dair.ai/papers/co-evolving-harnesses-and-models-2026-09-07-september-13-9",
+      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+    },
+    {
+      "implement_hints": [
+        {
+          "layer": "agent-governance",
+          "pattern": "cheat|governance|swarm",
+          "steal": "Shared agent channels need sanctioning/validation against reward hacking"
+        }
+      ],
+      "roi_hits": [
+        "cheat",
+        "agent"
+      ],
+      "roi_score": 9,
+      "title": "Research Swarm Cheating",
+      "url": "https://academy.dair.ai/papers/research-swarm-cheating-2026-09-07-september-13-8",
       "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
     }
   ],
@@ -108,30 +106,11 @@
       "roi_hits": [
         "design docs",
         "eval",
-        "agent",
         "graph"
       ],
-      "roi_score": 16,
+      "roi_score": 13,
       "title": "Ai Native Design Docs",
       "url": "https://academy.dair.ai/papers/ai-native-design-docs-2026-09-07-september-13-4",
-      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
-    },
-    {
-      "implement_hints": [
-        {
-          "layer": "agent-governance",
-          "pattern": "cheat|governance|swarm",
-          "steal": "Shared agent channels need sanctioning/validation against reward hacking"
-        }
-      ],
-      "roi_hits": [
-        "cheat",
-        "eval",
-        "agent"
-      ],
-      "roi_score": 13,
-      "title": "Research Swarm Cheating",
-      "url": "https://academy.dair.ai/papers/research-swarm-cheating-2026-09-07-september-13-8",
       "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
     },
     {
@@ -163,6 +142,23 @@
       "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
     },
     {
+      "implement_hints": [
+        {
+          "layer": "agent-governance",
+          "pattern": "cheat|governance|swarm",
+          "steal": "Shared agent channels need sanctioning/validation against reward hacking"
+        }
+      ],
+      "roi_hits": [
+        "cheat",
+        "agent"
+      ],
+      "roi_score": 9,
+      "title": "Research Swarm Cheating",
+      "url": "https://academy.dair.ai/papers/research-swarm-cheating-2026-09-07-september-13-8",
+      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+    },
+    {
       "implement_hints": [],
       "roi_hits": [
         "agent",
@@ -187,16 +183,6 @@
     {
       "implement_hints": [],
       "roi_hits": [
-        "eval"
-      ],
-      "roi_score": 4,
-      "title": "Stair",
-      "url": "https://academy.dair.ai/papers/stair-2026-09-07-september-13-3",
-      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
-    },
-    {
-      "implement_hints": [],
-      "roi_hits": [
         "agent"
       ],
       "roi_score": 3,
@@ -206,17 +192,23 @@
     },
     {
       "implement_hints": [],
-      "roi_hits": [
-        "agent"
-      ],
-      "roi_score": 3,
+      "roi_hits": [],
+      "roi_score": 0,
       "title": "Recursive Self Improvement Survey",
       "url": "https://academy.dair.ai/papers/recursive-self-improvement-survey-2026-09-07-september-13-10",
+      "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
+    },
+    {
+      "implement_hints": [],
+      "roi_hits": [],
+      "roi_score": 0,
+      "title": "Stair",
+      "url": "https://academy.dair.ai/papers/stair-2026-09-07-september-13-3",
       "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
     }
   ],
   "papers_url": "https://academy.dair.ai/papers",
-  "scraped_at_utc": "2026-09-15T19:14:40Z",
+  "scraped_at_utc": "2026-09-16T12:51:38Z",
   "tier_note": "use free papers feed + free dashboard session; skip paid Academy unlocks",
   "week_url": "https://academy.dair.ai/papers/week/2026-09-07-september-13"
 }
