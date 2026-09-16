@@ -34,6 +34,10 @@ Policy for Agents API `openai_hosted` sandboxes: local-first, network disabled b
 4. **When the CEO asks for action steps, respond with action steps only.**
 5. **If a deeper explanation is necessary, keep it brief and evidence-based.**
 
+## Anti-babysitting (binding)
+
+Standing rule: CEO never babysits. Prefer `.cursor/rules/anti-babysitting.mdc` + `.claude/rules/anti-babysitting.md` + skill `anti-babysitting-rtt`. Never end turns with want-me-to / should-I on pre-authorized work; execute then report evidence. Only stop for metered over-cap spend, irreversible outward send, human-only credentials, or a correctly firing danger gate.
+
 ## Operational reliability contract
 
 **Canonical doc:** `docs/OPERATIONAL_RELIABILITY.md` (evidence protocol, proxy vs ground truth, contradiction handling, metric semantics).
