@@ -38,7 +38,7 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-09-16T12:33:14+00:00
+**Generated:** 2026-09-16T12:54:22+00:00
 
 ## Onboarding Funnel
 - First Open: **159**
@@ -69,7 +69,7 @@
 
 **Top failure reasons:** failed (26), user_cancelled (1)
 
-**Catalog failures (Android):** pro_base (50), elite_tactical (45), elite_tactical_monthly (45)
+**Catalog failures (Android):** pro_base (51), elite_tactical (46), elite_tactical_monthly (45)
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -155,16 +155,16 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-09-15" , "2026-09-15" , "2026-09-15" , "2026-09-15" , "2026-09-15" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16"]
+    x-axis ["2026-09-15" , "2026-09-15" , "2026-09-15" , "2026-09-15" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16"]
     y-axis "Downloads"
-    line [51 , 51 , 51 , 51 , 51 , 50 , 50 , 50 , 50 , 51 , 51 , 51 , 51 , 50]
-    line [107 , 107 , 107 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 106]
+    line [51 , 51 , 51 , 51 , 50 , 50 , 50 , 50 , 51 , 51 , 51 , 51 , 50 , 50]
+    line [107 , 107 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 106]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-09-15" , "2026-09-15" , "2026-09-15" , "2026-09-15" , "2026-09-15" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16"]
+    x-axis ["2026-09-15" , "2026-09-15" , "2026-09-15" , "2026-09-15" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16"]
     y-axis "Users"
     line [4 , 4 , 4 , 4 , 4 , 4 , 4 , 4 , 4 , 4 , 4 , 4 , 4 , 4]
 ```
@@ -194,4 +194,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-09-16T12:33:16+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-09-16T12:54:25+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
