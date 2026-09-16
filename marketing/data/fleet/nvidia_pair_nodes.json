@@ -10,8 +10,8 @@
       "role": "primary",
       "host": "localhost",
       "native_pair": true,
-      "online": true,
-      "ready": true,
+      "online": false,
+      "ready": false,
       "engines": ["ollama"],
       "models": [
         "qwen2.5:3b-hermes-64k",
@@ -21,7 +21,7 @@
       ],
       "active_jobs": 0,
       "gpu_util": 0.1,
-      "notes": "PAIR proxy verified PAIR_OK 2026-09-15"
+      "notes": "Liveness from live probe of proxy_base_url only — fixture online/ready stay false"
     },
     {
       "id": "mac-mini",
