@@ -1,0 +1,16 @@
+{
+  "framework": "gemini-38-live-extended-thinking-lite",
+  "adopted": true,
+  "source": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-8-live-gemini-3-8-live-extended-thinking/",
+  "steals": [
+    "dual_mode_live_vs_extended_thinking",
+    "early_verbal_ack_and_progress_narration",
+    "background_tools_while_speaking",
+    "budget_gate_live_api"
+  ],
+  "rejected": [
+    "default_paid_live_api",
+    "freeze_dialogue_during_tools"
+  ],
+  "updated_at_utc": "2026-09-16T02:50:33Z"
+}

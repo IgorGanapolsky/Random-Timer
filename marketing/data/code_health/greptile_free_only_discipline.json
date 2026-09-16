@@ -1,0 +1,15 @@
+{
+  "free_tier_only": true,
+  "no_payment_method": true,
+  "disable_reviews_on_private_repos": true,
+  "disable_reviews_on_public_under_50_stars": true,
+  "label_filter_needs_greptile_review": true,
+  "no_flex_paid_credits": true,
+  "oss_grant_50_stars_osi_only": true,
+  "budget": {
+    "paid_greptile": false,
+    "hard_monthly_usd_cap": 20
+  },
+  "settings_url": "https://app.greptile.com/hermes-mobile/-/settings/review#when-reviews",
+  "updated_at_utc": "2026-09-16T02:50:33Z"
+}

@@ -35,6 +35,8 @@ Canonical recommendation this file encodes (successor-aware):
 | Retrieve→rank search discipline | **Semantic Search Stack lite** (LinkedIn Engineering) | `docs/SEMANTIC_SEARCH_STACK.md`, `python3 scripts/semantic_search_stack_gate.py --json` |
 | Offline multi-teacher distillation | **Multi-Teacher Distill lite** (LinkedIn 8X training infra) | `docs/MULTI_TEACHER_DISTILL.md`, `python3 scripts/multi_teacher_distill_gate.py --json` |
 | Local multi-node inference routing | **NVIDIA PAIR Local Router lite** ([Personal-AI-Router](https://github.com/NVIDIA/Personal-AI-Router)) | `docs/NVIDIA_PAIR_LOCAL_ROUTER.md`, `python3 scripts/nvidia_pair_local_router_gate.py --json` |
+| Voice / live agent dual-mode | **Gemini 3.8 Live Extended Thinking lite** (Google blog) | `docs/GEMINI_38_LIVE_EXTENDED_THINKING.md`, `python3 scripts/gemini_38_live_extended_thinking_gate.py --json` |
+| Code review budget | **Greptile free-only** | `docs/GREPTILE_FREE_ONLY.md`, `python3 scripts/greptile_free_only_gate.py --json` |
 | Execution runtime (model-separable) | **Cursor / Claude Code / Codex** (+ optional OpenCode) | Host tools; OpenCode CLI may exist locally |
 | Hawk metrics / lifecycle ROI | PlayerZero **method** only | `docs/AGENT_COMPOUNDING_ROI.md` |
 
@@ -101,6 +103,8 @@ python3 scripts/agent_coding_stack_gate.py --json
 - `marketing/data/semantic_search_stack_adoption.json`
 - `marketing/data/multi_teacher_distill_adoption.json`
 - `marketing/data/nvidia_pair_local_router_adoption.json`
+- `marketing/data/gemini_38_live_extended_thinking_adoption.json`
+- `marketing/data/greptile_free_only_adoption.json`
 
 ## pstack lite
 
@@ -169,3 +173,11 @@ Pluggable teachers → offline soft-label/embedding cache (per-shard) → compac
 ## NVIDIA PAIR Local Router lite
 
 Upstream [NVIDIA/Personal-AI-Router](https://github.com/NVIDIA/Personal-AI-Router): proxy Ollama/LM Studio (`ollama-pr` :11434); schedule independent subagent jobs across MacBook / Mac mini / Galaxy S25 edge Ollama (no VRAM pool; Jobs / `workloads-history.json` for multi-node; no paid remote GPU): see `docs/NVIDIA_PAIR_LOCAL_ROUTER.md` and `python3 scripts/nvidia_pair_local_router_gate.py --json`.
+
+## Gemini 3.8 Live Extended Thinking lite
+
+Dual-mode Live vs Extended Thinking (early ack, progress narration, background tools, visual grounding, barge-in, SynthID, budget-gated Live API — no paid Live default): see `docs/GEMINI_38_LIVE_EXTENDED_THINKING.md` and `python3 scripts/gemini_38_live_extended_thinking_gate.py --json`.
+
+## Greptile free-only
+
+Never pay for Greptile; disable reviews on private and under-50-star public repos; label filter `needs-greptile-review` on free-eligible repos only: see `docs/GREPTILE_FREE_ONLY.md` and `python3 scripts/greptile_free_only_gate.py --json`.
