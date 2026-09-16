@@ -50,6 +50,7 @@
       "notes": "Termux/Ollama edge only — not PAIR.app; enable when phone advertises model"
     }
   ],
-  "source": "https://developer.nvidia.com/blog/nvidia-pair-virtual-inference-router-expands-available-compute-on-your-local-network/",
+  "source": "https://github.com/NVIDIA/Personal-AI-Router",
+  "blog_source": "https://developer.nvidia.com/blog/nvidia-pair-virtual-inference-router-expands-available-compute-on-your-local-network/",
   "infoq_source": "https://www.infoq.com/news/2026/09/nvidia-pair-ai-task-router/"
 }

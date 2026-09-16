@@ -24,10 +24,11 @@ def _scaffold(root: Path) -> None:
                 "pair proxy ollama lm studio",
                 "workload level concurrency independent jobs",
                 "eligible engine model ready",
-                "jobs telemetry ground truth",
+                "jobs telemetry ground truth workloads-history",
                 "no vram pooling",
                 "tailscale lan pairing",
                 "s25 edge ollama hermes",
+                "github.com/NVIDIA/Personal-AI-Router ollama-pr",
                 "",
             ]
         ),
@@ -36,6 +37,7 @@ def _scaffold(root: Path) -> None:
     (root / "scripts").mkdir()
     (root / "scripts" / "nvidia_pair_local_router_gate.py").write_text("#\n")
     (root / "scripts" / "nvidia_pair_fleet.py").write_text("#\n")
+    (root / "scripts" / "nvidia_pair_workloads.py").write_text("#\n")
     for sr in (".cursor/skills", ".claude/skills"):
         p = root / sr / "nvidia-pair-local-router-lite"
         p.mkdir(parents=True)
@@ -51,10 +53,12 @@ def _scaffold(root: Path) -> None:
                 "elastic_home_nodes": True,
                 "eligibility_model_engine_ready": True,
                 "jobs_telemetry_ground_truth": True,
+                "workloads_history_ground_truth": True,
                 "no_vram_pooling": True,
                 "no_harness_api_change": True,
                 "tailscale_or_lan_pairing": True,
                 "s25_edge_ollama_not_native_pair": True,
+                "upstream_personal_ai_router_github": True,
                 "budget": {"paid_remote_gpu_saas": False},
             }
         )
