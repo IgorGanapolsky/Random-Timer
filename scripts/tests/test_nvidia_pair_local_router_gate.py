@@ -153,6 +153,43 @@ class FleetTests(unittest.TestCase):
         )
         self.assertFalse(plan["ok"])
 
+    def test_nonpositive_jobs_rejected(self) -> None:
+        for n in (0, -3):
+            plan = schedule_independent_jobs(
+                fleet=_fleet_two_ready(), model="m", engine="ollama", job_count=n
+            )
+            self.assertFalse(plan["ok"])
+            self.assertEqual(plan["reason"], "invalid_job_count")
+            self.assertEqual(plan["requested"], n)
+            self.assertEqual(plan["placed"], 0)
+
+    def test_fixture_local_offline_until_probe(self) -> None:
+        from scripts.nvidia_pair_fleet import apply_live_liveness
+
+        fleet = {
+            "proxy_base_url": "http://127.0.0.1:9",
+            "nodes": [
+                {
+                    "id": "macbook-pro",
+                    "host": "localhost",
+                    "online": True,
+                    "ready": True,
+                    "engines": ["ollama"],
+                    "models": ["m"],
+                    "active_jobs": 0,
+                }
+            ],
+        }
+        # Fixture says ready, but dead port must flip offline
+        live = apply_live_liveness(fleet, timeout_s=0.3)
+        self.assertFalse(live["live_probe_ok"])
+        self.assertFalse(live["nodes"][0]["online"])
+        self.assertFalse(live["nodes"][0]["ready"])
+        plan = schedule_independent_jobs(
+            fleet=live, model="m", engine="ollama", job_count=1
+        )
+        self.assertFalse(plan["ok"])
+
 
 class ClaimTests(unittest.TestCase):
     def test_vram_pool_blocked(self) -> None:
