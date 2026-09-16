@@ -44,6 +44,29 @@ class StorePublishAutomationContracts(unittest.TestCase):
             ),
         )
 
+    def test_store_release_watcher_patches_release_type_while_in_review(self):
+        watcher = (ROOT / ".github/workflows/store-release-watcher.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("asc_set_release_type.py", watcher)
+        self.assertIn("AFTER_APPROVAL", watcher)
+        self.assertIn("WAITING_FOR_REVIEW", watcher)
+        self.assertIn("IN_REVIEW", watcher)
+        self.assertRegex(
+            watcher,
+            re.compile(
+                r"continue-on-error:\s*true",
+                re.MULTILINE,
+            ),
+        )
+        self.assertRegex(
+            watcher,
+            re.compile(
+                r"if:\s*.*steps\.asc\.outputs\.state\s*==\s*'WAITING_FOR_REVIEW'.*IN_REVIEW",
+                re.MULTILINE | re.DOTALL,
+            ),
+        )
+
     def test_autonomous_operations_documents_after_approval(self):
         doc = (ROOT / "docs/AUTONOMOUS_OPERATIONS.md").read_text(encoding="utf-8")
         self.assertIn("AFTER_APPROVAL", doc)

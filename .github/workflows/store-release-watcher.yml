@@ -105,6 +105,30 @@ jobs:
           echo "state=$STATE" >> "$GITHUB_OUTPUT"
           echo "iOS App Store state for $TARGET_VERSION: $STATE"
 
+      - name: Set ASC releaseType to AFTER_APPROVAL while in review
+        if: steps.asc.outputs.state == 'WAITING_FOR_REVIEW' || steps.asc.outputs.state == 'IN_REVIEW'
+        continue-on-error: true
+        id: asc_release_type
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          PYTHONPATH: ${{ github.workspace }}
+          TARGET_VERSION: ${{ steps.version.outputs.target_version }}
+        run: |
+          set -uo pipefail
+          RELEASE_TYPE_JSON='{}'
+          if RELEASE_TYPE_JSON="$(python3 scripts/asc/asc_set_release_type.py --version "$TARGET_VERSION" --release-type AFTER_APPROVAL --json 2>/tmp/asc_release_type.err)"; then
+            echo "ASC releaseType patch succeeded"
+          else
+            echo "--- ASC releaseType patch error (non-fatal) ---"
+            sed -n '1,10p' /tmp/asc_release_type.err || true
+          fi
+          CHANGED="$(echo "$RELEASE_TYPE_JSON" | python -c 'import json,sys; print(str(json.loads(sys.stdin.read() or "{}").get("changed", False)).lower())' 2>/dev/null || echo false)"
+          echo "release_type_json=$RELEASE_TYPE_JSON" >> "$GITHUB_OUTPUT"
+          echo "release_type_changed=$CHANGED" >> "$GITHUB_OUTPUT"
+          echo "ASC releaseType patch result: $RELEASE_TYPE_JSON"
+
       - name: Poll Play public listing
         id: play
         env:
@@ -147,6 +171,20 @@ jobs:
             echo "created=false" >> "$GITHUB_OUTPUT"
           fi
           echo "number=$NUM" >> "$GITHUB_OUTPUT"
+
+      - name: Comment releaseType patch on watcher issue
+        if: steps.asc_release_type.outputs.release_type_changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUM: ${{ steps.issue.outputs.number }}
+          RELEASE_TYPE_JSON: ${{ steps.asc_release_type.outputs.release_type_json }}
+          TARGET_VERSION: ${{ steps.version.outputs.target_version }}
+        run: |
+          set -euo pipefail
+          COMMENT=$(printf '🔧 iOS releaseType patched to **AFTER_APPROVAL** for **v%s** while in review.\n\n```json\n%s\n```' \
+            "$TARGET_VERSION" "$RELEASE_TYPE_JSON")
+          printf '%s' "$COMMENT" > /tmp/release-type-comment.md
+          gh issue comment "$ISSUE_NUM" --body-file /tmp/release-type-comment.md
 
       - name: Auto-release iOS when pending developer release
         if: steps.asc.outputs.state == 'PENDING_DEVELOPER_RELEASE'
