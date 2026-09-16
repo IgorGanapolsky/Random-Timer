@@ -1,0 +1,17 @@
+{
+  "dual_mode_live_vs_extended_thinking": true,
+  "early_verbal_ack_cues": true,
+  "live_progress_narration": true,
+  "background_tools_while_speaking": true,
+  "visual_grounding_when_available": true,
+  "barge_in_friendly": true,
+  "synthid_audio_watermark_awareness": true,
+  "budget_gated_live_api": true,
+  "prefer_free_or_subscription_surfaces": true,
+  "budget": {
+    "default_to_paid_live_api": false,
+    "hard_monthly_usd_cap": 20
+  },
+  "source": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-8-live-gemini-3-8-live-extended-thinking/",
+  "updated_at_utc": "2026-09-16T02:50:33Z"
+}

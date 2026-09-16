@@ -44,6 +44,8 @@ REQUIRED_DOCS = (
     "docs/SEMANTIC_SEARCH_STACK.md",
     "docs/MULTI_TEACHER_DISTILL.md",
     "docs/NVIDIA_PAIR_LOCAL_ROUTER.md",
+    "docs/GEMINI_38_LIVE_EXTENDED_THINKING.md",
+    "docs/GREPTILE_FREE_ONLY.md",
     "AGENTS.md",
     "CLAUDE.md",
 )
@@ -72,6 +74,8 @@ REQUIRED_SCRIPTS = (
     "scripts/multi_teacher_distill_gate.py",
     "scripts/nvidia_pair_local_router_gate.py",
     "scripts/nvidia_pair_workloads.py",
+    "scripts/gemini_38_live_extended_thinking_gate.py",
+    "scripts/greptile_free_only_gate.py",
 )
 
 BANNED_MARKERS = (
@@ -195,6 +199,16 @@ def evaluate(root: Path) -> dict[str, Any]:
     if not child["nvidia_pair_local_router"].get("ready"):
         blockers.append("nvidia_pair_local_router_not_ready")
 
+    child["gemini_38_live_extended_thinking"] = _run_json(
+        root, "scripts/gemini_38_live_extended_thinking_gate.py"
+    )
+    if not child["gemini_38_live_extended_thinking"].get("ready"):
+        blockers.append("gemini_38_live_extended_thinking_not_ready")
+
+    child["greptile_free_only"] = _run_json(root, "scripts/greptile_free_only_gate.py")
+    if not child["greptile_free_only"].get("ready"):
+        blockers.append("greptile_free_only_not_ready")
+
     child["speckit"] = _run_json(root, "scripts/speckit_gate.py")
     if child["speckit"].get("error"):
         blockers.append("speckit_gate_error")
@@ -246,6 +260,10 @@ def evaluate(root: Path) -> dict[str, Any]:
             "nvidia_pair_local_router_ready": child["nvidia_pair_local_router"].get(
                 "ready"
             ),
+            "gemini_38_live_extended_thinking_ready": child[
+                "gemini_38_live_extended_thinking"
+            ].get("ready"),
+            "greptile_free_only_ready": child["greptile_free_only"].get("ready"),
             "speckit_implement_ready": child["speckit"].get("implement_ready"),
             "gsd_source": child["gsd"].get("source"),
             "gsd_ship_ready": child["gsd"].get("ship_ready"),
