@@ -1,0 +1,36 @@
+{
+  "framework": "nvidia-pair-local-router-lite",
+  "adopted_at_utc": "2026-09-15T23:31:42Z",
+  "source": "https://developer.nvidia.com/blog/nvidia-pair-virtual-inference-router-expands-available-compute-on-your-local-network/",
+  "infoq_source": "https://www.infoq.com/news/2026/09/nvidia-pair-ai-task-router/",
+  "doc": "docs/NVIDIA_PAIR_LOCAL_ROUTER.md",
+  "gate": "python3 scripts/nvidia_pair_local_router_gate.py --json",
+  "fleet": "python3 scripts/nvidia_pair_fleet.py --jobs 5 --json",
+  "skill": "nvidia-pair-local-router-lite",
+  "fixture": "marketing/data/code_health/nvidia_pair_local_router_discipline.json",
+  "fleet_fixture": "marketing/data/fleet/nvidia_pair_nodes.json",
+  "local_smoke": {
+    "proxy_port": 11434,
+    "engine_port": 11435,
+    "chat_reply": "PAIR_OK",
+    "model": "qwen2.5:3b-hermes-64k",
+    "verified_at_utc": "2026-09-15T23:32:29Z"
+  },
+  "fleet_status": {
+    "macbook-pro": "verified_ready",
+    "mac-mini": "inventory_only_tailscale_probe_blocked",
+    "galaxy-s25": "edge_path_documented_adb_absent"
+  },
+  "pairs_with": [
+    "scripts/agent_local_first_router.py",
+    "docs/HYDRAFUSION_ROUTING.md",
+    "docs/GPT6_ASTRA_HARNESS.md"
+  ],
+  "rejected": [
+    "paid remote GPU SaaS under hard monthly cap",
+    "VRAM pooling / shard one request across nodes",
+    "multi-node claims without Jobs telemetry",
+    "harness cluster API rewrite",
+    "Galaxy S25 as native PAIR.app target"
+  ]
+}

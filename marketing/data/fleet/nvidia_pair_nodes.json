@@ -1,0 +1,55 @@
+{
+  "updated_at_utc": "2026-09-15T23:31:42Z",
+  "proxy_base_url": "http://127.0.0.1:11434",
+  "engine_behind_pair_port": 11435,
+  "default_model": "qwen2.5:3b-hermes-64k",
+  "transport": ["lan", "tailscale"],
+  "nodes": [
+    {
+      "id": "macbook-pro",
+      "role": "primary",
+      "host": "localhost",
+      "native_pair": true,
+      "online": true,
+      "ready": true,
+      "engines": ["ollama"],
+      "models": [
+        "qwen2.5:3b-hermes-64k",
+        "qwen3:8b",
+        "qwen3-vl:8b",
+        "nomic-embed-text:latest"
+      ],
+      "active_jobs": 0,
+      "gpu_util": 0.1,
+      "notes": "PAIR proxy verified PAIR_OK 2026-09-15"
+    },
+    {
+      "id": "mac-mini",
+      "role": "spare",
+      "host": "100.94.135.78",
+      "native_pair": true,
+      "online": false,
+      "ready": false,
+      "engines": ["ollama"],
+      "models": ["qwen2.5:3b-hermes-64k"],
+      "active_jobs": 0,
+      "gpu_util": 0.0,
+      "notes": "Tailscale+PAIR peer — set online/ready when Jobs show node"
+    },
+    {
+      "id": "galaxy-s25",
+      "role": "edge",
+      "host": "tailscale-s25",
+      "native_pair": false,
+      "online": false,
+      "ready": false,
+      "engines": ["ollama"],
+      "models": ["qwen2.5:3b-hermes-64k"],
+      "active_jobs": 0,
+      "gpu_util": 0.0,
+      "notes": "Termux/Ollama edge only — not PAIR.app; enable when phone advertises model"
+    }
+  ],
+  "source": "https://developer.nvidia.com/blog/nvidia-pair-virtual-inference-router-expands-available-compute-on-your-local-network/",
+  "infoq_source": "https://www.infoq.com/news/2026/09/nvidia-pair-ai-task-router/"
+}

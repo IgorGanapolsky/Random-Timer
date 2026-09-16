@@ -45,6 +45,7 @@ def test_evaluate_ready_when_docs_and_children_ok(tmp_path: Path) -> None:
         "scripts/gpt6_astra_harness_gate.py": {"ready": True},
         "scripts/semantic_search_stack_gate.py": {"ready": True},
         "scripts/multi_teacher_distill_gate.py": {"ready": True},
+        "scripts/nvidia_pair_local_router_gate.py": {"ready": True},
         "scripts/speckit_gate.py": {"constitution": {"ok": True}, "implement_ready": True},
         "scripts/gsd_phase_gate.py": {"source": "open-gsd/gsd-core", "ship_ready": False},
     }
@@ -72,6 +73,7 @@ def test_evaluate_ready_when_docs_and_children_ok(tmp_path: Path) -> None:
     assert report["children"]["gpt6_astra_harness_ready"] is True
     assert report["children"]["semantic_search_stack_ready"] is True
     assert report["children"]["multi_teacher_distill_ready"] is True
+    assert report["children"]["nvidia_pair_local_router_ready"] is True
 
 
 def test_evaluate_blocks_missing_ssot_ban(tmp_path: Path) -> None:
