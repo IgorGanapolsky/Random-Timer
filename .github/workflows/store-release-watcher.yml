@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Marketing version to watch; blank uses source_versions.py'
+        description: 'Marketing version to watch; blank prefers in-flight ASC version, else develop tip'
         required: false
         default: ''
 
@@ -33,22 +33,6 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Resolve target version
-        id: version
-        run: |
-          set -euo pipefail
-          if [ -n "$REQUESTED_VERSION" ]; then
-            TARGET_VERSION="$REQUESTED_VERSION"
-          else
-            TARGET_VERSION="$(python scripts/source_versions.py --repo-root . --format json | python -c 'import json,sys; print(json.load(sys.stdin)["ios"]["version_name"])')"
-          fi
-          if ! echo "$TARGET_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "Invalid watcher target version: $TARGET_VERSION" >&2
-            exit 1
-          fi
-          echo "target_version=$TARGET_VERSION" >> "$GITHUB_OUTPUT"
-          echo "Watching store release version: $TARGET_VERSION"
-
       - name: Install deps
         run: python -m pip install --quiet pyjwt==2.11.0 cryptography==46.0.5 requests==2.32.5
 
@@ -60,6 +44,34 @@ jobs:
           set -euo pipefail
           mkdir -p "$HOME/.appstoreconnect/private_keys"
           printf '%s' "$APPSTORE_PRIVATE_KEY" > "$HOME/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8"
+
+      - name: Resolve target version
+        id: version
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          if [ -n "$REQUESTED_VERSION" ]; then
+            TARGET_VERSION="$REQUESTED_VERSION"
+            RESOLVE_REASON="workflow_dispatch_input"
+          else
+            # Prefer highest in-flight ASC version (WAITING_FOR_REVIEW, IN_REVIEW,
+            # PENDING_DEVELOPER_RELEASE, PENDING_APPLE_RELEASE, PROCESSING_FOR_APP_STORE).
+            RESOLVE_JSON="$(python scripts/asc/asc_resolve_watcher_target.py --repo-root . --json)"
+            TARGET_VERSION="$(echo "$RESOLVE_JSON" | python -c 'import json,sys; print(json.load(sys.stdin)["target_version"])')"
+            RESOLVE_REASON="$(echo "$RESOLVE_JSON" | python -c 'import json,sys; print(json.load(sys.stdin)["reason"])')"
+            echo "Watcher target resolution: reason=$RESOLVE_REASON develop_tip=$(echo "$RESOLVE_JSON" | python -c 'import json,sys; print(json.load(sys.stdin).get("develop_tip",""))')"
+          fi
+          if ! echo "$TARGET_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Invalid watcher target version: $TARGET_VERSION" >&2
+            exit 1
+          fi
+          echo "target_version=$TARGET_VERSION" >> "$GITHUB_OUTPUT"
+          echo "resolve_reason=$RESOLVE_REASON" >> "$GITHUB_OUTPUT"
+          echo "Watching store release version: $TARGET_VERSION"
 
       - name: Poll ASC state
         id: asc
@@ -125,7 +137,7 @@ jobs:
           TITLE="${ISSUE_TITLE_PREFIX}${TARGET_VERSION}"
           NUM="$(gh issue list --state open --search "\"$TITLE\" in:title" --json number,title --jq ".[] | select(.title==\"$TITLE\") | .number" | head -1)"
           if [ -z "$NUM" ]; then
-            BODY="Tracking store publish for **v${TARGET_VERSION}**. Auto-updated every 30 min by \`store-release-watcher.yml\`."
+            BODY="Tracking store publish for **v${TARGET_VERSION}**. Auto-updated every 6h by \`store-release-watcher.yml\`."
             NUM="$(gh issue create --title "$TITLE" --body "$BODY" --label release-watch 2>/dev/null | awk -F/ '{print $NF}' || true)"
             if [ -z "$NUM" ]; then
               NUM="$(gh issue create --title "$TITLE" --body "$BODY" | awk -F/ '{print $NF}')"
@@ -135,6 +147,35 @@ jobs:
             echo "created=false" >> "$GITHUB_OUTPUT"
           fi
           echo "number=$NUM" >> "$GITHUB_OUTPUT"
+
+      - name: Auto-release iOS when pending developer release
+        if: steps.asc.outputs.state == 'PENDING_DEVELOPER_RELEASE'
+        id: ios_release
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          PYTHONPATH: ${{ github.workspace }}
+          TARGET_VERSION: ${{ steps.version.outputs.target_version }}
+        run: |
+          set -euo pipefail
+          RELEASE_JSON="$(python3 scripts/asc_release_version.py --version "$TARGET_VERSION" --json)"
+          echo "release_json=$RELEASE_JSON" >> "$GITHUB_OUTPUT"
+          echo "iOS auto-release result: $RELEASE_JSON"
+
+      - name: Comment iOS auto-release on watcher issue
+        if: steps.asc.outputs.state == 'PENDING_DEVELOPER_RELEASE' && steps.ios_release.outputs.release_json != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUM: ${{ steps.issue.outputs.number }}
+          RELEASE_JSON: ${{ steps.ios_release.outputs.release_json }}
+          TARGET_VERSION: ${{ steps.version.outputs.target_version }}
+        run: |
+          set -euo pipefail
+          COMMENT=$(printf '🚀 iOS auto-release attempted for **v%s** (state was PENDING_DEVELOPER_RELEASE).\n\n```json\n%s\n```' \
+            "$TARGET_VERSION" "$RELEASE_JSON")
+          printf '%s' "$COMMENT" > /tmp/release-comment.md
+          gh issue comment "$ISSUE_NUM" --body-file /tmp/release-comment.md
 
       - name: Detect state change and notify
         env:
@@ -153,7 +194,7 @@ jobs:
 
           NOW_ISO="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
           SNAPSHOT=$(printf '%s\n\n- iOS App Store state: **%s**\n- Google Play public listing: **%s** %s\n- Last poll: %s\n\n%s%s -->' \
-            "Tracking store publish for **v${TARGET_VERSION}**. Auto-updated every 30 min." \
+            "Tracking store publish for **v${TARGET_VERSION}**. Auto-updated every 6h." \
             "$IOS_STATE" "$PLAY_STATUS" "$PLAY_DISPLAYED" "$NOW_ISO" "$MARKER" "$CUR")
           printf '%s' "$SNAPSHOT" > /tmp/issue-body.md
           gh issue edit "$ISSUE_NUM" --body-file /tmp/issue-body.md >/dev/null
