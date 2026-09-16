@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-16T06:35:38+00:00",
+  "generated_at": "2026-09-16T12:32:29+00:00",
   "status": "ok",
   "nsm": {
     "wqtu": 4,
@@ -8,16 +8,16 @@
     "alert_fired": false
   },
   "engagement": {
-    "dau": 19,
-    "wau": 75
+    "dau": 16,
+    "wau": 72
   },
   "abandon_rate": {
-    "started_30d": 1104,
-    "completed_30d": 602,
+    "started_30d": 1103,
+    "completed_30d": 601,
     "abandon_rate_pct": 45.5
   },
   "monetization_funnel": {
-    "paywall_viewed_users": 26,
+    "paywall_viewed_users": 25,
     "purchase_attempted_users": 1,
     "purchase_succeeded_users": 0,
     "conversion_pct": 0.0
@@ -46,11 +46,6 @@
   ],
   "query_errors": [],
   "history": [
-    {
-      "timestamp": "2026-09-09T12:31:44+00:00",
-      "wqtu": 5,
-      "dau": 8
-    },
     {
       "timestamp": "2026-09-09T15:34:39+00:00",
       "wqtu": 5,
@@ -495,6 +490,11 @@
       "timestamp": "2026-09-16T06:35:38+00:00",
       "wqtu": 4,
       "dau": 19
+    },
+    {
+      "timestamp": "2026-09-16T12:32:29+00:00",
+      "wqtu": 4,
+      "dau": 16
     }
   ]
 }
