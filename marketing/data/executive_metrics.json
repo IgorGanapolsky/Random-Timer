@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-10T19:53:34+00:00",
+  "generated_at": "2026-09-16T06:44:23+00:00",
   "source": "executive_metrics_snapshot",
   "reliability_contract_doc": "docs/OPERATIONAL_RELIABILITY.md",
   "definitions": {
@@ -33,9 +33,9 @@
     "posthog_paywall_revenue_sum_30d": 0.0,
     "posthog_paywall_revenue_avg_usd_per_day": 0.0,
     "posthog_usd_gap_per_day_vs_target": 100.0,
-    "events_paywall_purchase_success_30d": 1,
-    "distinct_persons_paywall_purchase_success_30d": 1,
-    "billing_product_not_found_play_store_android_30d": 469,
+    "events_paywall_purchase_success_30d": 0,
+    "distinct_persons_paywall_purchase_success_30d": 0,
+    "billing_product_not_found_play_store_android_30d": 140,
     "store_ledger_revenue_usd_30d": null,
     "store_ledger_metric_id": "not_wired_in_executive_snapshot"
   },
@@ -48,66 +48,44 @@
     "audience_note": "Excludes debug/sim/emulator, is_internal, non\u2013App Store/TestFlight/Firebase-style distribution_channel values, and optional POSTHOG_EXECUTIVE_EXCLUDE_PERSON_IDS. Legacy events without distribution_channel use coalesce 'legacy' (still included). Not a guarantee of human/non-team users\u2014set person exclusions for known IDs.",
     "exclude_person_ids_configured": true,
     "window_days": 30,
-    "errors": [
-      "http_400"
-    ],
-    "distinct_persons_application_installed": 731,
-    "distinct_persons_first_open": 731,
-    "distinct_persons_application_installed_ios": 60,
-    "distinct_persons_application_installed_android": 670,
-    "distinct_persons_application_opened_ios": 68,
-    "distinct_persons_application_opened_android": 674,
-    "timer_started_events": 1982,
-    "timer_completed_events": 599,
-    "distinct_persons_timer_started": 373,
-    "distinct_persons_timer_completed": 87,
-    "distinct_persons_timer_started_and_completed": 87,
-    "wqtu_distinct_persons": 27,
-    "wqtu_7d_distinct_persons": 11,
-    "timer_abandon_rate_event_level_pct": 69.78,
-    "distinct_persons_paywall_purchase_success": 1,
-    "events_paywall_purchase_success": 1,
+    "errors": [],
+    "distinct_persons_application_installed": 159,
+    "distinct_persons_first_open": 160,
+    "distinct_persons_application_installed_ios": 51,
+    "distinct_persons_application_installed_android": 106,
+    "distinct_persons_application_opened_ios": 69,
+    "distinct_persons_application_opened_android": 112,
+    "timer_started_events": 1104,
+    "timer_completed_events": 602,
+    "distinct_persons_timer_started": 138,
+    "distinct_persons_timer_completed": 68,
+    "distinct_persons_timer_started_and_completed": 68,
+    "wqtu_distinct_persons": 21,
+    "wqtu_7d_distinct_persons": 4,
+    "timer_abandon_rate_event_level_pct": 45.47,
+    "distinct_persons_paywall_purchase_success": 0,
+    "events_paywall_purchase_success": 0,
     "distinct_persons_paywall_purchase_success_ios": 0,
-    "distinct_persons_paywall_purchase_success_android": 1,
+    "distinct_persons_paywall_purchase_success_android": 0,
     "events_paywall_purchase_success_ios": 0,
-    "events_paywall_purchase_success_android": 1,
+    "events_paywall_purchase_success_android": 0,
     "paywall_revenue_sum_30d": 0.0,
-    "billing_product_not_found_play_store_android_30d": 469,
-    "in_app_review_prompt_events": 520,
-    "in_app_review_prompt_distinct_persons": 293,
+    "billing_product_not_found_play_store_android_30d": 140,
+    "in_app_review_prompt_events": 34,
+    "in_app_review_prompt_distinct_persons": 32,
     "top_screens_by_distinct_persons": [
       [
         "Timer Setup",
-        410,
-        3010
+        156,
+        1666
       ],
       [
         "Active Timer",
-        352,
-        2450
-      ],
-      [
-        "SmartCart",
-        84,
-        89
-      ],
-      [
-        "LipidSync",
-        77,
-        81
-      ],
-      [
-        "NutriPlan",
-        69,
-        74
-      ],
-      [
-        "Dashboard",
-        23,
-        34
+        138,
+        1345
       ]
     ],
-    "posthog_exception_events": 0,
+    "posthog_exception_events": 14,
     "metric_bundle_id": "posthog_executive_pragmatic_live_hogql_v1",
     "metric_field_ids": {
       "distinct_persons_application_installed": "posthog_hogql_distinct_persons_event_application_installed",
@@ -136,10 +114,7 @@
       "posthog_exception_events": "posthog_hogql_count_events_dollar_exception",
       "paywall_revenue_sum_30d": "posthog_hogql_sum_paywall_purchase_success_revenue_properties",
       "billing_product_not_found_play_store_android_30d": "posthog_hogql_count_billing_product_not_found_android_play_store"
-    },
-    "query_errors": [
-      "http_400"
-    ]
+    }
   },
   "store_apis": {
     "android": {
@@ -148,10 +123,10 @@
       "review_count_metric_id": "google_play_androidpublisher_reviews_list_7d_commented_paginated",
       "production_release": {
         "version_codes": [
-          "1781012436"
+          "1789484096"
         ],
         "status": "completed",
-        "name": "v1781012436"
+        "name": "v1789484096"
       },
       "refund_requests_30d": 0,
       "voided_purchase_reason_counts": {},
@@ -167,29 +142,29 @@
       "sku": "randomtimer2026",
       "versions": [
         {
+          "version": "1.3.60",
+          "state": "WAITING_FOR_REVIEW",
+          "created": "2026-09-15T08:19:08-07:00"
+        },
+        {
+          "version": "1.3.58",
+          "state": "READY_FOR_SALE",
+          "created": "2026-09-07T15:03:36-07:00"
+        },
+        {
+          "version": "1.3.56",
+          "state": "READY_FOR_SALE",
+          "created": "2026-06-12T13:14:30-07:00"
+        },
+        {
+          "version": "1.3.55",
+          "state": "READY_FOR_SALE",
+          "created": "2026-06-11T09:51:54-07:00"
+        },
+        {
           "version": "1.3.43",
           "state": "READY_FOR_SALE",
           "created": "2026-05-29T10:03:55-07:00"
-        },
-        {
-          "version": "1.3.42",
-          "state": "READY_FOR_SALE",
-          "created": "2026-05-27T11:12:22-07:00"
-        },
-        {
-          "version": "1.3.40",
-          "state": "READY_FOR_SALE",
-          "created": "2026-05-25T16:04:05-07:00"
-        },
-        {
-          "version": "1.3.39",
-          "state": "READY_FOR_SALE",
-          "created": "2026-05-23T07:21:31-07:00"
-        },
-        {
-          "version": "1.3.36",
-          "state": "READY_FOR_SALE",
-          "created": "2026-05-22T08:47:22-07:00"
         }
       ],
       "review_count": 0,
@@ -197,12 +172,12 @@
       "review_count_request_limit": 50,
       "reviews": [],
       "ios_refund_units_30d": 0,
-      "ios_gross_units_30d": 346,
-      "ios_net_units_30d": 346,
+      "ios_gross_units_30d": 200,
+      "ios_net_units_30d": 200,
       "refund_count_metric_id": "app_store_connect_sales_reports_daily_summary_negative_units_sum",
       "sales_report_vendor_number_present": true,
       "sales_report_days_scanned": 30,
-      "sales_report_days_with_data": 28,
+      "sales_report_days_with_data": 27,
       "note": "App Store Connect Sales reports require async report generation. customerReviews count is the first page only (limit 50, newest first), not total lifetime App Store reviews. Version state is live from the API. iOS refund units are derived from negative Units rows in ASC daily SALES/SUMMARY reports when APPSTORE_VENDOR_NUMBER is configured."
     }
   },
@@ -214,7 +189,7 @@
     "ios_refund_units_30d": 0,
     "ios_refund_count_metric_id": "app_store_connect_sales_reports_daily_summary_negative_units_sum",
     "ios_sales_report_vendor_number_present": true,
-    "ios_sales_report_days_with_data": 28,
+    "ios_sales_report_days_with_data": 27,
     "ios_status": "ok",
     "asn_v2_status": "skipped",
     "asn_v2_ios_refund_count_production": null,
@@ -264,10 +239,10 @@
   "canonical_users": {
     "metric_bundle_id": "executive_canonical_users_v1",
     "window_days": 30,
-    "wqtu_7d": 11,
-    "installs_30d": 731,
-    "timer_completed_persons_30d": 87,
-    "paywall_purchase_success_persons_30d": 1,
-    "paywall_purchase_success_events_30d": 1
+    "wqtu_7d": 4,
+    "installs_30d": 159,
+    "timer_completed_persons_30d": 68,
+    "paywall_purchase_success_persons_30d": 0,
+    "paywall_purchase_success_events_30d": 0
   }
 }
