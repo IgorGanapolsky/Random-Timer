@@ -1,24 +1,16 @@
 #!/usr/bin/env python3
 """NVIDIA PAIR local inference router lite — multi-node Ollama/LM Studio proxy.
 
-Sources:
-  https://developer.nvidia.com/blog/nvidia-pair-virtual-inference-router-expands-available-compute-on-your-local-network/
-  https://www.infoq.com/news/2026/09/nvidia-pair-ai-task-router/
+Upstream (canonical): https://github.com/NVIDIA/Personal-AI-Router
+Blog: https://developer.nvidia.com/blog/nvidia-pair-virtual-inference-router-expands-available-compute-on-your-local-network/
+Digest: https://www.infoq.com/news/2026/09/nvidia-pair-ai-task-router/
 
 PAIR thesis: multi-agent / subagent fanout bottlenecks one GPU. A virtual
 inference router proxies familiar Ollama/LM Studio endpoints, discovers paired
 local nodes (mDNS / Tailscale / manual), and schedules each *independent*
 request onto one eligible node (engine ready + exact model present + load).
 Does NOT merge GPUs, pool VRAM, or shard a single request across machines.
-Jobs telemetry is ground truth for multi-node claims.
-
-High-ROI steals for Random Timer ($20/mo hard cap — local fleet only):
-  - Keep harness pointing at one local base URL (PAIR proxy :11434)
-  - Route independent subagent calls across MacBook / Mac mini / spare nodes
-  - Galaxy S25 is an *edge Ollama* worker via Termux/Tailscale — not a native
-    PAIR OS target; eligible only when Ollama advertises the exact model
-  - Claim multi-node only from Jobs/telemetry, never from agent count alone
-  - Prefer parallel independent jobs; sequential single-call work gains little
+Jobs / workloads-history.json telemetry is ground truth for multi-node claims.
 """
 
 from __future__ import annotations
@@ -45,8 +37,13 @@ from scripts.nvidia_pair_fleet import (
     schedule_independent_jobs,
     select_eligible_node,
 )
+from scripts.nvidia_pair_workloads import (
+    UPSTREAM_GITHUB,
+    evaluate_multinode_from_workloads,
+)
 
-SOURCE = (
+SOURCE = UPSTREAM_GITHUB
+BLOG_SOURCE = (
     "https://developer.nvidia.com/blog/"
     "nvidia-pair-virtual-inference-router-expands-available-compute-on-your-local-network/"
 )
@@ -59,10 +56,12 @@ HEALTH_SIGNALS = (
     "elastic_home_nodes",
     "eligibility_model_engine_ready",
     "jobs_telemetry_ground_truth",
+    "workloads_history_ground_truth",
     "no_vram_pooling",
     "no_harness_api_change",
     "tailscale_or_lan_pairing",
     "s25_edge_ollama_not_native_pair",
+    "upstream_personal_ai_router_github",
 )
 
 
@@ -100,6 +99,26 @@ def evaluate_pair_claim(claim: Mapping[str, object]) -> Decision:
             action="block_multinode_without_telemetry",
             ok=False,
             reason="Jobs/telemetry must show routed work on >1 node before multi-node claims",
+        )
+
+    if action in {"verify_multinode_from_workloads", "claim_multinode"}:
+        wl_path = claim.get("workloads_history_path")
+        path = Path(str(wl_path)) if wl_path else None
+        if path is None:
+            from scripts.nvidia_pair_workloads import default_workloads_history_path
+
+            path = default_workloads_history_path()
+        report = evaluate_multinode_from_workloads(path)
+        if report.get("ok"):
+            return Decision(
+                action="allow_multinode_from_workloads",
+                ok=True,
+                reason=f"distinct scheduledOn={report.get('distinct_scheduled_on')}",
+            )
+        return Decision(
+            action="block_multinode_without_telemetry",
+            ok=False,
+            reason=str(report.get("reason") or "workloads_not_multinode"),
         )
 
     if action in {"change_harness_to_cluster_api", "require_new_cluster_sdk"}:
@@ -222,6 +241,8 @@ def evaluate(repo: Path) -> dict[str, Any]:
         blockers.append("missing_scripts/nvidia_pair_local_router_gate.py")
     if not (repo / "scripts" / "nvidia_pair_fleet.py").is_file():
         blockers.append("missing_scripts/nvidia_pair_fleet.py")
+    if not (repo / "scripts" / "nvidia_pair_workloads.py").is_file():
+        blockers.append("missing_scripts/nvidia_pair_workloads.py")
     blockers.extend(require_dual_skills(repo, "nvidia-pair-local-router-lite"))
     blockers.extend(
         require_docs_needles(
@@ -239,6 +260,9 @@ def evaluate(repo: Path) -> dict[str, Any]:
                 "s25",
                 "hermes",
                 "independent",
+                "github.com/nvidia/personal-ai-router",
+                "workloads-history",
+                "ollama-pr",
             ),
         )
     )
@@ -300,6 +324,7 @@ def evaluate(repo: Path) -> dict[str, Any]:
     return {
         "framework": "nvidia-pair-local-router-lite",
         "source": SOURCE,
+        "blog_source": BLOG_SOURCE,
         "infoq_source": INFOQ_SOURCE,
         "ready": ready,
         "blockers": blockers,

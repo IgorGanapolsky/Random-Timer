@@ -71,6 +71,7 @@ REQUIRED_SCRIPTS = (
     "scripts/semantic_search_stack_gate.py",
     "scripts/multi_teacher_distill_gate.py",
     "scripts/nvidia_pair_local_router_gate.py",
+    "scripts/nvidia_pair_workloads.py",
 )
 
 BANNED_MARKERS = (

@@ -34,7 +34,7 @@ Canonical recommendation this file encodes (successor-aware):
 | Computer-use + session notes harness | **GPT-6 Astra Harness lite** (InfoQ / OpenAI Astra) | `docs/GPT6_ASTRA_HARNESS.md`, `python3 scripts/gpt6_astra_harness_gate.py --json` |
 | Retrieve→rank search discipline | **Semantic Search Stack lite** (LinkedIn Engineering) | `docs/SEMANTIC_SEARCH_STACK.md`, `python3 scripts/semantic_search_stack_gate.py --json` |
 | Offline multi-teacher distillation | **Multi-Teacher Distill lite** (LinkedIn 8X training infra) | `docs/MULTI_TEACHER_DISTILL.md`, `python3 scripts/multi_teacher_distill_gate.py --json` |
-| Local multi-node inference routing | **NVIDIA PAIR Local Router lite** (PAIR + InfoQ) | `docs/NVIDIA_PAIR_LOCAL_ROUTER.md`, `python3 scripts/nvidia_pair_local_router_gate.py --json` |
+| Local multi-node inference routing | **NVIDIA PAIR Local Router lite** ([Personal-AI-Router](https://github.com/NVIDIA/Personal-AI-Router)) | `docs/NVIDIA_PAIR_LOCAL_ROUTER.md`, `python3 scripts/nvidia_pair_local_router_gate.py --json` |
 | Execution runtime (model-separable) | **Cursor / Claude Code / Codex** (+ optional OpenCode) | Host tools; OpenCode CLI may exist locally |
 | Hawk metrics / lifecycle ROI | PlayerZero **method** only | `docs/AGENT_COMPOUNDING_ROI.md` |
 
@@ -168,4 +168,4 @@ Pluggable teachers → offline soft-label/embedding cache (per-shard) → compac
 
 ## NVIDIA PAIR Local Router lite
 
-Proxy Ollama/LM Studio; schedule independent subagent jobs across MacBook / Mac mini / Galaxy S25 edge Ollama (no VRAM pool; Jobs telemetry for multi-node; no paid remote GPU): see `docs/NVIDIA_PAIR_LOCAL_ROUTER.md` and `python3 scripts/nvidia_pair_local_router_gate.py --json`.
+Upstream [NVIDIA/Personal-AI-Router](https://github.com/NVIDIA/Personal-AI-Router): proxy Ollama/LM Studio (`ollama-pr` :11434); schedule independent subagent jobs across MacBook / Mac mini / Galaxy S25 edge Ollama (no VRAM pool; Jobs / `workloads-history.json` for multi-node; no paid remote GPU): see `docs/NVIDIA_PAIR_LOCAL_ROUTER.md` and `python3 scripts/nvidia_pair_local_router_gate.py --json`.

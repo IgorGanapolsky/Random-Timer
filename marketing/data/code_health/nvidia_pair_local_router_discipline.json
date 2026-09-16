@@ -5,15 +5,18 @@
   "elastic_home_nodes": true,
   "eligibility_model_engine_ready": true,
   "jobs_telemetry_ground_truth": true,
+  "workloads_history_ground_truth": true,
   "no_vram_pooling": true,
   "no_harness_api_change": true,
   "tailscale_or_lan_pairing": true,
   "s25_edge_ollama_not_native_pair": true,
+  "upstream_personal_ai_router_github": true,
   "budget": {
     "paid_remote_gpu_saas": false,
     "hard_monthly_usd_cap": 20
   },
-  "source": "https://developer.nvidia.com/blog/nvidia-pair-virtual-inference-router-expands-available-compute-on-your-local-network/",
+  "source": "https://github.com/NVIDIA/Personal-AI-Router",
+  "blog_source": "https://developer.nvidia.com/blog/nvidia-pair-virtual-inference-router-expands-available-compute-on-your-local-network/",
   "infoq_source": "https://www.infoq.com/news/2026/09/nvidia-pair-ai-task-router/",
-  "updated_at_utc": "2026-09-15T23:31:42Z"
+  "updated_at_utc": "2026-09-16T02:40:00Z"
 }
