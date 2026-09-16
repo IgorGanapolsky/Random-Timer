@@ -51,6 +51,21 @@ Machine-readable registry: `.claude/scheduled_tasks.json` (documentation mirror 
 | Play IAP catalog | Play Console → Monetize → Products | `pro_base`, `elite_tactical`, `elite_tactical_monthly` must exist and be active |
 | App Store review | ASC | Optional `submit_review` on release workflow |
 
+### Store publish automation (AFTER_APPROVAL)
+
+**Automatic (no CEO click after submit):**
+
+- Fastlane `deliver` sets `automatic_release: true` → ASC `releaseType: AFTER_APPROVAL` so approved builds publish without `PENDING_DEVELOPER_RELEASE` manual release in the common case.
+- `store-release-watcher.yml` tracks the highest in-flight ASC version (not only `develop` tip), and if a version lands in `PENDING_DEVELOPER_RELEASE`, runs `scripts/asc_release_version.py` and comments on the release-watch issue.
+- `scripts/asc/asc_set_release_type.py` can PATCH `releaseType` to `AFTER_APPROVAL` for future or in-flight versions when the API allows.
+
+**Still human / Apple-owned:**
+
+- App Review approval, rejection, and metadata disputes.
+- CEO signoffs for internal and production upload workflows (unchanged).
+
+This is near-hands-off publish after submit, not a guarantee of 100% automation if review rejects or ASC blocks release.
+
 Commit statuses required before production (`scripts/internal_signoff_gate.py`):
 
 - Android: `internal-signoff/firebase`

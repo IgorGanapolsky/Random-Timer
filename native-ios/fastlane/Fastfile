@@ -403,7 +403,7 @@ platform :ios do
       app_version: version,
       build_number: build_number.to_s,
       submit_for_review: true,
-      automatic_release: false,
+      automatic_release: true,
       skip_binary_upload: true,
       # Fastlane precheck can't validate IAP via App Store Connect API keys and will fail the lane.
       # We do our own hard preflight checks before submission (see scripts/asc/asc_submit_for_review.py).
