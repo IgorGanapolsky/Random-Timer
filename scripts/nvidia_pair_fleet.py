@@ -10,6 +10,8 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any, Mapping, MutableMapping, Sequence
 
@@ -18,6 +20,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 FLEET_FIXTURE_REL = "marketing/data/fleet/nvidia_pair_nodes.json"
+_LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 
 
 def load_fleet(repo: Path | None = None) -> dict[str, Any]:
@@ -27,6 +30,77 @@ def load_fleet(repo: Path | None = None) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise ValueError("fleet fixture must be an object")
     return data
+
+
+def probe_ollama_tags(
+    base_url: str,
+    *,
+    timeout_s: float = 2.0,
+) -> set[str] | None:
+    """Return model names from an Ollama/PAIR `/api/tags` endpoint, or None on failure.
+
+    Only http(s) to loopback is accepted — fleet probes never follow arbitrary hosts.
+    """
+    from urllib.parse import urlparse
+
+    parsed = urlparse(base_url)
+    if parsed.scheme not in {"http", "https"}:
+        return None
+    host = (parsed.hostname or "").lower()
+    if host not in _LOCAL_HOSTS:
+        return None
+    url = base_url.rstrip("/") + "/api/tags"
+    try:
+        with urllib.request.urlopen(url, timeout=timeout_s) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError):
+        return None
+    models = payload.get("models") if isinstance(payload, dict) else None
+    if not isinstance(models, list):
+        return set()
+    names: set[str] = set()
+    for row in models:
+        if isinstance(row, Mapping):
+            for key in ("name", "model"):
+                val = row.get(key)
+                if isinstance(val, str) and val.strip():
+                    names.add(val.strip())
+    return names
+
+
+def apply_live_liveness(
+    fleet: Mapping[str, Any],
+    *,
+    timeout_s: float = 2.0,
+) -> dict[str, Any]:
+    """Derive localhost node online/ready from a live proxy probe (never trust fixture alone)."""
+    out = dict(fleet)
+    nodes_in = fleet.get("nodes") or []
+    if not isinstance(nodes_in, list):
+        return out
+    proxy = str(fleet.get("proxy_base_url") or "http://127.0.0.1:11434")
+    live_models = probe_ollama_tags(proxy, timeout_s=timeout_s)
+    nodes_out: list[dict[str, Any]] = []
+    for raw in nodes_in:
+        if not isinstance(raw, Mapping):
+            continue
+        node = dict(raw)
+        host = str(node.get("host") or "").strip().lower()
+        if host in _LOCAL_HOSTS:
+            if live_models is None:
+                node["online"] = False
+                node["ready"] = False
+                node["live_probe"] = "unreachable"
+            else:
+                node["online"] = True
+                node["models"] = sorted(live_models) or list(node.get("models") or [])
+                node["ready"] = True
+                node["live_probe"] = "ok"
+        nodes_out.append(node)
+    out["nodes"] = nodes_out
+    out["live_probe_proxy"] = proxy
+    out["live_probe_ok"] = live_models is not None
+    return out
 
 
 def _node_eligible(
@@ -98,7 +172,20 @@ def schedule_independent_jobs(
     job_count: int = 1,
 ) -> dict[str, Any]:
     """Workload-level concurrency: each job → one eligible node for its lifetime."""
-    count = max(1, int(job_count))
+    count = int(job_count)
+    if count <= 0:
+        return {
+            "ok": False,
+            "reason": "invalid_job_count",
+            "placed": 0,
+            "requested": count,
+            "placements": [],
+            "nodes_used": 0,
+            "node_ids": [],
+            "multinode": False,
+            "model": model,
+            "engine": engine,
+        }
     # Mutable load simulation so later jobs see earlier placements
     working: list[MutableMapping[str, Any]] = []
     for raw in fleet.get("nodes") or []:
@@ -147,15 +234,23 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--model", default="qwen2.5:3b-hermes-64k")
     parser.add_argument("--engine", default="ollama")
     parser.add_argument("--jobs", type=int, default=5)
+    parser.add_argument(
+        "--no-probe",
+        action="store_true",
+        help="Skip live localhost proxy probe (fixture readiness only; not for claims)",
+    )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     fleet = load_fleet(Path(args.repo_root))
+    if not args.no_probe:
+        fleet = apply_live_liveness(fleet)
     plan = schedule_independent_jobs(
         fleet=fleet,
         model=args.model,
         engine=args.engine,
         job_count=args.jobs,
     )
+    plan["live_probe_ok"] = bool(fleet.get("live_probe_ok")) if not args.no_probe else None
     if args.json:
         print(json.dumps(plan, indent=2, sort_keys=True))
     else:

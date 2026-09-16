@@ -46,8 +46,11 @@ Hermes / Cursor / OpenClaw  →  PAIR proxy (:11434)
 
 ```bash
 python3 scripts/nvidia_pair_local_router_gate.py --json
+# Live probe of localhost proxy before placement (default):
 python3 scripts/nvidia_pair_fleet.py --jobs 5 --model qwen2.5:3b-hermes-64k --json
 ```
+
+Fixture `online`/`ready` for localhost nodes stay **false** until the live `/api/tags` probe succeeds. Multi-node claims still require PAIR Jobs telemetry across nodes.
 
 Local smoke:
 
