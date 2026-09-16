@@ -11,6 +11,7 @@ from scripts.nvidia_pair_workloads import (
     UPSTREAM_GITHUB,
     default_workloads_history_path,
     evaluate_multinode_from_workloads,
+    resolve_workloads_path,
     summarize_workloads,
 )
 
@@ -53,7 +54,8 @@ class SummarizeTests(unittest.TestCase):
 class ClaimTests(unittest.TestCase):
     def test_claim_blocked_without_multinode_history(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "workloads-history.json"
+            root = Path(tmp)
+            path = root / "workloads-history.json"
             path.write_text(
                 json.dumps(
                     [
@@ -67,13 +69,14 @@ class ClaimTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            d = evaluate_multinode_from_workloads(path)
+            d = evaluate_multinode_from_workloads(path, allowed_root=root)
             self.assertFalse(d["ok"])
             self.assertEqual(d["reason"], "single_node_only")
 
     def test_claim_allowed_with_two_nodes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "workloads-history.json"
+            root = Path(tmp)
+            path = root / "workloads-history.json"
             path.write_text(
                 json.dumps(
                     [
@@ -83,18 +86,33 @@ class ClaimTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            d = evaluate_multinode_from_workloads(path)
+            d = evaluate_multinode_from_workloads(path, allowed_root=root)
             self.assertTrue(d["ok"])
             self.assertTrue(d["multinode"])
 
     def test_missing_file(self) -> None:
-        d = evaluate_multinode_from_workloads(Path("/tmp/does-not-exist-pair-wl.json"))
-        self.assertFalse(d["ok"])
-        self.assertEqual(d["reason"], "workloads_history_missing")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            missing = root / "workloads-history.json"
+            d = evaluate_multinode_from_workloads(missing, allowed_root=root)
+            self.assertFalse(d["ok"])
+            self.assertEqual(d["reason"], "workloads_history_missing")
+
+    def test_path_traversal_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            outside = Path("/etc/passwd")
+            with self.assertRaises(ValueError):
+                resolve_workloads_path(outside, allowed_root=root)
+            d = evaluate_multinode_from_workloads(outside, allowed_root=root)
+            self.assertFalse(d["ok"])
+            self.assertTrue(str(d["reason"]).startswith("workloads_path_rejected"))
 
     def test_upstream_constant(self) -> None:
         self.assertIn("NVIDIA/Personal-AI-Router", UPSTREAM_GITHUB)
-        self.assertTrue(str(default_workloads_history_path()).endswith("workloads-history.json"))
+        self.assertTrue(
+            str(default_workloads_history_path()).endswith("workloads-history.json")
+        )
 
 
 if __name__ == "__main__":

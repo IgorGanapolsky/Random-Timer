@@ -21,13 +21,21 @@ from typing import Any, Mapping, Sequence
 UPSTREAM_GITHUB = "https://github.com/NVIDIA/Personal-AI-Router"
 
 # macOS path from NVIDIA Personal AI Router installers / desktop app.
-_MACOS_APP_SUPPORT = (
+_MACOS_PAIR_DIR = (
     Path.home()
     / "Library"
     / "Application Support"
     / "Nvidia Corporation"
     / "Personal AI Router"
-    / "workloads-history.json"
+)
+_MACOS_APP_SUPPORT = _MACOS_PAIR_DIR / "workloads-history.json"
+_ALLOWED_BASENAMES = frozenset(
+    {
+        "workloads-history.json",
+        "workloads-history.json.1",
+        "workloads-history.json.2",
+        "workloads-history.json.3",
+    }
 )
 
 
@@ -35,10 +43,38 @@ def default_workloads_history_path() -> Path:
     return _MACOS_APP_SUPPORT
 
 
-def load_workloads(path: Path) -> list[dict[str, Any]]:
-    if not path.is_file():
-        raise FileNotFoundError(str(path))
-    data = json.loads(path.read_text(encoding="utf-8"))
+def resolve_workloads_path(
+    path: Path,
+    *,
+    allowed_root: Path | None = None,
+) -> Path:
+    """Only allow workloads-history* under the PAIR app-support directory.
+
+    Blocks path traversal from CLI / LLM-supplied --path (Sonar S8707).
+    Tests may pass ``allowed_root`` to sandbox a temp directory.
+    """
+    resolved = path.expanduser().resolve()
+    root = (allowed_root or _MACOS_PAIR_DIR).expanduser().resolve()
+    try:
+        resolved.relative_to(root)
+    except ValueError as exc:
+        raise ValueError(f"workloads path must stay under {root}: {resolved}") from exc
+    if resolved.name not in _ALLOWED_BASENAMES:
+        raise ValueError(
+            f"workloads basename must be one of {sorted(_ALLOWED_BASENAMES)}"
+        )
+    return resolved
+
+
+def load_workloads(
+    path: Path,
+    *,
+    allowed_root: Path | None = None,
+) -> list[dict[str, Any]]:
+    safe = resolve_workloads_path(path, allowed_root=allowed_root)
+    if not safe.is_file():
+        raise FileNotFoundError(str(safe))
+    data = json.loads(safe.read_text(encoding="utf-8"))
     if not isinstance(data, list):
         raise ValueError("workloads-history.json must be a JSON array")
     out: list[dict[str, Any]] = []
@@ -82,22 +118,33 @@ def evaluate_multinode_from_workloads(
     path: Path,
     *,
     recent: int | None = 500,
+    allowed_root: Path | None = None,
 ) -> dict[str, Any]:
-    if not path.is_file():
+    try:
+        safe = resolve_workloads_path(path, allowed_root=allowed_root)
+    except ValueError as exc:
         return {
             "ok": False,
-            "reason": "workloads_history_missing",
+            "reason": f"workloads_path_rejected:{exc}",
             "path": str(path),
             "multinode": False,
             "upstream": UPSTREAM_GITHUB,
         }
+    if not safe.is_file():
+        return {
+            "ok": False,
+            "reason": "workloads_history_missing",
+            "path": str(safe),
+            "multinode": False,
+            "upstream": UPSTREAM_GITHUB,
+        }
     try:
-        rows = load_workloads(path)
+        rows = load_workloads(safe, allowed_root=allowed_root)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         return {
             "ok": False,
             "reason": f"workloads_history_invalid:{exc}",
-            "path": str(path),
+            "path": str(safe),
             "multinode": False,
             "upstream": UPSTREAM_GITHUB,
         }
@@ -106,13 +153,13 @@ def evaluate_multinode_from_workloads(
         return {
             "ok": False,
             "reason": "single_node_only",
-            "path": str(path),
+            "path": str(safe),
             **summary,
         }
     return {
         "ok": True,
         "reason": "distinct_scheduled_on",
-        "path": str(path),
+        "path": str(safe),
         **summary,
     }
 
