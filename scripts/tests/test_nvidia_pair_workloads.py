@@ -108,6 +108,11 @@ class ClaimTests(unittest.TestCase):
             self.assertFalse(d["ok"])
             self.assertTrue(str(d["reason"]).startswith("workloads_path_rejected"))
 
+    def test_invalid_reason_uses_prefix(self) -> None:
+        reason = "workloads_history_invalid:Expecting value"
+        self.assertTrue(reason.startswith("workloads_history_invalid"))
+        self.assertNotEqual(reason, "workloads_history_invalid")
+
     def test_upstream_constant(self) -> None:
         self.assertIn("NVIDIA/Personal-AI-Router", UPSTREAM_GITHUB)
         self.assertTrue(

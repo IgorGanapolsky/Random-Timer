@@ -169,9 +169,11 @@ def main(argv: list[str] | None = None) -> int:
         description="Summarize NVIDIA PAIR workloads-history.json (Jobs ground truth)"
     )
     parser.add_argument(
-        "--path",
-        default=str(default_workloads_history_path()),
-        help="Path to workloads-history.json",
+        "--history-index",
+        type=int,
+        default=0,
+        choices=(0, 1, 2, 3),
+        help="0=workloads-history.json; 1..3=rotated .json.N under PAIR app-support",
     )
     parser.add_argument("--recent", type=int, default=500)
     parser.add_argument("--json", action="store_true")
@@ -181,15 +183,25 @@ def main(argv: list[str] | None = None) -> int:
         help="Exit 1 unless distinct scheduledOn > 1",
     )
     args = parser.parse_args(argv)
-    path = Path(args.path)
+    # No free-form --path: only fixed basenames under the PAIR app-support dir
+    # (blocks LLM/CLI path injection — Sonar pythonsecurity:S8707).
+    if args.history_index == 0:
+        path = default_workloads_history_path()
+    else:
+        path = _MACOS_PAIR_DIR / f"workloads-history.json.{args.history_index}"
     report = evaluate_multinode_from_workloads(path, recent=args.recent)
     if args.json:
         print(json.dumps(report, indent=2, sort_keys=True))
     else:
         print(report)
+    reason = str(report.get("reason") or "")
     if args.require_multinode:
         return 0 if report.get("ok") else 1
-    return 0 if report.get("reason") != "workloads_history_invalid" else 1
+    if reason.startswith("workloads_history_invalid") or reason.startswith(
+        "workloads_path_rejected"
+    ):
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
