@@ -46,6 +46,7 @@ REQUIRED_DOCS = (
     "docs/NVIDIA_PAIR_LOCAL_ROUTER.md",
     "docs/GEMINI_38_LIVE_EXTENDED_THINKING.md",
     "docs/GREPTILE_FREE_ONLY.md",
+    "docs/AI_OPERATING_MODEL.md",
     "AGENTS.md",
     "CLAUDE.md",
 )
@@ -76,6 +77,7 @@ REQUIRED_SCRIPTS = (
     "scripts/nvidia_pair_workloads.py",
     "scripts/gemini_38_live_extended_thinking_gate.py",
     "scripts/greptile_free_only_gate.py",
+    "scripts/ai_operating_model_gate.py",
 )
 
 BANNED_MARKERS = (
@@ -209,6 +211,10 @@ def evaluate(root: Path) -> dict[str, Any]:
     if not child["greptile_free_only"].get("ready"):
         blockers.append("greptile_free_only_not_ready")
 
+    child["ai_operating_model"] = _run_json(root, "scripts/ai_operating_model_gate.py")
+    if not child["ai_operating_model"].get("ready"):
+        blockers.append("ai_operating_model_not_ready")
+
     child["speckit"] = _run_json(root, "scripts/speckit_gate.py")
     if child["speckit"].get("error"):
         blockers.append("speckit_gate_error")
@@ -264,6 +270,7 @@ def evaluate(root: Path) -> dict[str, Any]:
                 "gemini_38_live_extended_thinking"
             ].get("ready"),
             "greptile_free_only_ready": child["greptile_free_only"].get("ready"),
+            "ai_operating_model_ready": child["ai_operating_model"].get("ready"),
             "speckit_implement_ready": child["speckit"].get("implement_ready"),
             "gsd_source": child["gsd"].get("source"),
             "gsd_ship_ready": child["gsd"].get("ship_ready"),

@@ -1,0 +1,29 @@
+{
+  "operating_model_not_tool_rollout": true,
+  "one_workflow_clear_owner": true,
+  "baseline_before_ai": true,
+  "rebuild_ai_native_sop": true,
+  "enablement_before_tool_spend": true,
+  "weekly_ai_operating_ritual": true,
+  "measure_behavior_not_logins": true,
+  "roi_includes_total_cost": true,
+  "thirty_day_pilot_then_expand": true,
+  "budget": {
+    "prefer_enablement_over_licenses": true,
+    "hard_monthly_usd_cap": 20,
+    "default_buy_more_seats": false
+  },
+  "reference_pilot": {
+    "workflow": "intake_to_delivery",
+    "owner": "CTO",
+    "baseline_metrics": [
+      "cycle_time_hours",
+      "cost_per_deliverable",
+      "rework_rate",
+      "throughput"
+    ],
+    "outcome_metrics_not_logins": true
+  },
+  "source": "https://music.youtube.com/watch?v=c-u8E15Lj8s",
+  "updated_at_utc": "2026-09-16T05:01:05Z"
+}
