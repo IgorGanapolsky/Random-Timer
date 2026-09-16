@@ -1,0 +1,17 @@
+{
+  "operational_perf_errors_latency_tokens": true,
+  "prompt_injection_and_security_signals": true,
+  "pii_scrub_or_detect": true,
+  "functional_quality_evals": true,
+  "end_to_end_chain_tracing": true,
+  "cost_per_query_visibility": true,
+  "alert_on_budget_and_errors": true,
+  "prefer_free_local_or_posthog": true,
+  "budget_gated_datadog_saas": true,
+  "budget": {
+    "default_to_paid_datadog": false,
+    "hard_monthly_usd_cap": 20
+  },
+  "source": "https://lp.datadoghq.com/rs/875-UVY-685/images/eBook-LLMObservabilityBestPractices.pdf?version=1",
+  "updated_at_utc": "2026-09-16T05:11:05Z"
+}
