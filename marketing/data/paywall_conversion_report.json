@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-09-16T18:25:47+00:00",
+  "generated_at": "2026-09-17T00:54:39+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 54,
+    "views": 55,
     "offer_selects": 5,
     "purchase_attempts": 1,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.0926,
+    "view_to_select_rate": 0.0909,
     "select_to_attempt_rate": 0.2,
     "attempt_to_success_rate": 0.0
   },
   "top_failure_reasons": [
     {
       "reason": "failed",
-      "count": 26
+      "count": 11
     },
     {
       "reason": "user_cancelled",
@@ -27,8 +27,8 @@
       "platform": "android",
       "product_id": "unknown",
       "reason": "failed",
-      "failures": 26,
-      "users": 5
+      "failures": 11,
+      "users": 2
     },
     {
       "platform": "ios",
@@ -117,7 +117,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 13,
+      "views": 14,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -152,12 +152,12 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2963,
+      "changes": 2968,
       "users": 109
     },
     {
       "setting_name": "volume",
-      "changes": 1856,
+      "changes": 2045,
       "users": 74
     },
     {
@@ -167,13 +167,13 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1568,
-      "users": 106
+      "changes": 1570,
+      "users": 107
     },
     {
       "setting_name": "sound_type",
-      "changes": 1099,
-      "users": 101
+      "changes": 1108,
+      "users": 102
     },
     {
       "setting_name": "voice_callouts_enabled",
@@ -182,7 +182,7 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 633,
+      "changes": 635,
       "users": 105
     },
     {
@@ -192,13 +192,13 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 257,
-      "users": 87
+      "changes": 261,
+      "users": 88
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 209,
-      "users": 74
+      "changes": 210,
+      "users": 75
     },
     {
       "setting_name": "use_extended_range",
