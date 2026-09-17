@@ -7,14 +7,14 @@
 <!-- DOWNLOADS_START -->
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
-| Distinct install users (30d) | 48 | 98 | 146 |
-| Active Installs | — | 104 | — |
+| Distinct install users (30d) | 48 | 102 | 150 |
+| Active Installs | — | 108 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
-| DAU | 6 |
-| WAU | 65 |
-| MAU | 173 |
+| DAU | 10 |
+| WAU | 66 |
+| MAU | 177 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -23,9 +23,9 @@
 | Metric | Value |
 |--------|-------|
 | WQTU (7d) | 5 |
-| Timer Completed (7d) | 92 |
-| Completed Users (7d) | 23 |
-| Sessions/Completed User (7d) | 4.0 |
+| Timer Completed (7d) | 112 |
+| Completed Users (7d) | 24 |
+| Sessions/Completed User (7d) | 4.67 |
 | Checkpoint Target (2026-03-31) | 8 |
 | Quarter Target (2026-06-30) | 25 |
 | Paid Attributed Users (30d) | 0 |
@@ -38,12 +38,12 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-09-17T06:36:49+00:00
+**Generated:** 2026-09-17T12:32:01+00:00
 
 ## Onboarding Funnel
-- First Open: **149**
-- First Timer Configured: **121** (81.2% of opens)
-- First Timer Completed: **57** (38.3% of opens)
+- First Open: **153**
+- First Timer Configured: **126** (82.3% of opens)
+- First Timer Completed: **59** (38.6% of opens)
 
 ## UTM Attribution (Top Sources)
 | Source | Medium | Campaign | Installs | Unique Users |
@@ -69,7 +69,7 @@
 
 **Top failure reasons:** failed (11), user_cancelled (1)
 
-**Catalog failures (Android):** pro_base (51), elite_tactical (46), elite_tactical_monthly (45)
+**Catalog failures (Android):** pro_base (55), elite_tactical (50), elite_tactical_monthly (49)
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -77,9 +77,9 @@
 <!-- FUNNEL_START -->
 | Step | Users | Conversion |
 |------|:-----:|:----------:|
-| First Open | 149 | — |
-| First Timer Configured | 121 | 81.2% of opens |
-| First Timer Completed | 57 | 38.3% of opens |
+| First Open | 153 | — |
+| First Timer Configured | 126 | 82.3% of opens |
+| First Timer Completed | 59 | 38.6% of opens |
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -155,18 +155,18 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-09-15" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-17" , "2026-09-17"]
+    x-axis ["2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-17" , "2026-09-17" , "2026-09-17"]
     y-axis "Downloads"
-    line [51 , 50 , 50 , 50 , 50 , 51 , 51 , 51 , 51 , 50 , 50 , 48 , 50 , 48]
-    line [106 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 98 , 98]
+    line [50 , 50 , 50 , 50 , 51 , 51 , 51 , 51 , 50 , 50 , 48 , 50 , 48 , 48]
+    line [106 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 106 , 98 , 98 , 102]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-09-15" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-17" , "2026-09-17"]
+    x-axis ["2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-16" , "2026-09-17" , "2026-09-17" , "2026-09-17"]
     y-axis "Users"
-    line [4 , 4 , 4 , 4 , 4 , 4 , 4 , 4 , 4 , 4 , 4 , 4 , 5 , 5]
+    line [4 , 4 , 4 , 4 , 4 , 4 , 4 , 4 , 4 , 4 , 4 , 5 , 5 , 5]
 ```
 
 ```mermaid
@@ -194,4 +194,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-09-17T06:36:50+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-09-17T12:32:02+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
