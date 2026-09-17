@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-17T12:31:24+00:00",
+  "generated_at": "2026-09-17T18:25:42+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -14,22 +14,11 @@
   },
   "top_failure_reasons": [
     {
-      "reason": "failed",
-      "count": 11
-    },
-    {
       "reason": "user_cancelled",
       "count": 1
     }
   ],
   "failure_breakdown": [
-    {
-      "platform": "android",
-      "product_id": "unknown",
-      "reason": "failed",
-      "failures": 11,
-      "users": 2
-    },
     {
       "platform": "ios",
       "product_id": "com.iganapolsky.randomtimer.elite",
@@ -152,8 +141,8 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2736,
-      "users": 112
+      "changes": 2566,
+      "users": 110
     },
     {
       "setting_name": "volume",
@@ -162,18 +151,18 @@
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 1807,
-      "users": 108
+      "changes": 1803,
+      "users": 106
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1533,
-      "users": 110
+      "changes": 1511,
+      "users": 108
     },
     {
       "setting_name": "sound_type",
-      "changes": 1145,
-      "users": 105
+      "changes": 1141,
+      "users": 104
     },
     {
       "setting_name": "voice_callouts_enabled",
@@ -182,8 +171,8 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 658,
-      "users": 109
+      "changes": 655,
+      "users": 107
     },
     {
       "setting_name": "repeat_rounds",
@@ -192,13 +181,13 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 267,
-      "users": 91
+      "changes": 263,
+      "users": 90
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 216,
-      "users": 79
+      "changes": 214,
+      "users": 77
     },
     {
       "setting_name": "use_extended_range",
@@ -212,6 +201,7 @@
     }
   ],
   "data_quality_warnings": [
+    "purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage",
     "product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status"
   ],
   "query_errors": []

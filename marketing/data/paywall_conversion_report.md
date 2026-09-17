@@ -1,6 +1,6 @@
 # Paywall Conversion Report
 
-Generated: 2026-09-17T12:31:24+00:00
+Generated: 2026-09-17T18:25:42+00:00
 Window (days): 30
 
 ## Funnel
@@ -15,13 +15,11 @@ Window (days): 30
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| failed | 11 |
 | user_cancelled | 1 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
-| android | unknown | failed | 11 | 2 |
 | ios | com.iganapolsky.randomtimer.elite | user_cancelled | 1 | 1 |
 
 ## Product Funnel
@@ -53,18 +51,19 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| max_seconds | 2736 | 112 |
+| max_seconds | 2566 | 110 |
 | volume | 1925 | 78 |
-| alarm_duration | 1807 | 108 |
-| min_seconds | 1533 | 110 |
-| sound_type | 1145 | 105 |
+| alarm_duration | 1803 | 106 |
+| min_seconds | 1511 | 108 |
+| sound_type | 1141 | 104 |
 | voice_callouts_enabled | 751 | 65 |
-| repeat_enabled | 658 | 109 |
+| repeat_enabled | 655 | 107 |
 | repeat_rounds | 299 | 62 |
-| voice_gender | 267 | 91 |
-| vibration_enabled | 216 | 79 |
+| voice_gender | 263 | 90 |
+| vibration_enabled | 214 | 77 |
 | use_extended_range | 199 | 65 |
 | unknown | 7 | 1 |
 
 ## Data Quality Warnings
+- purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage
 - product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status
