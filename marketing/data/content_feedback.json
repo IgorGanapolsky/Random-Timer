@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-09-18T00:55:09+00:00",
-  "status": "degraded",
+  "generated_at": "2026-09-18T06:36:37+00:00",
+  "status": "ok",
   "onboarding_funnel": {
-    "first_open": 144,
-    "first_timer_configured": 124,
-    "first_timer_completed": 57,
-    "open_to_configured_rate": 0.8611,
-    "configured_to_completed_rate": 0.4597,
-    "open_to_completed_rate": 0.3958,
+    "first_open": 145,
+    "first_timer_configured": 125,
+    "first_timer_completed": 58,
+    "open_to_configured_rate": 0.8621,
+    "configured_to_completed_rate": 0.464,
+    "open_to_completed_rate": 0.4,
     "window_days": 30
   },
   "top_campaigns_by_activation": [],
   "data_quality": {
-    "is_stale": true,
-    "preserved_previous_metrics": true,
-    "last_attempt_generated_at": "2026-09-18T00:55:09+00:00",
-    "last_good_generated_at": "2026-09-17T18:26:21+00:00",
-    "reason": "request_error: HTTPSConnectionPool(host='us.posthog.com', port=443): Read timed out. (read timeout=30)"
+    "is_stale": false,
+    "preserved_previous_metrics": false,
+    "last_attempt_generated_at": "2026-09-18T06:36:37+00:00",
+    "last_good_generated_at": "",
+    "reason": ""
   }
 }
