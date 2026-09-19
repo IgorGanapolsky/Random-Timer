@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-09-19T12:27:31+00:00",
+  "generated_at": "2026-09-19T18:21:40+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 57,
+    "views": 56,
     "offer_selects": 5,
     "purchase_attempts": 1,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.0877,
+    "view_to_select_rate": 0.0893,
     "select_to_attempt_rate": 0.2,
     "attempt_to_success_rate": 0.0
   },
@@ -89,7 +89,7 @@
   ],
   "entry_points": [
     {
-      "entry_point": "qualified_training_gate",
+      "entry_point": "range_gate",
       "views": 16,
       "attempts": 0,
       "successes": 0,
@@ -97,8 +97,8 @@
       "attempt_to_success_rate": 0.0
     },
     {
-      "entry_point": "range_gate",
-      "views": 16,
+      "entry_point": "qualified_training_gate",
+      "views": 15,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
