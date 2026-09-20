@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-20T06:31:48+00:00",
+  "generated_at": "2026-09-20T12:27:23+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -141,58 +141,58 @@
   "settings_hotspots": [
     {
       "setting_name": "max_seconds",
-      "changes": 2945,
-      "users": 117
+      "changes": 2947,
+      "users": 118
     },
     {
       "setting_name": "volume",
-      "changes": 2183,
-      "users": 81
+      "changes": 2293,
+      "users": 83
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 1816,
+      "changes": 1836,
       "users": 113
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1664,
-      "users": 116
+      "changes": 1667,
+      "users": 117
     },
     {
       "setting_name": "sound_type",
-      "changes": 1160,
-      "users": 110
+      "changes": 1172,
+      "users": 111
     },
     {
       "setting_name": "voice_callouts_enabled",
-      "changes": 753,
-      "users": 66
+      "changes": 759,
+      "users": 67
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 662,
+      "changes": 664,
       "users": 112
     },
     {
       "setting_name": "repeat_rounds",
-      "changes": 299,
-      "users": 62
+      "changes": 302,
+      "users": 63
     },
     {
       "setting_name": "voice_gender",
-      "changes": 272,
-      "users": 94
+      "changes": 270,
+      "users": 95
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 218,
+      "changes": 219,
       "users": 81
     },
     {
       "setting_name": "use_extended_range",
-      "changes": 200,
-      "users": 66
+      "changes": 203,
+      "users": 67
     },
     {
       "setting_name": "unknown",
