@@ -9,17 +9,17 @@ Campaign configurations and live paid performance for Apple Search Ads and Googl
 <!-- LIVE_PAID_START -->
 | Metric | Value |
 |--------|-------|
-| Snapshot (UTC) | `2026-09-21T06:46:49+00:00` |
+| Snapshot (UTC) | `2026-09-21T12:31:30+00:00` |
 | Paid Attributed Users (30d) | 0 |
 | Paid Events (30d) | 0 |
 | Active Campaign Count (tracked) | 0 |
 | Daily Budget Configured | $30.00 |
 | Blended CPI Target | $3.00 |
-| Open -> Completed Rate (30d) | 40.7% |
+| Open -> Completed Rate (30d) | 40.5% |
 | WQTU (7d) | 6 |
 | WQTU Checkpoint Target (2026-03-31) | 8 |
 | WQTU Quarter Target (2026-06-30) | 25 |
-| Distinct install users (30d) | 149 |
+| Distinct install users (30d) | 152 |
 | Apple Ads Campaigns (API) | 1 |
 | Apple Ads Active Campaigns (API) | 0 |
 | Apple Ads Impressions (30d) | 0 |
@@ -28,8 +28,6 @@ Campaign configurations and live paid performance for Apple Search Ads and Googl
 | Apple Ads Installs (30d) | 0 |
 | Apple Ads Live Finding | API reports 1 campaign(s), 0 active; 30d taps 0, spend $0.00, installs 0. |
 | Guardrail Violated | NO |
-
-_Data quality: stale; showing last good metrics from `2026-09-21T01:00:01+00:00`; latest read issue: `http_503`._
 <!-- LIVE_PAID_END -->
 
 ## Paid Attribution Sources (30d)
@@ -60,7 +58,7 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Apple Ads Taps (30d snapshot trend)"
-    x-axis ["09-18T00:55" , "09-18T06:36" , "09-18T12:30" , "09-18T18:25" , "09-19T00:52" , "09-19T06:33" , "09-19T12:28" , "09-19T18:22" , "09-20T01:02" , "09-20T06:32" , "09-20T12:27" , "09-20T18:23" , "09-21T01:00" , "09-21T06:46"]
+    x-axis ["09-18T06:36" , "09-18T12:30" , "09-18T18:25" , "09-19T00:52" , "09-19T06:33" , "09-19T12:28" , "09-19T18:22" , "09-20T01:02" , "09-20T06:32" , "09-20T12:27" , "09-20T18:23" , "09-21T01:00" , "09-21T06:46" , "09-21T12:31"]
     y-axis "Taps" 0 --> 1
     line [0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0]
 ```
@@ -68,7 +66,7 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Apple Ads Spend USD (30d snapshot trend)"
-    x-axis ["09-18T00:55" , "09-18T06:36" , "09-18T12:30" , "09-18T18:25" , "09-19T00:52" , "09-19T06:33" , "09-19T12:28" , "09-19T18:22" , "09-20T01:02" , "09-20T06:32" , "09-20T12:27" , "09-20T18:23" , "09-21T01:00" , "09-21T06:46"]
+    x-axis ["09-18T06:36" , "09-18T12:30" , "09-18T18:25" , "09-19T00:52" , "09-19T06:33" , "09-19T12:28" , "09-19T18:22" , "09-20T01:02" , "09-20T06:32" , "09-20T12:27" , "09-20T18:23" , "09-21T01:00" , "09-21T06:46" , "09-21T12:31"]
     y-axis "USD" 0 --> 1
     line [0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
 ```
