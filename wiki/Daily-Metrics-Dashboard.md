@@ -79,6 +79,8 @@
 | First Open | 150 | — |
 | First Timer Configured | 132 | 88.0% of opens |
 | First Timer Completed | 61 | 40.7% of opens |
+
+_Data quality: stale; showing last good metrics from `2026-09-21T01:00:01+00:00`; latest read issue: `http_503`._
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -154,18 +156,18 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-09-17" , "2026-09-18" , "2026-09-18" , "2026-09-18" , "2026-09-18" , "2026-09-19" , "2026-09-19" , "2026-09-19" , "2026-09-19" , "2026-09-20" , "2026-09-20" , "2026-09-20" , "2026-09-20" , "2026-09-21"]
+    x-axis ["2026-09-18" , "2026-09-18" , "2026-09-18" , "2026-09-18" , "2026-09-19" , "2026-09-19" , "2026-09-19" , "2026-09-19" , "2026-09-20" , "2026-09-20" , "2026-09-20" , "2026-09-20" , "2026-09-21" , "2026-09-21"]
     y-axis "Downloads"
-    line [47 , 48 , 48 , 50 , 49 , 50 , 51 , 51 , 51 , 51 , 51 , 52 , 51 , 51]
-    line [95 , 95 , 95 , 96 , 96 , 96 , 96 , 96 , 96 , 96 , 97 , 98 , 98 , 98]
+    line [48 , 48 , 50 , 49 , 50 , 51 , 51 , 51 , 51 , 51 , 52 , 51 , 51 , 51]
+    line [95 , 95 , 96 , 96 , 96 , 96 , 96 , 96 , 96 , 97 , 98 , 98 , 98 , 98]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-09-17" , "2026-09-18" , "2026-09-18" , "2026-09-18" , "2026-09-18" , "2026-09-19" , "2026-09-19" , "2026-09-19" , "2026-09-19" , "2026-09-20" , "2026-09-20" , "2026-09-20" , "2026-09-20" , "2026-09-21"]
+    x-axis ["2026-09-18" , "2026-09-18" , "2026-09-18" , "2026-09-18" , "2026-09-19" , "2026-09-19" , "2026-09-19" , "2026-09-19" , "2026-09-20" , "2026-09-20" , "2026-09-20" , "2026-09-20" , "2026-09-21" , "2026-09-21"]
     y-axis "Users"
-    line [5 , 5 , 5 , 5 , 5 , 6 , 6 , 7 , 7 , 6 , 6 , 6 , 6 , 6]
+    line [5 , 5 , 5 , 5 , 6 , 6 , 7 , 7 , 6 , 6 , 6 , 6 , 6 , 6]
 ```
 
 ```mermaid
@@ -193,4 +195,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-09-21T01:00:02+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-09-21T06:46:49+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
