@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-09-22T00:54:16+00:00
+Generated: 2026-09-22T06:35:38+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **56**
-- Offer Selects: **5**
+- Views: **52**
+- Offer Selects: **4**
 - Purchase Attempts: **1**
 - Purchase Successes: **0**
-- View -> Offer Select: **8.9%**
-- Select -> Purchase Attempt: **20.0%**
+- View -> Offer Select: **7.7%**
+- Select -> Purchase Attempt: **25.0%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
@@ -26,7 +26,7 @@ Window (days): 30
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
 | ios | com.iganapolsky.randomtimer.elite | 0 | 1 | 0 | 0.0% | 0.0% |
-| android | elite_tactical | 5 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical | 4 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
@@ -39,8 +39,8 @@ Window (days): 30
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | range_gate | 16 | 0 | 0 | 0.0% | 0.0% |
-| qualified_training_gate | 15 | 0 | 0 | 0.0% | 0.0% |
-| unknown | 15 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 14 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 12 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 6 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 4 | 0 | 0 | 0.0% | 0.0% |
 | sound_gate | 0 | 1 | 0 | 0.0% | 0.0% |
@@ -51,16 +51,16 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| volume | 2796 | 90 |
-| max_seconds | 2639 | 120 |
-| alarm_duration | 1914 | 117 |
-| min_seconds | 1587 | 120 |
-| sound_type | 1231 | 117 |
+| volume | 2788 | 88 |
+| max_seconds | 2503 | 116 |
+| alarm_duration | 1910 | 115 |
+| min_seconds | 1509 | 118 |
+| sound_type | 1220 | 115 |
 | voice_callouts_enabled | 781 | 71 |
-| repeat_enabled | 681 | 114 |
+| repeat_enabled | 678 | 111 |
 | repeat_rounds | 314 | 67 |
-| voice_gender | 281 | 100 |
-| vibration_enabled | 224 | 84 |
+| voice_gender | 279 | 99 |
+| vibration_enabled | 221 | 83 |
 | use_extended_range | 211 | 70 |
 | unknown | 7 | 1 |
 
