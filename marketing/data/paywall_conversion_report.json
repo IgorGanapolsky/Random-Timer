@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-09-23T06:36:07+00:00",
+  "generated_at": "2026-09-23T12:31:29+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 52,
+    "views": 54,
     "offer_selects": 4,
     "purchase_attempts": 1,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.0769,
+    "view_to_select_rate": 0.0741,
     "select_to_attempt_rate": 0.25,
     "attempt_to_success_rate": 0.0
   },
@@ -89,7 +89,7 @@
   ],
   "entry_points": [
     {
-      "entry_point": "range_gate",
+      "entry_point": "unknown",
       "views": 16,
       "attempts": 0,
       "successes": 0,
@@ -97,8 +97,8 @@
       "attempt_to_success_rate": 0.0
     },
     {
-      "entry_point": "unknown",
-      "views": 14,
+      "entry_point": "range_gate",
+      "views": 16,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -141,13 +141,13 @@
   "settings_hotspots": [
     {
       "setting_name": "volume",
-      "changes": 2733,
-      "users": 87
+      "changes": 2798,
+      "users": 88
     },
     {
       "setting_name": "max_seconds",
-      "changes": 2459,
-      "users": 116
+      "changes": 2572,
+      "users": 117
     },
     {
       "setting_name": "alarm_duration",
@@ -156,13 +156,13 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1474,
-      "users": 117
+      "changes": 1484,
+      "users": 118
     },
     {
       "setting_name": "sound_type",
-      "changes": 1207,
-      "users": 115
+      "changes": 1209,
+      "users": 116
     },
     {
       "setting_name": "voice_callouts_enabled",
