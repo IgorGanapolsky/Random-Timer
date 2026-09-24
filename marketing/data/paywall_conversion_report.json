@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-09-24T12:31:35+00:00",
+  "generated_at": "2026-09-24T18:26:09+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 55,
+    "views": 57,
     "offer_selects": 4,
     "purchase_attempts": 2,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.0727,
+    "view_to_select_rate": 0.0702,
     "select_to_attempt_rate": 0.5,
     "attempt_to_success_rate": 0.0
   },
@@ -106,7 +106,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 10,
+      "views": 12,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -141,28 +141,28 @@
   "settings_hotspots": [
     {
       "setting_name": "volume",
-      "changes": 2636,
-      "users": 87
+      "changes": 2670,
+      "users": 88
     },
     {
       "setting_name": "max_seconds",
-      "changes": 2347,
-      "users": 110
-    },
-    {
-      "setting_name": "alarm_duration",
-      "changes": 1873,
-      "users": 109
-    },
-    {
-      "setting_name": "min_seconds",
-      "changes": 1436,
+      "changes": 2422,
       "users": 112
     },
     {
+      "setting_name": "alarm_duration",
+      "changes": 1877,
+      "users": 111
+    },
+    {
+      "setting_name": "min_seconds",
+      "changes": 1438,
+      "users": 113
+    },
+    {
       "setting_name": "sound_type",
-      "changes": 1208,
-      "users": 115
+      "changes": 1210,
+      "users": 116
     },
     {
       "setting_name": "voice_callouts_enabled",
@@ -171,8 +171,8 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 663,
-      "users": 105
+      "changes": 665,
+      "users": 107
     },
     {
       "setting_name": "repeat_rounds",
@@ -186,8 +186,8 @@
     },
     {
       "setting_name": "vibration_enabled",
-      "changes": 214,
-      "users": 79
+      "changes": 215,
+      "users": 80
     },
     {
       "setting_name": "use_extended_range",
