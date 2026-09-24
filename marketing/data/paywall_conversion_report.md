@@ -1,31 +1,31 @@
 # Paywall Conversion Report
 
-Generated: 2026-09-23T18:26:16+00:00
+Generated: 2026-09-24T00:53:50+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **51**
+- Views: **54**
 - Offer Selects: **4**
-- Purchase Attempts: **1**
+- Purchase Attempts: **2**
 - Purchase Successes: **0**
-- View -> Offer Select: **7.8%**
-- Select -> Purchase Attempt: **25.0%**
+- View -> Offer Select: **7.4%**
+- Select -> Purchase Attempt: **50.0%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
 | Reason | Count |
 |--------|-------|
-| user_cancelled | 1 |
+| user_cancelled | 3 |
 
 ## Failure Breakdown
 | Platform | Product ID | Reason | Failures | Users |
 |----------|------------|--------|----------|-------|
-| ios | com.iganapolsky.randomtimer.elite | user_cancelled | 1 | 1 |
+| ios | com.iganapolsky.randomtimer.elite | user_cancelled | 3 | 2 |
 
 ## Product Funnel
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
-| ios | com.iganapolsky.randomtimer.elite | 0 | 1 | 0 | 0.0% | 0.0% |
+| ios | com.iganapolsky.randomtimer.elite | 0 | 2 | 0 | 0.0% | 0.0% |
 | android | elite_tactical | 4 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
@@ -38,12 +38,12 @@ Window (days): 30
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
+| unknown | 17 | 0 | 0 | 0.0% | 0.0% |
 | range_gate | 16 | 0 | 0 | 0.0% | 0.0% |
-| unknown | 15 | 0 | 0 | 0.0% | 0.0% |
 | qualified_training_gate | 10 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 6 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 4 | 0 | 0 | 0.0% | 0.0% |
-| sound_gate | 0 | 1 | 0 | 0.0% | 0.0% |
+| sound_gate | 1 | 2 | 0 | 200.0% | 0.0% |
 
 ## Leaky Entry Points
 - None
@@ -51,18 +51,18 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| volume | 2798 | 88 |
-| max_seconds | 2461 | 114 |
-| alarm_duration | 1880 | 113 |
-| min_seconds | 1480 | 116 |
+| volume | 2636 | 87 |
+| max_seconds | 2417 | 113 |
+| alarm_duration | 1877 | 112 |
+| min_seconds | 1461 | 115 |
 | sound_type | 1209 | 116 |
 | voice_callouts_enabled | 773 | 70 |
-| repeat_enabled | 668 | 108 |
+| repeat_enabled | 665 | 107 |
 | repeat_rounds | 308 | 66 |
-| voice_gender | 277 | 98 |
-| vibration_enabled | 219 | 82 |
+| voice_gender | 275 | 97 |
+| vibration_enabled | 216 | 81 |
 | use_extended_range | 210 | 69 |
-| unknown | 7 | 1 |
+| unknown | 26 | 2 |
 
 ## Data Quality Warnings
 - purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage
