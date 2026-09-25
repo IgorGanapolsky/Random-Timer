@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-24T18:26:09+00:00",
+  "generated_at": "2026-09-25T00:54:18+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -146,7 +146,7 @@
     },
     {
       "setting_name": "max_seconds",
-      "changes": 2422,
+      "changes": 2519,
       "users": 112
     },
     {
@@ -156,12 +156,12 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 1438,
-      "users": 113
+      "changes": 1468,
+      "users": 114
     },
     {
       "setting_name": "sound_type",
-      "changes": 1210,
+      "changes": 1214,
       "users": 116
     },
     {
@@ -181,8 +181,8 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 275,
-      "users": 97
+      "changes": 277,
+      "users": 98
     },
     {
       "setting_name": "vibration_enabled",
