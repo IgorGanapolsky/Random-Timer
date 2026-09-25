@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-09-25T12:31:35+00:00
+Generated: 2026-09-25T18:24:49+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **57**
+- Views: **59**
 - Offer Selects: **4**
 - Purchase Attempts: **2**
 - Purchase Successes: **0**
-- View -> Offer Select: **7.0%**
+- View -> Offer Select: **6.8%**
 - Select -> Purchase Attempt: **50.0%**
 - Attempt -> Purchase Success: **0.0%**
 
@@ -38,12 +38,12 @@ Window (days): 30
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| unknown | 18 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 19 | 0 | 0 | 0.0% | 0.0% |
 | range_gate | 16 | 0 | 0 | 0.0% | 0.0% |
 | qualified_training_gate | 12 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 6 | 0 | 0 | 0.0% | 0.0% |
 | repeat_gate | 4 | 0 | 0 | 0.0% | 0.0% |
-| sound_gate | 1 | 2 | 0 | 200.0% | 0.0% |
+| sound_gate | 2 | 2 | 0 | 100.0% | 0.0% |
 
 ## Leaky Entry Points
 - None
@@ -54,7 +54,7 @@ Window (days): 30
 | volume | 2670 | 88 |
 | max_seconds | 2519 | 112 |
 | alarm_duration | 1876 | 110 |
-| min_seconds | 1463 | 113 |
+| min_seconds | 1442 | 112 |
 | sound_type | 1214 | 116 |
 | voice_callouts_enabled | 773 | 70 |
 | repeat_enabled | 665 | 107 |
@@ -62,7 +62,7 @@ Window (days): 30
 | voice_gender | 277 | 98 |
 | vibration_enabled | 215 | 80 |
 | use_extended_range | 210 | 69 |
-| unknown | 30 | 3 |
+| unknown | 36 | 4 |
 
 ## Data Quality Warnings
 - purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage
