@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-09-28T01:02:32+00:00
+Generated: 2026-09-28T06:49:50+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **58**
-- Offer Selects: **4**
+- Views: **54**
+- Offer Selects: **2**
 - Purchase Attempts: **2**
 - Purchase Successes: **0**
-- View -> Offer Select: **6.9%**
-- Select -> Purchase Attempt: **50.0%**
+- View -> Offer Select: **3.7%**
+- Select -> Purchase Attempt: **100.0%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
@@ -26,7 +26,7 @@ Window (days): 30
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
 | ios | com.iganapolsky.randomtimer.elite | 0 | 2 | 0 | 0.0% | 0.0% |
-| android | elite_tactical | 4 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical | 2 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
@@ -39,11 +39,11 @@ Window (days): 30
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | unknown | 19 | 0 | 0 | 0.0% | 0.0% |
-| range_gate | 16 | 0 | 0 | 0.0% | 0.0% |
+| range_gate | 14 | 0 | 0 | 0.0% | 0.0% |
 | qualified_training_gate | 11 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 6 | 0 | 0 | 0.0% | 0.0% |
-| repeat_gate | 4 | 0 | 0 | 0.0% | 0.0% |
 | sound_gate | 2 | 2 | 0 | 100.0% | 0.0% |
+| repeat_gate | 2 | 0 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
 - None
@@ -52,12 +52,12 @@ Window (days): 30
 | Setting | Changes | Users |
 |---------|---------|-------|
 | volume | 2703 | 88 |
-| max_seconds | 2476 | 109 |
-| alarm_duration | 1871 | 107 |
-| min_seconds | 1430 | 109 |
-| sound_type | 1206 | 113 |
+| max_seconds | 2310 | 108 |
+| alarm_duration | 1870 | 106 |
+| min_seconds | 1225 | 108 |
+| sound_type | 1204 | 112 |
 | voice_callouts_enabled | 773 | 70 |
-| repeat_enabled | 663 | 105 |
+| repeat_enabled | 660 | 104 |
 | repeat_rounds | 308 | 66 |
 | voice_gender | 277 | 98 |
 | vibration_enabled | 214 | 79 |
