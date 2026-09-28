@@ -123,7 +123,7 @@ jobs:
       - name: Mobile Security Framework (MobSF)
         if: matrix.scan-type == 'mobile'
         continue-on-error: true
-        uses: MobSF/mobsfscan@2659f2ac6d185f0c60ce2eb754f5f48b683f73fb # main
+        uses: MobSF/mobsfscan@4645ea70bc093268502fe9f6df93e41bb482254a # main
         with:
           args: ". --json --output mobile-security-results.json"
 
