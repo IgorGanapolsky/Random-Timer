@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-09-29T06:37:50+00:00",
+  "generated_at": "2026-09-29T12:34:39+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 54,
-    "offer_selects": 2,
+    "views": 52,
+    "offer_selects": 1,
     "purchase_attempts": 2,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.037,
-    "select_to_attempt_rate": 1.0,
+    "view_to_select_rate": 0.0192,
+    "select_to_attempt_rate": 2.0,
     "attempt_to_success_rate": 0.0
   },
   "top_failure_reasons": [
@@ -40,7 +40,7 @@
     {
       "platform": "android",
       "product_id": "elite_tactical",
-      "offer_selects": 2,
+      "offer_selects": 1,
       "attempts": 0,
       "successes": 0,
       "select_to_attempt_rate": 0.0,
@@ -106,7 +106,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 11,
+      "views": 9,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -141,28 +141,28 @@
   "settings_hotspots": [
     {
       "setting_name": "volume",
-      "changes": 2703,
+      "changes": 2685,
       "users": 88
     },
     {
       "setting_name": "max_seconds",
-      "changes": 2326,
+      "changes": 2135,
       "users": 109
     },
     {
       "setting_name": "alarm_duration",
-      "changes": 1870,
-      "users": 106
-    },
-    {
-      "setting_name": "min_seconds",
-      "changes": 1243,
-      "users": 109
+      "changes": 1865,
+      "users": 105
     },
     {
       "setting_name": "sound_type",
       "changes": 1204,
       "users": 112
+    },
+    {
+      "setting_name": "min_seconds",
+      "changes": 1057,
+      "users": 109
     },
     {
       "setting_name": "voice_callouts_enabled",
@@ -181,8 +181,8 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 277,
-      "users": 98
+      "changes": 274,
+      "users": 97
     },
     {
       "setting_name": "vibration_enabled",
@@ -201,6 +201,7 @@
     }
   ],
   "data_quality_warnings": [
+    "purchase_attempts exceed offer_selects; paywall funnel events are inconsistent and need instrumentation review",
     "purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage",
     "product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status"
   ],

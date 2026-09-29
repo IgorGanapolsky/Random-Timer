@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-09-29T06:37:50+00:00
+Generated: 2026-09-29T12:34:39+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **54**
-- Offer Selects: **2**
+- Views: **52**
+- Offer Selects: **1**
 - Purchase Attempts: **2**
 - Purchase Successes: **0**
-- View -> Offer Select: **3.7%**
-- Select -> Purchase Attempt: **100.0%**
+- View -> Offer Select: **1.9%**
+- Select -> Purchase Attempt: **200.0%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
@@ -26,7 +26,7 @@ Window (days): 30
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
 | ios | com.iganapolsky.randomtimer.elite | 0 | 2 | 0 | 0.0% | 0.0% |
-| android | elite_tactical | 2 | 0 | 0 | 0.0% | 0.0% |
+| android | elite_tactical | 1 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
@@ -40,7 +40,7 @@ Window (days): 30
 |-------------|-------|----------|-----------|---------------|------------------|
 | unknown | 19 | 0 | 0 | 0.0% | 0.0% |
 | range_gate | 14 | 0 | 0 | 0.0% | 0.0% |
-| qualified_training_gate | 11 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 9 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 6 | 0 | 0 | 0.0% | 0.0% |
 | sound_gate | 2 | 2 | 0 | 100.0% | 0.0% |
 | repeat_gate | 2 | 0 | 0 | 0.0% | 0.0% |
@@ -51,19 +51,20 @@ Window (days): 30
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| volume | 2703 | 88 |
-| max_seconds | 2326 | 109 |
-| alarm_duration | 1870 | 106 |
-| min_seconds | 1243 | 109 |
+| volume | 2685 | 88 |
+| max_seconds | 2135 | 109 |
+| alarm_duration | 1865 | 105 |
 | sound_type | 1204 | 112 |
+| min_seconds | 1057 | 109 |
 | voice_callouts_enabled | 773 | 70 |
 | repeat_enabled | 660 | 104 |
 | repeat_rounds | 308 | 66 |
-| voice_gender | 277 | 98 |
+| voice_gender | 274 | 97 |
 | vibration_enabled | 214 | 79 |
 | use_extended_range | 210 | 69 |
 | unknown | 36 | 4 |
 
 ## Data Quality Warnings
+- purchase_attempts exceed offer_selects; paywall funnel events are inconsistent and need instrumentation review
 - purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage
 - product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status
