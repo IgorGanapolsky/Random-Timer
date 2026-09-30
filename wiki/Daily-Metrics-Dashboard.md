@@ -8,13 +8,13 @@
 | Metric | iOS | Android | Combined |
 |--------|:---:|:-------:|:--------:|
 | Distinct install users (30d) | 48 | 94 | 142 |
-| Active Installs | — | 105 | — |
+| Active Installs | — | 106 | — |
 
 | Active Users | Count |
 |-------------|:-----:|
 | DAU | 4 |
-| WAU | 19 |
-| MAU | 167 |
+| WAU | 20 |
+| MAU | 168 |
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -38,7 +38,7 @@
 <!-- ATTRIBUTION_START -->
 # Attribution Feedback Report
 
-**Generated:** 2026-09-30T12:37:49+00:00
+**Generated:** 2026-09-30T18:27:38+00:00
 
 ## Onboarding Funnel
 - First Open: **143**
@@ -154,16 +154,16 @@
 ```mermaid
 xychart-beta
     title "Downloads (30d rolling)"
-    x-axis ["2026-09-27" , "2026-09-27" , "2026-09-27" , "2026-09-27" , "2026-09-28" , "2026-09-28" , "2026-09-28" , "2026-09-28" , "2026-09-29" , "2026-09-29" , "2026-09-29" , "2026-09-29" , "2026-09-30" , "2026-09-30"]
+    x-axis ["2026-09-27" , "2026-09-27" , "2026-09-27" , "2026-09-28" , "2026-09-28" , "2026-09-28" , "2026-09-28" , "2026-09-29" , "2026-09-29" , "2026-09-29" , "2026-09-29" , "2026-09-30" , "2026-09-30" , "2026-09-30"]
     y-axis "Downloads"
-    line [48 , 48 , 48 , 47 , 47 , 47 , 47 , 48 , 48 , 48 , 48 , 48 , 48 , 48]
-    line [95 , 95 , 95 , 95 , 95 , 94 , 94 , 94 , 94 , 95 , 94 , 94 , 94 , 94]
+    line [48 , 48 , 47 , 47 , 47 , 47 , 48 , 48 , 48 , 48 , 48 , 48 , 48 , 48]
+    line [95 , 95 , 95 , 95 , 94 , 94 , 94 , 94 , 95 , 94 , 94 , 94 , 94 , 94]
 ```
 
 ```mermaid
 xychart-beta
     title "WQTU (7d)"
-    x-axis ["2026-09-27" , "2026-09-27" , "2026-09-27" , "2026-09-27" , "2026-09-28" , "2026-09-28" , "2026-09-28" , "2026-09-28" , "2026-09-29" , "2026-09-29" , "2026-09-29" , "2026-09-29" , "2026-09-30" , "2026-09-30"]
+    x-axis ["2026-09-27" , "2026-09-27" , "2026-09-27" , "2026-09-28" , "2026-09-28" , "2026-09-28" , "2026-09-28" , "2026-09-29" , "2026-09-29" , "2026-09-29" , "2026-09-29" , "2026-09-30" , "2026-09-30" , "2026-09-30"]
     y-axis "Users"
     line [5 , 5 , 5 , 5 , 5 , 5 , 5 , 5 , 5 , 5 , 5 , 5 , 5 , 5]
 ```
@@ -193,4 +193,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-09-30T12:37:50+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-09-30T18:27:39+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
