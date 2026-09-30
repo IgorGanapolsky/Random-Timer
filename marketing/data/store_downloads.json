@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-09-29T18:28:02+00:00",
+  "generated_at": "2026-09-30T01:00:32+00:00",
   "window_days": 30,
   "source": "posthog",
-  "status": "ok",
-  "status_reason": "",
+  "status": "degraded",
+  "status_reason": "preserved last good metrics after degraded PostHog query",
   "ios": {
     "downloads_30d": 48
   },
@@ -28,14 +28,20 @@
     }
   },
   "data_quality": {
-    "is_stale": false,
-    "preserved_previous_metrics": false,
-    "last_attempt_generated_at": "2026-09-29T18:28:02+00:00",
-    "last_good_generated_at": "",
-    "reason": ""
+    "is_stale": true,
+    "preserved_previous_metrics": true,
+    "last_attempt_generated_at": "2026-09-30T01:00:32+00:00",
+    "last_good_generated_at": "2026-09-29T18:28:02+00:00",
+    "reason": "http_400"
   },
   "query_diagnostics": {
-    "errors": []
+    "errors": [
+      "http_400",
+      "http_400",
+      "http_400",
+      "http_400",
+      "http_400"
+    ]
   },
   "snapshots": [
     {

@@ -15,6 +15,8 @@
 | DAU | 5 |
 | WAU | 21 |
 | MAU | 166 |
+
+_Data quality: stale; showing last good metrics from `2026-09-29T18:28:02+00:00`; latest read issue: `http_400`._
 <!-- DOWNLOADS_END -->
 
 ## North Star (WQTU)
@@ -31,6 +33,8 @@
 | Paid Attributed Users (30d) | 0 |
 | Active Campaign Count | 0 |
 | Guardrail Violated | NO |
+
+_Data quality: stale; showing last good metrics from `2026-09-29T18:27:54+00:00`; latest read issue: `http_400`._
 <!-- NORTH_STAR_END -->
 
 ## Attribution Summary
@@ -60,15 +64,17 @@
 <!-- PAYWALL_START -->
 | Metric | Value |
 |--------|-------|
-| Paywall Views | 52 |
-| Offer Selects | 1 |
-| Purchase Attempts | 2 |
+| Paywall Views | 0 |
+| Offer Selects | 0 |
+| Purchase Attempts | 0 |
 | Purchase Successes | 0 |
 | Attempt → Success | — |
 
-**Top failure reasons:** user_cancelled (3)
+**Top failure reasons:** none
 
-**Catalog failures (Android):** pro_base (56), elite_tactical (52), elite_tactical_monthly (52)
+**Catalog failures (Android):** none
+
+_Data quality: stale; latest read issue: `paywall conversion snapshot degraded`._
 <!-- PAYWALL_END -->
 
 ## Onboarding Funnel (30-day window)
@@ -79,6 +85,8 @@
 | First Open | 143 | — |
 | First Timer Configured | 122 | 85.3% of opens |
 | First Timer Completed | 56 | 39.2% of opens |
+
+_Data quality: stale; showing last good metrics from `2026-09-29T18:28:42+00:00`; latest read issue: `http_400`._
 <!-- FUNNEL_END -->
 
 ## Review Velocity
@@ -193,4 +201,4 @@ xychart-beta
 
 ---
 
-_Dashboard generated at: `2026-09-29T18:28:43+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._
+_Dashboard generated at: `2026-09-30T01:01:18+00:00`. Data refreshed daily by [`wiki-sync.yml`](https://github.com/IgorGanapolsky/Random-Timer/actions/workflows/wiki-sync.yml)._

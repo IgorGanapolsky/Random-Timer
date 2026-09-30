@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-09-29T18:27:54+00:00",
+  "generated_at": "2026-09-30T01:00:24+00:00",
   "source": "posthog",
-  "status": "ok",
+  "status": "degraded",
   "status_reason": "",
   "lookback_days": 30,
   "wqtu_window_days": 7,
@@ -46,14 +46,20 @@
     }
   },
   "data_quality": {
-    "is_stale": false,
-    "preserved_previous_metrics": false,
-    "last_attempt_generated_at": "2026-09-29T18:27:54+00:00",
-    "last_good_generated_at": "",
-    "reason": ""
+    "is_stale": true,
+    "preserved_previous_metrics": true,
+    "last_attempt_generated_at": "2026-09-30T01:00:24+00:00",
+    "last_good_generated_at": "2026-09-29T18:27:54+00:00",
+    "reason": "http_400"
   },
   "query_diagnostics": {
-    "errors": []
+    "errors": [
+      "http_400",
+      "http_400",
+      "http_400",
+      "http_400",
+      "http_400"
+    ]
   },
   "snapshots": [
     {

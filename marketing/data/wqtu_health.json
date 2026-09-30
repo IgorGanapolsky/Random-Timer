@@ -1,56 +1,40 @@
 {
-  "generated_at": "2026-09-29T18:28:24+00:00",
-  "status": "ok",
+  "generated_at": "2026-09-30T01:00:56+00:00",
+  "status": "alert",
   "nsm": {
-    "wqtu": 5,
+    "wqtu": 0,
     "definition": "Users with >= 3 timer_completed in trailing 7 days",
     "alert_threshold": 1,
-    "alert_fired": false
+    "alert_fired": true
   },
   "engagement": {
-    "dau": 5,
-    "wau": 21
+    "dau": 0,
+    "wau": 0
   },
   "abandon_rate": {
-    "started_30d": 989,
-    "completed_30d": 477,
-    "abandon_rate_pct": 51.8
+    "started_30d": 0,
+    "completed_30d": 0,
+    "abandon_rate_pct": 0.0
   },
   "monetization_funnel": {
-    "paywall_viewed_users": 25,
-    "purchase_attempted_users": 2,
+    "paywall_viewed_users": 0,
+    "purchase_attempted_users": 0,
     "purchase_succeeded_users": 0,
     "conversion_pct": 0.0
   },
-  "wqtu_trend": [
-    {
-      "week_start": "2026-08-30",
-      "wqtu": 3
-    },
-    {
-      "week_start": "2026-09-06",
-      "wqtu": 4
-    },
-    {
-      "week_start": "2026-09-13",
-      "wqtu": 6
-    },
-    {
-      "week_start": "2026-09-20",
-      "wqtu": 5
-    },
-    {
-      "week_start": "2026-09-27",
-      "wqtu": 1
-    }
+  "wqtu_trend": [],
+  "query_errors": [
+    "http_400",
+    "http_400",
+    "http_400",
+    "http_400",
+    "http_400",
+    "http_400",
+    "http_400",
+    "http_400",
+    "http_400"
   ],
-  "query_errors": [],
   "history": [
-    {
-      "timestamp": "2026-09-14T19:26:09+00:00",
-      "wqtu": 4,
-      "dau": 10
-    },
     {
       "timestamp": "2026-09-14T19:35:42+00:00",
       "wqtu": 4,
@@ -495,6 +479,11 @@
       "timestamp": "2026-09-29T18:28:24+00:00",
       "wqtu": 5,
       "dau": 5
+    },
+    {
+      "timestamp": "2026-09-30T01:00:56+00:00",
+      "wqtu": 0,
+      "dau": 0
     }
   ]
 }
