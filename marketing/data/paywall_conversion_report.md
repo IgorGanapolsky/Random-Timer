@@ -1,14 +1,14 @@
 # Paywall Conversion Report
 
-Generated: 2026-10-01T12:34:07+00:00
+Generated: 2026-10-01T18:28:59+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **51**
+- Views: **52**
 - Offer Selects: **1**
 - Purchase Attempts: **2**
 - Purchase Successes: **0**
-- View -> Offer Select: **2.0%**
+- View -> Offer Select: **1.9%**
 - Select -> Purchase Attempt: **200.0%**
 - Attempt -> Purchase Success: **0.0%**
 
@@ -38,7 +38,7 @@ Window (days): 30
 ## Entry Point Funnel
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
-| unknown | 19 | 0 | 0 | 0.0% | 0.0% |
+| unknown | 20 | 0 | 0 | 0.0% | 0.0% |
 | range_gate | 14 | 0 | 0 | 0.0% | 0.0% |
 | qualified_training_gate | 8 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 6 | 0 | 0 | 0.0% | 0.0% |
@@ -46,18 +46,18 @@ Window (days): 30
 | repeat_gate | 2 | 0 | 0 | 0.0% | 0.0% |
 
 ## Leaky Entry Points
-- None
+- `unknown` had **20** views and **0** purchase attempts.
 
 ## Settings Hotspots
 | Setting | Changes | Users |
 |---------|---------|-------|
-| volume | 2463 | 88 |
-| max_seconds | 2072 | 109 |
-| alarm_duration | 1865 | 105 |
+| volume | 2414 | 88 |
+| max_seconds | 1920 | 109 |
+| alarm_duration | 1864 | 104 |
 | sound_type | 1204 | 112 |
-| min_seconds | 1002 | 109 |
+| min_seconds | 985 | 109 |
 | voice_callouts_enabled | 773 | 70 |
-| repeat_enabled | 654 | 103 |
+| repeat_enabled | 651 | 102 |
 | repeat_rounds | 308 | 66 |
 | voice_gender | 274 | 97 |
 | vibration_enabled | 213 | 79 |
@@ -66,5 +66,6 @@ Window (days): 30
 
 ## Data Quality Warnings
 - purchase_attempts exceed offer_selects; paywall funnel events are inconsistent and need instrumentation review
+- unknown paywall entry_point is still receiving meaningful traffic
 - purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage
 - product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status
