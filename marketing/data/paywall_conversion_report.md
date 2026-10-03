@@ -1,15 +1,15 @@
 # Paywall Conversion Report
 
-Generated: 2026-10-02T18:27:37+00:00
+Generated: 2026-10-03T00:55:08+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **52**
-- Offer Selects: **1**
+- Views: **50**
+- Offer Selects: **0**
 - Purchase Attempts: **2**
 - Purchase Successes: **0**
-- View -> Offer Select: **1.9%**
-- Select -> Purchase Attempt: **200.0%**
+- View -> Offer Select: **0.0%**
+- Select -> Purchase Attempt: **0.0%**
 - Attempt -> Purchase Success: **0.0%**
 
 ## Top Failure Reasons
@@ -26,7 +26,6 @@ Window (days): 30
 | Platform | Product ID | Selects | Attempts | Successes | Select->Attempt | Attempt->Success |
 |----------|------------|---------|----------|-----------|-----------------|------------------|
 | ios | com.iganapolsky.randomtimer.elite | 0 | 2 | 0 | 0.0% | 0.0% |
-| android | elite_tactical | 1 | 0 | 0 | 0.0% | 0.0% |
 
 ## Product Catalog Failures
 | Platform | Product ID | Failures | Users |
@@ -39,7 +38,7 @@ Window (days): 30
 | Entry Point | Views | Attempts | Successes | View->Attempt | Attempt->Success |
 |-------------|-------|----------|-----------|---------------|------------------|
 | unknown | 20 | 0 | 0 | 0.0% | 0.0% |
-| range_gate | 14 | 0 | 0 | 0.0% | 0.0% |
+| range_gate | 12 | 0 | 0 | 0.0% | 0.0% |
 | qualified_training_gate | 8 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 6 | 0 | 0 | 0.0% | 0.0% |
 | sound_gate | 2 | 2 | 0 | 100.0% | 0.0% |
@@ -52,10 +51,10 @@ Window (days): 30
 | Setting | Changes | Users |
 |---------|---------|-------|
 | volume | 2414 | 88 |
-| max_seconds | 1920 | 109 |
 | alarm_duration | 1864 | 104 |
+| max_seconds | 1827 | 108 |
 | sound_type | 1204 | 112 |
-| min_seconds | 985 | 109 |
+| min_seconds | 934 | 108 |
 | voice_callouts_enabled | 773 | 70 |
 | repeat_enabled | 651 | 102 |
 | repeat_rounds | 308 | 66 |
@@ -65,7 +64,6 @@ Window (days): 30
 | unknown | 36 | 4 |
 
 ## Data Quality Warnings
-- purchase_attempts exceed offer_selects; paywall funnel events are inconsistent and need instrumentation review
 - unknown paywall entry_point is still receiving meaningful traffic
 - purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage
 - product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status

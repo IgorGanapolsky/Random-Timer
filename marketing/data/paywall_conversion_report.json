@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-10-02T18:27:37+00:00",
+  "generated_at": "2026-10-03T00:55:08+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 52,
-    "offer_selects": 1,
+    "views": 50,
+    "offer_selects": 0,
     "purchase_attempts": 2,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.0192,
-    "select_to_attempt_rate": 2.0,
+    "view_to_select_rate": 0.0,
+    "select_to_attempt_rate": 0.0,
     "attempt_to_success_rate": 0.0
   },
   "top_failure_reasons": [
@@ -33,15 +33,6 @@
       "product_id": "com.iganapolsky.randomtimer.elite",
       "offer_selects": 0,
       "attempts": 2,
-      "successes": 0,
-      "select_to_attempt_rate": 0.0,
-      "attempt_to_success_rate": 0.0
-    },
-    {
-      "platform": "android",
-      "product_id": "elite_tactical",
-      "offer_selects": 1,
-      "attempts": 0,
       "successes": 0,
       "select_to_attempt_rate": 0.0,
       "attempt_to_success_rate": 0.0
@@ -98,7 +89,7 @@
     },
     {
       "entry_point": "range_gate",
-      "views": 14,
+      "views": 12,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -154,14 +145,14 @@
       "users": 88
     },
     {
-      "setting_name": "max_seconds",
-      "changes": 1920,
-      "users": 109
-    },
-    {
       "setting_name": "alarm_duration",
       "changes": 1864,
       "users": 104
+    },
+    {
+      "setting_name": "max_seconds",
+      "changes": 1827,
+      "users": 108
     },
     {
       "setting_name": "sound_type",
@@ -170,8 +161,8 @@
     },
     {
       "setting_name": "min_seconds",
-      "changes": 985,
-      "users": 109
+      "changes": 934,
+      "users": 108
     },
     {
       "setting_name": "voice_callouts_enabled",
@@ -210,7 +201,6 @@
     }
   ],
   "data_quality_warnings": [
-    "purchase_attempts exceed offer_selects; paywall funnel events are inconsistent and need instrumentation review",
     "unknown paywall entry_point is still receiving meaningful traffic",
     "purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage",
     "product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status"
