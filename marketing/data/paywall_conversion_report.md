@@ -1,10 +1,10 @@
 # Paywall Conversion Report
 
-Generated: 2026-10-04T14:03:56+00:00
+Generated: 2026-10-04T19:09:28+00:00
 Window (days): 30
 
 ## Funnel
-- Views: **50**
+- Views: **49**
 - Offer Selects: **0**
 - Purchase Attempts: **2**
 - Purchase Successes: **0**
@@ -39,7 +39,7 @@ Window (days): 30
 |-------------|-------|----------|-----------|---------------|------------------|
 | unknown | 20 | 0 | 0 | 0.0% | 0.0% |
 | range_gate | 12 | 0 | 0 | 0.0% | 0.0% |
-| qualified_training_gate | 8 | 0 | 0 | 0.0% | 0.0% |
+| qualified_training_gate | 7 | 0 | 0 | 0.0% | 0.0% |
 | voice_gate | 6 | 0 | 0 | 0.0% | 0.0% |
 | sound_gate | 2 | 2 | 0 | 100.0% | 0.0% |
 | repeat_gate | 2 | 0 | 0 | 0.0% | 0.0% |
@@ -51,10 +51,10 @@ Window (days): 30
 | Setting | Changes | Users |
 |---------|---------|-------|
 | volume | 2337 | 86 |
-| max_seconds | 1885 | 106 |
 | alarm_duration | 1842 | 102 |
+| max_seconds | 1779 | 104 |
 | sound_type | 1193 | 112 |
-| min_seconds | 903 | 105 |
+| min_seconds | 884 | 104 |
 | voice_callouts_enabled | 767 | 69 |
 | repeat_enabled | 643 | 100 |
 | repeat_rounds | 305 | 65 |
