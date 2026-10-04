@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-03T18:53:42+00:00",
+  "generated_at": "2026-10-04T01:28:52+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -145,19 +145,19 @@
       "users": 86
     },
     {
+      "setting_name": "max_seconds",
+      "changes": 1912,
+      "users": 107
+    },
+    {
       "setting_name": "alarm_duration",
       "changes": 1842,
       "users": 102
     },
     {
-      "setting_name": "max_seconds",
-      "changes": 1817,
-      "users": 106
-    },
-    {
       "setting_name": "sound_type",
-      "changes": 1189,
-      "users": 111
+      "changes": 1193,
+      "users": 112
     },
     {
       "setting_name": "min_seconds",
@@ -181,8 +181,8 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 272,
-      "users": 96
+      "changes": 273,
+      "users": 97
     },
     {
       "setting_name": "vibration_enabled",
