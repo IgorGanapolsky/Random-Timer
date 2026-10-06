@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-10-05T18:29:05+00:00",
+  "generated_at": "2026-10-06T00:57:38+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
   "funnel": {
-    "views": 49,
-    "offer_selects": 0,
+    "views": 51,
+    "offer_selects": 1,
     "purchase_attempts": 2,
     "purchase_successes": 0,
-    "view_to_select_rate": 0.0,
-    "select_to_attempt_rate": 0.0,
+    "view_to_select_rate": 0.0196,
+    "select_to_attempt_rate": 2.0,
     "attempt_to_success_rate": 0.0
   },
   "top_failure_reasons": [
@@ -33,6 +33,15 @@
       "product_id": "com.iganapolsky.randomtimer.elite",
       "offer_selects": 0,
       "attempts": 2,
+      "successes": 0,
+      "select_to_attempt_rate": 0.0,
+      "attempt_to_success_rate": 0.0
+    },
+    {
+      "platform": "android",
+      "product_id": "elite_tactical",
+      "offer_selects": 1,
+      "attempts": 0,
       "successes": 0,
       "select_to_attempt_rate": 0.0,
       "attempt_to_success_rate": 0.0
@@ -97,7 +106,7 @@
     },
     {
       "entry_point": "qualified_training_gate",
-      "views": 7,
+      "views": 9,
       "attempts": 0,
       "successes": 0,
       "view_to_attempt_rate": 0.0,
@@ -151,8 +160,8 @@
     },
     {
       "setting_name": "max_seconds",
-      "changes": 1824,
-      "users": 103
+      "changes": 1828,
+      "users": 104
     },
     {
       "setting_name": "sound_type",
@@ -171,8 +180,8 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 642,
-      "users": 99
+      "changes": 643,
+      "users": 100
     },
     {
       "setting_name": "repeat_rounds",
@@ -201,6 +210,7 @@
     }
   ],
   "data_quality_warnings": [
+    "purchase_attempts exceed offer_selects; paywall funnel events are inconsistent and need instrumentation review",
     "unknown paywall entry_point is still receiving meaningful traffic",
     "purchase failures are dominated by user_cancelled; prioritize pricing, plan default, and purchase-sheet value proof before assuming a store outage",
     "product catalog lookup failures detected; verify App Store Connect and Google Play product IDs, approval state, and cleared-for-sale status"
