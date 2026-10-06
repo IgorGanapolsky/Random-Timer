@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-06T12:33:12+00:00",
+  "generated_at": "2026-10-06T18:26:55+00:00",
   "window_days": 30,
   "status": "ok",
   "reason": "",
@@ -180,8 +180,8 @@
     },
     {
       "setting_name": "repeat_enabled",
-      "changes": 643,
-      "users": 100
+      "changes": 645,
+      "users": 101
     },
     {
       "setting_name": "repeat_rounds",
@@ -190,8 +190,8 @@
     },
     {
       "setting_name": "voice_gender",
-      "changes": 277,
-      "users": 98
+      "changes": 278,
+      "users": 99
     },
     {
       "setting_name": "vibration_enabled",
